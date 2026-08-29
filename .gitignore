@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# vercel / prisma
+.vercel
+prisma/*.db
+prisma/*.db-journal
+
+# agent workspaces
+.claude/worktrees/
+.aider*
+.codex/
+
+# os / editor
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
