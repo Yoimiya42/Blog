@@ -8,8 +8,8 @@
 ## 2026-08-29 · Claude (Cowork) · init
 
 做了：
-- 建立多 AI 协作规则 `docs/00-agent-rules.md`
-- 根目录加 `CLAUDE.md` 和 `AGENTS.md`，两边入口指向同一套规则
+- 建立 `AGENTS.md` 作为唯一的 AI 规则文件（项目上下文 + 硬约束 + 工作规矩 + 多 AI 协作规则）
+- `CLAUDE.md` 改成只指向 AGENTS.md 的指路条，规则不再有第二份副本
 - 加 `.gitignore`
 - 清理了两个残留的 git worktree 和一个卡住的 `.git/index.lock`
 - 删掉了空的 `CHANGELOG.md`，由本文件取代
