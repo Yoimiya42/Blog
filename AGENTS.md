@@ -99,3 +99,22 @@ init              主干，唯一可发布的分支
 chatgpt/<任务名>   ChatGPT 的工作分支，合并后删除
 claude/<任务名>    Claude 需要做大改动时的临时分支，合并后删除
 ```
+
+### 5.7 Commit message 规范
+
+**Commit message 一律用英文，写短。** 中文只出现在代码注释的关键点和 `docs/` 里，不出现在 git 历史里。
+
+格式：`<type>: <做了什么>`，祈使句、小写开头、不加句号，标题一行不超过 50 字符。
+
+```
+feat: add item model and media table
+fix: handle empty slug in post route
+docs: record editor choice in ADR-0004
+chore: add gitignore
+refactor: merge agent rules into AGENTS.md
+wip: half-done R2 upload, do not merge
+```
+
+常用 type：`feat` 新功能、`fix` 修 bug、`docs` 只改文档、`refactor` 重构、`style` 格式、`test` 测试、`chore` 杂务、`wip` 半成品交接。
+
+只有当「为什么这么改」不明显时才写正文，也用英文，一两句话说清原因，不要复述改了哪些文件——那个 diff 里有。
