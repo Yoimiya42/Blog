@@ -4,7 +4,7 @@ This document defines the Git and GitHub workflow. AI-specific operating rules r
 
 ## 1. Workflow
 
-1. Select a ready GitHub Issue.
+1. Create or select a ready GitHub Issue.
 2. Create one short-lived branch from the latest `main`.
 3. Make small, verified commits.
 4. Open a Pull Request and complete the template.
@@ -105,3 +105,11 @@ Milestones represent releases. Recommended fields are Priority, Size, and Target
 Before merge, acceptance criteria MUST pass, review threads MUST be resolved, and documentation MUST be current.
 
 Use squash merge and delete the source branch. After merge, close the Issue, set the Project item to `Done`, and verify the target environment when deployment is involved.
+
+## 8. Automation Boundary
+
+AI maintains Issues, branches, Project status, and Pull Requests. The repository owner approves each exact commit diff and message.
+
+Unless the user restricts it, commit approval also authorizes the AI to commit, push the current branch, and open or update its PR. It never authorizes merge. Merge requires explicit approval.
+
+AI MUST report every created or completed Issue, branch, commit, and PR.

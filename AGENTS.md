@@ -29,13 +29,14 @@ v1 目标上线：2026-09-30。
 
 **中国大陆必须可访问。** 禁用 Google Fonts、Google Analytics、reCAPTCHA 等被墙资源；字体自托管并子集化；登录主方式是邮箱 6 位验证码，不是魔法链接。引入任何新的第三方依赖或 CDN 前，先确认大陆可达，并写进 ADR。详见 ADR-0003。
 
-**Markdown MUST use concise technical English.** This is a project-level hard constraint for every new Markdown file and all newly written Markdown content.
+**All repository content written or rewritten by AI MUST use concise technical English.** This project-level hard constraint applies to documentation, rules, comments, configuration descriptions, Issue templates, and PR templates.
 
 - Lead with the rule, decision, or outcome.
 - Use short sentences, clear headings, and precise terms.
 - Remove tutorials, conversational filler, repetition, and decorative prose.
 - Keep each rule in one authoritative location; link to it elsewhere.
-- Do not translate existing Chinese documentation unless the task requires it.
+- Preserve untouched legacy Chinese content; convert any rewritten content to English.
+- Use another language only when the user explicitly requires it for product content.
 
 ## 4. 工作规矩
 
@@ -44,7 +45,7 @@ v1 目标上线：2026-09-30。
 3. 任何妥协立刻记进 `docs/tech-debt.md`。
 4. 文档改动和代码改动一起提交，不要分开。
 5. v1 范围之外的想法一律推后，不要塞进 v1。
-6. 注释默认用英文，关键点中英双语。用户是新手，改动要解释清楚为什么。
+6. Code comments MUST use English and explain non-obvious decisions, not syntax.
 
 ---
 
@@ -63,12 +64,12 @@ v1 目标上线：2026-09-30。
 
 所有 AI 都不要直接改 `main`，不要自己合并分支，写完交给人工审核。如果发现工作区里有未提交的改动，那是别人留下的，不要覆盖，先提醒用户。
 
-### 5.2 串行原则（最重要的一条）
+### 5.2 Serial execution
 
-1. 开工前先跑 `git status`。工作区不干净就先问人，不要在别人没提交的改动上面继续写。
-2. **AI 不自己执行 `git commit`**（除非用户当场明确说「帮我提交」）。到检查点就停下来，按 5.8 提议提交。
-3. 切换到另一个 AI 之前，工作区必须已经是干净的——由用户来执行提交。没提交就不要换窗口。
-4. 不要在两个窗口里同时按下「开始」。
+1. Run `git status` before work. If unrelated uncommitted changes exist, stop and notify the user.
+2. **AI MUST obtain explicit approval for the exact commit message and diff before committing.**
+3. The worktree MUST be clean before switching to another AI.
+4. Do not run multiple AI work sessions concurrently.
 
 ### 5.4 禁止事项
 
@@ -91,34 +92,31 @@ git 是唯一裁判，`main` 分支为准。
 
 分支命名、生命周期和合并方式以 `CONTRIBUTING.md` 为准。
 
-### 5.7 Commit message 规范
+### 5.7 Commit messages
 
-Commit 和 PR 标题规范以 `CONTRIBUTING.md` 为准。AI 只提议 commit，不自行提交，除非用户当场明确授权。
+Commit and PR title rules are defined in `CONTRIBUTING.md`. AI MUST follow the approval boundary in section 5.8.
 
-### 5.8 提交检查点
+### 5.8 Automated workflow management
 
-git 历史是用户的，由用户决定什么进去。AI 负责把活干到一个干净的点，然后**提议**提交，不代劳。
+AI owns workflow bookkeeping. The user approves commits.
 
-到了下面任何一个点就停下来提议：
+At task start, AI MUST:
 
-- 一个功能或一个 FR 编号做完了，能跑起来
-- 一个 bug 修好了，验证过了
-- 加完依赖、改完配置，装好能启动
-- 重构做完了，行为没变
-- 文档或 ADR 写完了
-- 一次会话要结束、或者要交给另一个 AI 之前
-- 接下来准备做一件风险大的改动，先存个档
+- create or select the relevant Issue when the task warrants one;
+- create or switch to the correct branch when the worktree is clean;
+- keep a branch explicitly selected by the user;
+- move the Project item to `In progress` when Project access is available.
 
-提议的格式，简短说清三件事：
+AI MUST stop at each atomic, verified checkpoint and request commit approval with:
 
-```
-建议提交：
+- the Issue and branch;
+- the exact commit message;
+- the exact file list;
+- validation results;
+- the next checkpoint.
 
-  git add prisma/schema.prisma docs/adr/0004-editor.md
-  git commit -m "feat: add item and media models"
+Approval applies only to the presented diff and message. Any later change requires new approval.
 
-改了 2 个文件：Item / Media 两张表，和对应的 ADR-0004。
-下一个检查点：接上 R2 上传逻辑之后。
-```
+After approval, AI MAY commit, push the current branch, open or update the PR, and move the Project item to `In review`. AI MUST report created branches, Issues, commits, and PRs.
 
-不要一次憋一大堆改动才提议。宁可多提几次小的，也别攒成一个改了 20 个文件的巨型提交——出问题时回滚不了。
+AI MUST NOT merge without explicit authorization. After merge, AI SHOULD verify Issue closure, set the Project item to `Done`, and delete the merged branch.
