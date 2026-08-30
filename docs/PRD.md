@@ -545,7 +545,7 @@ model Tag {
 | CI | GitHub Actions | — | PR 自动跑 lint 与 build |
 | 动效 | Motion (原 Framer Motion) | — | 树洞转场、页面过渡 |
 
-**仓库与协作流程**：当前以根目录 `AGENTS.md` 第 5 节为准；`CONTRIBUTING.md` 仍是占位文件，等流程逐项确认后再启用。
+**仓库与协作流程**：以根目录 `CONTRIBUTING.md` 为准，AI 特有规则见 `AGENTS.md`。
 
 ---
 

@@ -247,13 +247,13 @@ events.on('post.published', revalidateSitemap)
 
 **业界做法**：Issue 跟踪、看板（To Do / In Progress / Review / Done）、里程碑、Sprint。
 **本项目**：GitHub Issues + GitHub Projects 看板，里程碑对应 v1 / v1.5 / v2。
-**具体规矩**：当前以根目录 `AGENTS.md` 第 5 节为准；`CONTRIBUTING.md` 尚未启用，避免提前固化未确认的细节。
+**具体规矩**：以根目录 `CONTRIBUTING.md` 为准，本文不重复维护 Issue 字段、状态和粒度要求。
 **你会学到**：如何把一个大目标拆成可执行、可验收的小块——这是工程能力里最被低估的一项。
 
 ### 4.4 版本控制与协作流程
 
 **业界做法**：分支策略（GitHub Flow / Trunk-Based）、Conventional Commits、Pull Request、Code Review。
-**本项目**：计划采用轻量 GitHub Flow。当前协作规则以根目录 `AGENTS.md` 第 5 节为准；完整 Commit、分支、PR 与审查规范将在确认后写入 `CONTRIBUTING.md`。
+**本项目**：采用轻量 GitHub Flow。Commit、分支、PR 与审查规范以根目录 `CONTRIBUTING.md` 为准。
 **你会学到**：Git 的正确用法（远不止 add commit push）、代码审查视角、以及如何写出别人（和三个月后的自己）看得懂的提交历史。
 
 ### 4.5 测试

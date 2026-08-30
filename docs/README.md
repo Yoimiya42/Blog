@@ -1,6 +1,6 @@
 # 项目文档索引
 
-规则和工作规矩不在这里，在根目录的 **[AGENTS.md](../AGENTS.md)**（唯一的 AI 规则文件）。`CONTRIBUTING.md` 目前只是占位，尚未启用。这里只放项目本身的资料。
+AI 规则在根目录的 **[AGENTS.md](../AGENTS.md)**；Git 和 GitHub 流程在 **[CONTRIBUTING.md](../CONTRIBUTING.md)**。这里只放项目本身的资料。
 
 | 文件 | 内容 | 什么时候看 |
 |---|---|---|

@@ -21,6 +21,7 @@ v1 目标上线：2026-09-30。
 | 为什么这么选 | `docs/adr/` |
 | 哪里凑合了 | `docs/tech-debt.md` |
 | 什么时候做什么 | `docs/ROADMAP.md` |
+| Git、Issue、PR 怎么走 | `CONTRIBUTING.md` |
 
 想改已经定下来的决策，写一份新 ADR，不要直接改旧的。
 
@@ -48,9 +49,11 @@ v1 目标上线：2026-09-30。
 
 ### 5.1 分工
 
-- **Claude Code 模式** — 主力写代码。在 `main` 分支上干活。
+- **Claude Code 模式** — 主力写代码。在 `claude/<Issue 编号>-<任务名>` 分支上干活。
 - **Claude Chat / Cowork 模式** — 读代码、规划、写和改 `docs/`。不改 `app/`、`lib/` 等代码目录。
-- **ChatGPT** — 可以写代码，但**只在 `chatgpt/<任务名>` 分支上**。不要直接改 `main`，不要自己合并分支，写完交给人工审核。如果发现工作区里有未提交的改动，那是别人留下的，不要覆盖，先提醒用户。
+- **ChatGPT** — 可以写代码，但**只在 `chatgpt/<Issue 编号>-<任务名>` 分支上**。没有 Issue 的准备性文档任务可以省略编号。
+
+所有 AI 都不要直接改 `main`，不要自己合并分支，写完交给人工审核。如果发现工作区里有未提交的改动，那是别人留下的，不要覆盖，先提醒用户。
 
 ### 5.2 串行原则（最重要的一条）
 
@@ -78,30 +81,11 @@ git 是唯一裁判，`main` 分支为准。
 
 ### 5.6 分支约定
 
-```
-main              主干，唯一可发布的分支
-chatgpt/<任务名>   ChatGPT 的工作分支，合并后删除
-claude/<任务名>    Claude 需要做大改动时的临时分支，合并后删除
-```
+分支命名、生命周期和合并方式以 `CONTRIBUTING.md` 为准。
 
 ### 5.7 Commit message 规范
 
-**Commit message 一律用英文，写短。** 中文只出现在代码注释的关键点和 `docs/` 里，不出现在 git 历史里。
-
-格式：`<type>: <做了什么>`，祈使句、小写开头、不加句号，标题一行不超过 50 字符。
-
-```
-feat: add item model and media table
-fix: handle empty slug in post route
-docs: record editor choice in ADR-0004
-chore: add gitignore
-refactor: merge agent rules into AGENTS.md
-wip: half-done R2 upload, do not merge
-```
-
-常用 type：`feat` 新功能、`fix` 修 bug、`docs` 只改文档、`refactor` 重构、`style` 格式、`test` 测试、`chore` 杂务、`wip` 半成品交接。
-
-只有当「为什么这么改」不明显时才写正文，也用英文，一两句话说清原因，不要复述改了哪些文件——那个 diff 里有。
+Commit 和 PR 标题规范以 `CONTRIBUTING.md` 为准。AI 只提议 commit，不自行提交，除非用户当场明确授权。
 
 ### 5.8 提交检查点
 
