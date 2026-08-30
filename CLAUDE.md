@@ -1,5 +1,6 @@
-# 看 AGENTS.md
+@AGENTS.md
 
-本项目的所有规则、项目上下文和多 AI 协作约定，都在根目录的 **[AGENTS.md](AGENTS.md)** 里。
+---
 
-**先读那一份，再动手。** 这个文件只是指路条，不要往里面写内容——规则只维护一份，避免两边说法不一致。
+## Claude Code-specific instructions
+
