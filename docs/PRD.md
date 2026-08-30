@@ -545,7 +545,7 @@ model Tag {
 | CI | GitHub Actions | — | PR 自动跑 lint 与 build |
 | 动效 | Motion (原 Framer Motion) | — | 树洞转场、页面过渡 |
 
-**仓库与分支**：`main` 为生产分支（当前叫 `init`，建议改名），功能开发走 `feat/xxx` 分支，合并前自测。Commit 信息用 Conventional Commits（`feat:` `fix:` `docs:` `refactor:`）。
+**仓库与协作流程**：当前以根目录 `AGENTS.md` 第 5 节为准；`CONTRIBUTING.md` 仍是占位文件，等流程逐项确认后再启用。
 
 ---
 

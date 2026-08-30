@@ -247,18 +247,13 @@ events.on('post.published', revalidateSitemap)
 
 **业界做法**：Issue 跟踪、看板（To Do / In Progress / Review / Done）、里程碑、Sprint。
 **本项目**：GitHub Issues + GitHub Projects 看板，里程碑对应 v1 / v1.5 / v2。
-**规矩**：每个功能开一个 Issue，关联 FR 编号；**一个任务的粒度控制在半天内能做完**，做不完说明拆得不够细；每个 commit 和 PR 关联 Issue 号。
+**具体规矩**：当前以根目录 `AGENTS.md` 第 5 节为准；`CONTRIBUTING.md` 尚未启用，避免提前固化未确认的细节。
 **你会学到**：如何把一个大目标拆成可执行、可验收的小块——这是工程能力里最被低估的一项。
 
 ### 4.4 版本控制与协作流程
 
 **业界做法**：分支策略（GitHub Flow / Trunk-Based）、Conventional Commits、Pull Request、Code Review。
-**本项目**：
-- `main` 为唯一长期分支（当前叫 `init`，**建议尽早改名为 `main`**），永远保持可部署。
-- 功能开发走短命分支：`feat/blog-editor`、`fix/image-upload`，做完开 PR 合回 `main`。
-- Commit 信息用 Conventional Commits：`feat(blog): add tag filtering`、`fix(admin): keyboard covering editor`、`docs:`、`refactor:`、`chore:`。这个格式能自动生成 CHANGELOG。
-- **即使只有你一个人，也要走 PR**。开 PR 后自己把 diff 从头看一遍，你会发现大量随手写下的问题。这是零成本的最高性价比实践。
-- PR 自审清单（放进 PR 模板）：有没有硬编码？有没有漏掉错误处理？输入校验做了吗？会不会有 N+1 查询？手机上试过吗？
+**本项目**：计划采用轻量 GitHub Flow。当前协作规则以根目录 `AGENTS.md` 第 5 节为准；完整 Commit、分支、PR 与审查规范将在确认后写入 `CONTRIBUTING.md`。
 **你会学到**：Git 的正确用法（远不止 add commit push）、代码审查视角、以及如何写出别人（和三个月后的自己）看得懂的提交历史。
 
 ### 4.5 测试

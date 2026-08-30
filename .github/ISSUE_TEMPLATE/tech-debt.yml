@@ -1,0 +1,45 @@
+name: Technical debt
+description: Record one consciously accepted engineering compromise.
+title: ""
+labels:
+  - tech debt
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Point to the affected file, module, or service.
+    validations:
+      required: true
+
+  - type: textarea
+    id: debt
+    attributes:
+      label: Compromise
+      description: Explain what was accepted and why it is debt.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Describe the current cost, risk, or limitation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repayment
+    attributes:
+      label: Suggested repayment
+      description: Describe a likely fix and the event that should trigger it.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: ledger
+    attributes:
+      label: Documentation
+      options:
+        - label: I will add this debt and the Issue link to docs/tech-debt.md.
+          required: true
