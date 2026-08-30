@@ -38,17 +38,21 @@ image upload fails on iOS Safari
 
 ## 3. Branches
 
-Use lowercase names with hyphens:
+Name branches by work, not contributor:
 
 ```text
-chatgpt/<issue>-<slug>
-claude/<issue>-<slug>
-human/<issue>-<slug>
+<type>/<issue>-<outcome>
 ```
 
-Example: `chatgpt/123-blog-editor`.
+Use the same types as Conventional Commits. Examples:
 
-One branch SHOULD address one Issue. Documentation preparation without an Issue MAY omit the number. Force-pushing shared branches is prohibited.
+```text
+feat/123-blog-editor
+fix/124-image-upload
+docs/125-workflow-rules
+```
+
+The Issue number MUST identify the tracked Project item. One branch MUST map to one primary Issue and one PR. Omitting the Issue number requires explicit approval.
 
 ## 4. Commits
 

@@ -56,13 +56,15 @@ v1 目标上线：2026-09-30。
 **核心前提：它们的记忆是分开的，互相看不见对方说过什么。**
 所以所有约定、决策、进度，只有写进这个仓库的文件里才算数。任何「我上次跟 AI 说过」都不作数。
 
-### 5.1 分工
+### 5.1 Responsibilities
 
-- **Claude Code 模式** — 主力写代码。在 `claude/<Issue 编号>-<任务名>` 分支上干活。
-- **Claude Chat / Cowork 模式** — 读代码、规划、写和改 `docs/`。不改 `app/`、`lib/` 等代码目录。
-- **ChatGPT** — 可以写代码，但**只在 `chatgpt/<Issue 编号>-<任务名>` 分支上**。没有 Issue 的准备性文档任务可以省略编号。
+- **Claude Code** is the primary implementation agent.
+- **Claude Chat / Cowork** may inspect code, plan work, and edit `docs/`. It MUST NOT edit application code.
+- **ChatGPT** may edit documentation and application code.
 
-所有 AI 都不要直接改 `main`，不要自己合并分支，写完交给人工审核。如果发现工作区里有未提交的改动，那是别人留下的，不要覆盖，先提醒用户。
+All AIs MUST use the work-driven branch format defined in `CONTRIBUTING.md`. Actor identity MUST NOT appear in branch names.
+
+AI MUST NOT edit `main` directly or merge without authorization. If unrelated uncommitted changes exist, stop and notify the user.
 
 ### 5.2 Serial execution
 
