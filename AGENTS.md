@@ -29,6 +29,14 @@ v1 目标上线：2026-09-30。
 
 **中国大陆必须可访问。** 禁用 Google Fonts、Google Analytics、reCAPTCHA 等被墙资源；字体自托管并子集化；登录主方式是邮箱 6 位验证码，不是魔法链接。引入任何新的第三方依赖或 CDN 前，先确认大陆可达，并写进 ADR。详见 ADR-0003。
 
+**Markdown MUST use concise technical English.** This is a project-level hard constraint for every new Markdown file and all newly written Markdown content.
+
+- Lead with the rule, decision, or outcome.
+- Use short sentences, clear headings, and precise terms.
+- Remove tutorials, conversational filler, repetition, and decorative prose.
+- Keep each rule in one authoritative location; link to it elsewhere.
+- Do not translate existing Chinese documentation unless the task requires it.
+
 ## 4. 工作规矩
 
 1. 任何新想法先写进 `docs/PRD.md` 并标注版本，不直接写进代码。
