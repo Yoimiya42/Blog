@@ -1,4 +1,4 @@
 <!--
-预留给 CI/CD、环境、部署门禁和回滚策略。
-等项目脚本、部署平台和环境划分实际确定后再替换本注释，避免提前记录未经验证的命令。
+Reserved for CI/CD, environments, deployment gates, and rollback strategy.
+Replace once scripts, platform, and environment split are settled. Do not record unverified commands.
 -->

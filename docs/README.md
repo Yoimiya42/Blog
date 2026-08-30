@@ -1,13 +1,13 @@
-# 项目文档索引
+# Documentation index
 
-AI 规则在根目录的 **[AGENTS.md](../AGENTS.md)**；Git 和 GitHub 流程在 **[CONTRIBUTING.md](../CONTRIBUTING.md)**。这里只放项目本身的资料。
+AI rules live in [AGENTS.md](../AGENTS.md). Git and GitHub workflow lives in [CONTRIBUTING.md](../CONTRIBUTING.md). This directory holds project material only.
 
-| 文件 | 内容 | 什么时候看 |
+| File | Contents | Read it when |
 |---|---|---|
-| [PRD.md](PRD.md) | 需求规格：定位、版本范围、站点地图、功能需求（FR 编号）、数据模型、非功能需求、技术选型、待决问题 | 开始任何功能前 |
-| [architecture.md](architecture.md) | 架构与工程规范：分层设计、五个扩展点、软件工程全流程实践、实践引入节奏 | 搭项目骨架时、纠结要不要抽象时 |
-| [adr/](adr/) | 架构决策记录，每个重要技术决策一份 | 做重要技术选型前后 |
-| [tech-debt.md](tech-debt.md) | 技术债台账 | 每次「先这样凑合一下」的时候 |
-| [ROADMAP.md](ROADMAP.md) | 版本目标与顺序；实时进度不在这里维护 | 决定下一版本做什么时 |
-| [engineering/](engineering/) | 尚未启用的工程细则占位 | 对应实践真正落地时 |
-| [runbooks/](runbooks/) | 部署、回滚、恢复等操作手册占位 | 对应系统上线后 |
+| [PRD.md](PRD.md) | Positioning, scope, sitemap, functional requirements (FR ids), data model, non-functional requirements, technology, open questions | Before starting any feature |
+| [architecture.md](architecture.md) | Layering, extension points, engineering practices, adoption sequence | When building project structure or deciding whether to abstract |
+| [adr/](adr/) | One record per significant technical decision | Before and after a significant technical choice |
+| [tech-debt.md](tech-debt.md) | Accepted compromises | Whenever you accept a shortcut |
+| [ROADMAP.md](ROADMAP.md) | Release scope and order; live status is not tracked here | When deciding what the next release contains |
+| [engineering/](engineering/) | Placeholders for engineering detail, not yet active | When the corresponding practice is actually in use |
+| [runbooks/](runbooks/) | Placeholders for deployment, rollback, and recovery procedures | After the system is live |

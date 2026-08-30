@@ -1,8 +1,8 @@
-# 技术债台账
+# Technical debt ledger
 
-这里只登记已经明确接受的妥协，不收集一般想法或未来功能。每项技术债应创建 GitHub Issue；实时进度以 Issue 为准，本表只保留项目长期需要记住的背景和链接。
+Records accepted compromises only, not ideas or future features. Every entry needs a GitHub Issue; the Issue tracks live status, this table keeps the long-term context and links.
 
-| ID | 位置 | 妥协与原因 | 影响 | 偿还触发条件 | Issue |
+| ID | Location | Compromise and reason | Impact | Repayment trigger | Issue |
 |---|---|---|---|---|---|
 
-<!-- 新增技术债时在表格追加一行；解决后删除该行，历史由已关闭的 Issue 和 Git 保留。 -->
+<!-- Append a row when taking on debt. Delete the row once repaid; history stays in the closed Issue and in Git. -->

@@ -1,4 +1,4 @@
 <!--
-本目录预留给可执行的运维手册，例如部署、回滚、数据库恢复和事故处理。
-对应系统上线并亲自演练后再新增手册，不记录尚未验证的步骤。
+Reserved for executable operational runbooks: deployment, rollback, database recovery, incident response.
+Add a runbook only after the procedure has been rehearsed against the live system.
 -->

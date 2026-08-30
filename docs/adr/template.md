@@ -1,36 +1,35 @@
-# NNNN. 决策标题
+# NNNN. Decision title
 
-- **状态**：提议中 / 已接受 / 已废弃 / 已被 NNNN 取代
-- **日期**：YYYY-MM-DD
-- **相关需求**：FR-XXX-NN
+- **Status**: Proposed / Accepted / Deprecated / Superseded by NNNN
+- **Date**: YYYY-MM-DD
+- **Requirements**: FR-XXX-NN
 
-## 背景
+## Context
 
-我们面临什么问题？有什么约束条件？为什么现在必须做这个决定？
-（只写事实，不写结论。）
+The problem, the constraints, and why the decision is needed now. Facts only, no conclusions.
 
-## 考虑过的选项
+## Options considered
 
-### 选项 A：……
-优点：
-缺点：
+### Option A
+Pros:
+Cons:
 
-### 选项 B：……
-优点：
-缺点：
+### Option B
+Pros:
+Cons:
 
-### 选项 C：……
-优点：
-缺点：
+### Option C
+Pros:
+Cons:
 
-## 决定
+## Decision
 
-我们选择 __，因为 __。
+We chose __ because __.
 
-## 后果
+## Consequences
 
-**好的**：
+**Benefits**:
 
-**坏的 / 需要承担的代价**：
+**Costs accepted**:
 
-**以后如果要改，成本有多大**：
+**Cost of reversing**:

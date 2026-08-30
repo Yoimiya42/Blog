@@ -1,4 +1,4 @@
 <!--
-预留给 Markdown 写入触发条件、文档生命周期和格式规范。
-等本轮 Git/GitHub 流程通过实际使用验证后再替换本注释。
+Reserved for documentation triggers, lifecycle, and format rules.
+Replace once the current Git and GitHub workflow has been validated in real use.
 -->

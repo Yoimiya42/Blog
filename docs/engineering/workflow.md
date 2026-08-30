@@ -1,5 +1,5 @@
 <!--
-预留给将来确实需要的工程操作细节。
-当前 Git 和 GitHub 规则以根目录 CONTRIBUTING.md 为准。
-本文件只在将来需要更详细的操作手册时启用，不复制同一套规则。
+Reserved for detailed engineering procedures.
+Git and GitHub rules live in CONTRIBUTING.md. Activate this file only when a more detailed
+runbook is genuinely needed, and never duplicate rules already defined elsewhere.
 -->
