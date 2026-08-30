@@ -105,7 +105,7 @@ prisma/
   seed.ts                     # 开发用的测试数据
 docs/
   PRD.md                      # 需求规格
-  02-architecture.md
+  architecture.md                # 架构与工程规范
   ROADMAP.md                  # 路线图
   tech-debt.md                # 技术债台账
   adr/                        # 架构决策记录
@@ -344,3 +344,4 @@ TypeScript strict 模式 · ESLint + Prettier + Husky · 分层目录结构与 i
 |---|---|---|
 | 2026-08-29 | v0.1 | 首次起草。确定分层架构、五个扩展点、SDLC 实践清单与引入节奏 |
 | 2026-08-30 | v0.2 | Removed section 6 (suggested learning order). Delivery sequencing is tracked in `docs/ROADMAP.md` and GitHub Issues. |
+| 2026-08-30 | v0.3 | Renamed from `02-architecture.md`. The numeric filename prefix was dropped project-wide when `01-requirements.md` became `PRD.md`. |

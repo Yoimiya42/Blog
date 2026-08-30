@@ -7,7 +7,7 @@
 
 ---
 
-## 1. 项目是什么
+## 1. About this project
 
 个人网站 + 技术博客 + 移动优先的管理后台。
 v1 目标上线：2026-09-30。
@@ -17,7 +17,7 @@ v1 目标上线：2026-09-30。
 | 想知道什么 | 去看哪个文件 |
 |---|---|
 | 要做什么功能、v1 范围 | `docs/PRD.md` |
-| 怎么分层、怎么写 | `docs/02-architecture.md` |
+| 怎么分层、怎么写 | `docs/architecture.md` |
 | 为什么这么选 | `docs/adr/` |
 | 哪里凑合了 | `docs/tech-debt.md` |
 | 什么时候做什么 | `docs/ROADMAP.md` |
@@ -48,13 +48,6 @@ v1 目标上线：2026-09-30。
 6. Code comments MUST use English and explain non-obvious decisions, not syntax.
 
 ---
-
-## 5. 多 AI 协作规则
-
-这个项目同时由 Claude 桌面版（Claude Code 模式 / Chat 和 Cowork 模式）和 ChatGPT 桌面版协助开发，三者都直接读写 `D:\Blog`。
-
-**核心前提：它们的记忆是分开的，互相看不见对方说过什么。**
-所以所有约定、决策、进度，只有写进这个仓库的文件里才算数。任何「我上次跟 AI 说过」都不作数。
 
 ### 5.1 Responsibilities
 
