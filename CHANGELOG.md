@@ -1,4 +1,4 @@
 <!--
-正式发布第一个版本时，用 Keep a Changelog 风格初始化本文件。
-发布前不要在这里复制开发进度；实时状态以 GitHub Issues 和 Project 为准。
+Initialise in Keep a Changelog format at the first release.
+Do not track development progress here; live status lives in GitHub Issues and Projects.
 -->

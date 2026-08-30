@@ -1,77 +1,52 @@
 # Contributing
 
-This document defines the Git and GitHub workflow. AI-specific operating rules remain in `AGENTS.md`.
+Git and GitHub workflow. AI-specific rules: `AGENTS.md`.
 
 ## 1. Workflow
 
-1. Create or select a ready GitHub Issue.
-2. Create one short-lived branch from the latest `main`.
+1. Create or select a ready Issue.
+2. Branch from the latest `main`.
 3. Make small, verified commits.
-4. Open a Pull Request and complete the template.
+4. Open a PR and complete the template.
 5. Resolve review comments and required checks.
-6. Squash-merge into `main`, then delete the branch.
+6. Squash-merge, then delete the branch.
 
 Direct changes to `main` are not allowed.
 
 ## 2. Issues
 
-Use one Issue for one independently verifiable outcome. Large outcomes MUST be split into sub-issues.
+One Issue, one independently verifiable outcome. Larger outcomes are split into sub-issues.
 
-An Issue is ready when it contains:
+An Issue is ready when it states the outcome, testable acceptance criteria, explicit out-of-scope items, and relevant FRs, ADRs, dependencies, or reproduction steps.
 
-- a clear outcome;
-- testable acceptance criteria;
-- explicit out-of-scope items;
-- relevant FRs, ADRs, dependencies, or reproduction steps.
-
-Feature titles MUST include the requirement ID:
+Feature titles carry the requirement ID; bug titles describe the observable failure:
 
 ```text
 [FR-BLOG-03] add code highlighting
-```
-
-Bug titles MUST describe the observable failure:
-
-```text
 image upload fails on iOS Safari
 ```
 
 ## 3. Branches
 
-Name branches by work, not contributor:
+Named by work, not contributor:
 
 ```text
 <type>/<issue>-<outcome>
-```
 
-Use the same types as Conventional Commits. Examples:
-
-```text
 feat/123-blog-editor
 fix/124-image-upload
 docs/125-workflow-rules
 ```
 
-The Issue number MUST identify the tracked Project item. One branch MUST map to one primary Issue and one PR. Omitting the Issue number requires explicit approval.
+Types match Conventional Commits. The Issue number identifies the tracked Project item. One branch maps to one primary Issue and one PR. Omitting the Issue number requires explicit approval.
 
 ## 4. Commits
 
-Use Conventional Commits:
+Conventional Commits: `<type>[optional scope]: <description>`.
 
-```text
-<type>[optional scope]: <description>
-```
+Types: `feat`, `fix`, `docs`, `refactor`, `test`, `perf`, `build`, `ci`, `chore`, `revert`.
 
-Allowed types: `feat`, `fix`, `docs`, `refactor`, `test`, `perf`, `build`, `ci`, `chore`, `revert`.
-
-Commit messages MUST:
-
-- be written in English;
-- use an imperative, lowercase description without a period;
-- keep the subject within 50 characters;
-- represent one logical change.
-
-Use the body only to explain non-obvious reasons or trade-offs. Temporary WIP commits MUST be removed by squash merge.
+Messages MUST be English, imperative, lowercase, without a trailing period, within 50 characters, and cover one logical change. Use the body only for non-obvious reasons or trade-offs. Squash merge removes WIP commits.
 
 ```text
 feat(blog): add tag filtering
@@ -79,9 +54,9 @@ fix(admin): preserve failed upload draft
 docs: record editor decision
 ```
 
-## 5. Pull Requests
+## 5. Pull requests
 
-The PR title MUST follow the commit format because it becomes the squash commit title.
+The PR title follows the commit format; it becomes the squash commit title.
 
 A PR MUST:
 
@@ -90,30 +65,30 @@ A PR MUST:
 - describe verification, risk, and rollback;
 - include screenshots or a preview link for UI changes;
 - update related requirements, ADRs, and technical debt in the same PR;
-- pass all configured required checks.
+- pass all required checks.
 
-Use a draft PR for incomplete work. The repository owner performs the final review and merge unless explicitly delegated.
+Incomplete work goes in a draft PR. The repository owner performs the final review and merge unless explicitly delegated.
 
 ## 6. Tracking
 
-GitHub Project is the source of truth for current progress. `docs/ROADMAP.md` records version scope, not daily status.
+GitHub Project is the source of truth for progress. `docs/ROADMAP.md` records release scope, not daily status.
 
 ```text
 Backlog -> Ready -> In progress -> In review -> Done
 ```
 
-Milestones represent releases. Recommended fields are Priority, Size, and Target version.
+Milestones represent releases. Recommended fields: Priority, Size, Target version.
 
-## 7. Merge and Completion
+## 7. Merge
 
-Before merge, acceptance criteria MUST pass, review threads MUST be resolved, and documentation MUST be current.
+Before merge: acceptance criteria pass, review threads resolved, documentation current.
 
-Use squash merge and delete the source branch. After merge, close the Issue, set the Project item to `Done`, and verify the target environment when deployment is involved.
+Squash-merge and delete the branch. After merge, close the Issue, set the Project item to `Done`, and verify the target environment when a deployment is involved.
 
-## 8. Automation Boundary
+## 8. Automation boundary
 
-AI maintains Issues, branches, Project status, and Pull Requests. The repository owner approves each exact commit diff and message.
+AI maintains Issues, branches, Project status, and PRs. The owner approves each exact commit diff and message.
 
-Unless the user restricts it, commit approval also authorizes the AI to commit, push the current branch, and open or update its PR. It never authorizes merge. Merge requires explicit approval.
+Unless restricted, commit approval also authorises the AI to commit, push the current branch, and open or update its PR. It never authorises merge; merge requires explicit approval.
 
-AI MUST report every created or completed Issue, branch, commit, and PR.
+AI MUST report every Issue, branch, commit, and PR it creates or completes.
