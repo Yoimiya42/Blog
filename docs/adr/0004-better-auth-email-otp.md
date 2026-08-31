@@ -30,7 +30,7 @@ Cons: The project would own session rotation, token security, expiry, abuse cont
 
 ## Decision
 
-Use Better Auth with its email OTP flow and database-backed sessions. Resend sends six-digit codes. v1 ships the full login path for the owner only: `/login`, the OTP flow, 30-day sessions, and GitHub login as the owner's fallback if mainland delivery proves unreliable. There is no self-registration in v1; codes go only to addresses already present in `User`. v1.5 opens the same system to visitors.
+Use Better Auth with its email OTP flow and database-backed sessions. Resend sends six-digit codes. v1 enables the owner account only. Visitor email and GitHub login remain in v1.5.
 
 Rate limits and one-time-code state must use durable storage. In-memory counters are not valid in a serverless runtime. QQ Mail and 163 Mail delivery tests block release.
 
