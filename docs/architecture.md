@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.4 · 2026-08-30
+> v0.5 · 2026-08-31
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -71,7 +71,7 @@ src/
       index.ts                #   Sole public export
     moment/  item/  photo/  comment/  auth/  media/  tag/
   components/
-    ui/                       # Generic, business-free
+    ui/                       # Admin primitives; public pages may use custom components
     layout/
   lib/
     db.ts                     #   Prisma singleton
@@ -79,7 +79,7 @@ src/
     mail/                     # * Mail adapter
     metadata/                 # * Metadata adapters
     events.ts                 # * Event bus
-    auth.ts
+    auth.ts                   # Better Auth server configuration
     env.ts                    #   Centralised env validation
   config/
     content-types.ts          # * Content type registry
@@ -97,6 +97,16 @@ tests/
 ```
 
 The five `*` entries are the project's only extension points.
+
+### Technology baseline
+
+- Next.js 16 App Router and strict TypeScript form the application runtime.
+- Tailwind CSS v4 is the styling base. shadcn/ui and Radix are limited to admin primitives. Public pages may use custom CSS and components.
+- Neon PostgreSQL in Singapore is the source of truth. Prisma is selected, but its major version and runtime adapter remain provisional until bootstrap validation.
+- Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
+- Cloudflare R2 stores media behind the project domain.
+- Pure Markdown is authoritative. remark, rehype, and Shiki render content on the server. See ADR-0005.
+- Hosting and image processing remain provisional until the ADR-0006 deployment spike passes.
 
 ---
 
@@ -206,13 +216,13 @@ Any failing row is an architectural defect.
 
 **CI/CD.**
 - GitHub Actions runs `lint`, `typecheck`, `test`, `build` on every push and PR. Any failure blocks merge.
-- Every PR gets a Vercel preview URL, openable on a phone.
+- Every PR gets a provider preview URL, openable on a phone. The provider remains provisional under ADR-0006.
 - Merging to `main` deploys to production.
 - Husky and lint-staged gate commits locally.
 
 **Database operations.** Migrations via `prisma migrate`, committed. `prisma/seed.ts` populates a new environment in one command. The Neon restore procedure MUST be rehearsed; an untested backup is not a backup. Review slow queries after launch and use `EXPLAIN` to catch ORM N+1 patterns.
 
-**Observability.** Sentry for front-end and back-end errors. Structured logs for login, publish, upload, delete. Vercel Analytics for performance, Umami for traffic, UptimeRobot for availability alerts.
+**Observability.** Structured logs cover login, publish, upload, and delete. Error and availability providers require a separate decision and mainland reachability check. Traffic analytics are deferred beyond v1.
 
 **Security.** After v1.5, audit against the OWASP Top 10 and commit the report to `docs/`. Enable Dependabot.
 
@@ -222,7 +232,7 @@ Any failing row is an architectural defect.
 
 ## 5. Adoption sequence
 
-**v1.** TypeScript strict · ESLint + Prettier + Husky · layered structure with import boundaries · migration discipline · zod validation · `lib/env.ts` · branch strategy, Conventional Commits, self-reviewed PRs · ADRs · GitHub Actions baseline · Vercel Preview · Sentry · authorisation and validation unit tests · debt ledger
+**v1.** TypeScript strict · ESLint + Prettier + Husky · layered structure with import boundaries · migration discipline · zod validation · `lib/env.ts` · branch strategy, Conventional Commits, self-reviewed PRs · ADRs · GitHub Actions baseline · provider preview · structured error capture · authorisation and validation unit tests · debt ledger
 
 **v1.5.** Business-logic unit tests · Playwright smoke tests · GitHub Projects in active use · Dependabot · structured logging · generated CHANGELOG
 
@@ -240,3 +250,4 @@ Any failing row is an architectural defect.
 | 2026-08-30 | v0.2 | Removed the suggested learning order |
 | 2026-08-30 | v0.3 | Renamed from `02-architecture.md` |
 | 2026-08-30 | v0.4 | Condensed to concise technical English. No standards changed |
+| 2026-08-31 | v0.5 | Aligned architecture with the confirmed technology baseline and provisional hosting decision |

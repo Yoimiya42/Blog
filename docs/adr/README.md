@@ -17,3 +17,6 @@ Template: `template.md`.
 | [0001](0001-fullstack-over-static.md) | Full-stack application over a static site | Accepted | 2026-08-29 |
 | [0002](0002-unified-item-table.md) | One shared table for all life-list categories | Accepted | 2026-08-29 |
 | [0003](0003-china-accessibility.md) | Mainland China accessibility as a hard constraint | Accepted | 2026-08-29 |
+| [0004](0004-better-auth-email-otp.md) | Better Auth with email OTP | Accepted | 2026-08-31 |
+| [0005](0005-markdown-authoring.md) | Pure Markdown authoring | Accepted | 2026-08-31 |
+| [0006](0006-hosting-platform-spike.md) | Hosting platform validation spike | Proposed | 2026-08-31 |

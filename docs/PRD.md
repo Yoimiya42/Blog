@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.4 · 2026-08-30 · Draft
+> v0.5 · 2026-08-31 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -250,7 +250,7 @@ model User {
   role          Role      @default(VISITOR)
   createdAt     DateTime  @default(now())
   lastSeenAt    DateTime?
-  accounts      Account[]      // Auth.js provider links
+  accounts      Account[]      // Better Auth provider links
   sessions      Session[]
   comments      Comment[]
   itemRatings   ItemRating[]
@@ -281,7 +281,7 @@ model Post {
   slug        String     @unique
   title       String
   summary     String?
-  content     String                    // Markdown / MDX source
+  content     String                    // Markdown source
   coverId     String?
   cover       Media?     @relation(fields: [coverId], references: [id])
   status      PubStatus  @default(DRAFT)
@@ -439,14 +439,14 @@ Every rule is blocking. Violating one prevents mainland visitors from loading th
 | NFR-CN-02 | No Google Analytics, reCAPTCHA, Tag Manager | Blocked; slows every page |
 | NFR-CN-03 | Google login is never the only or default method | Mainland visitors hang. Secondary placement, with a warning |
 | NFR-CN-04 | Primary login is a 6-digit email code, not a magic link | Chinese mail providers rewrite external links. Configure SPF, DKIM, DMARC; prompt users to check spam |
-| NFR-CN-05 | Custom domain required; never expose `*.vercel.app` | Poisoned in mainland China |
+| NFR-CN-05 | Custom domain required; never expose provider domains such as `*.vercel.app` or `*.workers.dev` | Provider domains may be unreliable in mainland China |
 | NFR-CN-06 | Image CDN uses a custom domain, not `*.r2.dev` | Same |
 | NFR-CN-07 | Verify every third-party script is reachable before launch | Comments, analytics, maps, fonts, emoji: any one breaks the page |
 | NFR-CN-08 | First paint never depends on third-party resources | The body renders even if a third party is down |
 | NFR-CN-09 | No ICP filing; 2–5s first paint accepted | Filing needs a domestic entity, and personal filings forbid interactive features |
 | NFR-CN-10 | A mainland tester completes load, browse, register, log in, comment before launch | The only reliable verification |
 
-Deploy to Vercel Hong Kong or Singapore, with the database in the same region.
+Hosting is provisional under ADR-0006. Keep compute and Neon in nearby regions where the selected platform permits.
 
 ### 6.2 Performance
 
@@ -479,16 +479,16 @@ Deploy to Vercel Hong Kong or Singapore, with the database in the same region.
 
 ### 6.6 Budget
 
-Target £15–30 per year, mostly the domain.
+Target £15–30 per year before paid compute. Cloudflare Workers Paid adds at least $60 per year and requires explicit approval.
 
 | Item | Choice | Cost |
 |---|---|---|
 | Domain | Cloudflare Registrar / Namecheap | £10–15 / year |
-| Hosting | Vercel Hobby | Free |
+| Hosting | Provisional: Vercel Hobby or Cloudflare Workers Paid | Free or $5 minimum / month |
 | Database | Neon free tier | Free, 0.5GB |
 | Image storage | Cloudflare R2 | Free under 10GB, no egress fees |
 | Email | Resend free tier | 3000 / month |
-| Analytics | Umami Cloud / Vercel Analytics | Free tier |
+| Analytics | None in v1 | Free |
 
 Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 
@@ -496,25 +496,27 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 
 ## 7. Technology
 
-| Layer | Choice | Version | Reason |
-|---|---|---|---|
-| Framework | Next.js (App Router) | 15.x | Pages, API, admin in one project |
-| Language | TypeScript (strict) | 5.x | Keeps a growing codebase controllable |
-| Styling | Tailwind CSS | v4 | Constrained, pairs with design tokens |
-| Components | shadcn/ui + Radix | — | Source in-repo, fully restylable |
-| Database | PostgreSQL on Neon | — | Relational, free tier, serverless-friendly |
-| ORM | Prisma | 6.x | Schema is documentation; mature migrations |
-| Auth | Auth.js (NextAuth) | v5 | Providers, sessions, security handled |
-| Object storage | Cloudflare R2 | — | No egress fees, custom domain (NFR-CN-06) |
-| Image pipeline | sharp + next/image | — | WebP, multiple sizes, blurhash |
-| Editor | Pending | — | OQ-03, key v1 decision |
-| Markdown | remark / rehype + Shiki | — | Build-time highlighting, zero client cost |
-| Email | Resend | — | Login codes and notifications |
-| Hosting | Vercel (HK or SG) | — | Push to deploy; see NFR-CN-05 |
-| Analytics | Umami Cloud | — | Cookie-free, no consent banner |
-| Code quality | ESLint + Prettier + Husky | — | Pre-commit checks |
-| CI | GitHub Actions | — | Lint and build on every PR |
-| Motion | Motion | — | Hidden-entrance and page transitions |
+`Confirmed` choices are implementation defaults. `Provisional` choices require the named validation before implementation.
+
+| Layer | Choice | Version | Status | Decision |
+|---|---|---|---|---|
+| Framework | Next.js App Router | 16.x | Confirmed | One application for pages, server routes, and admin |
+| Language | TypeScript, strict mode | Current compatible | Confirmed | Required for all application code |
+| Styling | Tailwind CSS plus custom CSS | v4 | Confirmed | Utilities for admin; custom CSS is allowed for the public visual system |
+| Components | shadcn/ui and Radix | Current compatible | Confirmed | Admin primitives only; do not impose the library on public pages |
+| Database | PostgreSQL on Neon, Singapore | Current managed service | Confirmed | Relational source of truth close to the target deployment region |
+| ORM | Prisma | 7.x candidate | Provisional | Confirm the current production release, runtime adapter, and migration path during bootstrap |
+| Authentication | Better Auth with email OTP | Current compatible | Confirmed | Six-digit email codes and database sessions; see ADR-0004 |
+| Object storage | Cloudflare R2 on a custom domain | Current managed service | Confirmed | Store all uploaded media behind the project domain |
+| Image pipeline | Host-dependent | — | Provisional | Compare server-side `sharp` with browser preprocessing in the hosting spike; see ADR-0006 |
+| Content | Pure Markdown with remark, rehype, and Shiki | Current compatible | Confirmed | Markdown is authoritative; MDX is excluded; see ADR-0005 |
+| Editor | Text area, preview, and mobile toolbar | — | Confirmed | Keep authoring portable and dependency-light; see ADR-0005 |
+| Email | Resend | Current managed service | Confirmed | Release requires successful code delivery to QQ Mail and 163 Mail |
+| Hosting | Vercel or Cloudflare Workers with OpenNext | — | Provisional | Select through a representative deployment spike; see ADR-0006 |
+| Analytics | None in v1 | — | Confirmed | Reconsider cookie-free analytics in v1.5 |
+| Code quality | ESLint, Prettier, Husky, lint-staged | Current compatible | Confirmed | Run local checks before user commits |
+| CI | GitHub Actions | — | Confirmed | Run lint, type checks, tests, and a production build on every PR |
+| Motion | Motion | Current compatible | Provisional | Confirm after OQ-02 defines the visual direction |
 
 Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 
@@ -526,7 +528,7 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 |---|---|---|---|
 | OQ-01 | Domain name (`.com` preferred, `.dev` second) | Site, email, SEO | Before v1 |
 | OQ-02 | Visual direction: references, palette, type, motion | All design work | v1 design phase |
-| OQ-03 | Editor: Markdown with preview, or WYSIWYG | FR-ADMIN-03 | Before v1 |
+| OQ-03 | Resolved: pure Markdown with preview and a mobile toolbar | FR-ADMIN-03 | Closed 2026-08-31; ADR-0005 |
 | OQ-04 | Rating scale: 5 stars with halves, 10-point, or none | FR-LIFE-04 data type | Before v2 |
 | OQ-05 | Bilingual EN/ZH content | FR-HOME-09, architectural | Before v1, hard to retrofit |
 | OQ-06 | Track repeat experiences | Whether to split out `ItemLog` | Before v2 |
@@ -545,3 +547,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-08-29 | v0.2 | Split architecture into its own file; added `adr/` and `tech-debt.md` |
 | 2026-08-30 | v0.3 | Removed learning-goal sections |
 | 2026-08-30 | v0.4 | Condensed to concise technical English. No requirements changed |
+| 2026-08-31 | v0.5 | Recorded the confirmed technology baseline and isolated platform-dependent choices |
