@@ -39,13 +39,13 @@ A restrained academic and career homepage, with a private interest space behind 
 
 ### 2.1 v1 — launch by 2026-09-30
 
-Homepage · blog (list, detail, tags) · mobile-first admin (write, upload, publish) · domain · deployment · owner-only account skeleton · hidden entrance.
+Homepage · blog (list, detail, tags) · mobile-first admin (write, upload, publish) · domain · deployment · owner login (email code, GitHub fallback, 30-day session) · hidden entrance.
 
 Excluded: life list, gallery, moments, visitor login, comments, ratings, whispers, subscriptions, dark mode, i18n.
 
 ### 2.2 v1.5 — 2026-10
 
-Moments · visitor login (GitHub, email code) · polymorphic comments.
+Moments · visitor registration and login (opens the v1 authentication system to visitors) · polymorphic comments.
 
 ### 2.3 v2 — 2026-11 to 2026-12
 
@@ -87,7 +87,7 @@ Gallery · whisper inbox · update subscriptions · dark mode · RSS · travel m
 | `/gallery/[category]` | Category gallery | v2.5 | landscape / portrait / documentary |
 | `/gallery/[id]` | Single photo | v2.5 | Large view, EXIF, story |
 | `/whisper` | Whisper form | v2.5 | |
-| `/login` | Login | v1.5 | |
+| `/login` | Login | v1 | Owner only in v1; opened to visitors in v1.5 |
 | `/api/*` | API routes | v1 | |
 | `/rss.xml` `/sitemap.xml` | Feed and index | v1.5 | |
 
@@ -192,11 +192,11 @@ Sources: TMDB (films), Google Books or Open Library (books), IGDB (games, needs 
 
 | ID | Requirement | Version | Acceptance |
 |---|---|---|---|
-| FR-AUTH-01 | Email login, 6-digit code | v1.5 | Primary method, see 6.1 |
-| FR-AUTH-02 | GitHub login | v1.5 | |
+| FR-AUTH-01 | Email login, 6-digit code | v1 | Primary method, see 6.1. v1 serves the owner only: no self-registration, codes are sent only to addresses already in `User`. Opened to visitors in v1.5 |
+| FR-AUTH-02 | GitHub login | v1 | Owner fallback if mainland OTP delivery fails, see ADR-0004. Opened to visitors in v1.5 |
 | FR-AUTH-03 | Google login | v2 | Secondary, labelled as needing network access |
 | FR-AUTH-04 | Owner account | v1 | `role = OWNER`, sole admin access |
-| FR-AUTH-05 | Session persistence and logout | v1.5 | 30-day session |
+| FR-AUTH-05 | Session persistence and logout | v1 | 30-day database-backed session; required by FR-ADMIN-01 |
 | FR-AUTH-06 | Self-service account and data deletion | v1.5 | GDPR, see 6.5 |
 | FR-SOCIAL-01 | Comments on posts, moments, items, photos | v1.5 | One polymorphic implementation |
 | FR-SOCIAL-02 | Threaded replies | v1.5 | One level only |
@@ -548,3 +548,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-08-30 | v0.3 | Removed learning-goal sections |
 | 2026-08-30 | v0.4 | Condensed to concise technical English. No requirements changed |
 | 2026-08-31 | v0.5 | Recorded the confirmed technology baseline and isolated platform-dependent choices |
+| 2026-08-31 | v0.6 | Aligned FR-AUTH with ADR-0004: owner login, session persistence, and GitHub fallback move to v1; v1.5 opens the same system to visitors |
