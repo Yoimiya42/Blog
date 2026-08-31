@@ -1,8 +1,9 @@
 # 0006. Hosting platform validation spike
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-08-31
 - **Requirements**: NFR-CN-05, NFR-CN-06, NFR-CN-08, NFR-CN-09, NFR-CN-10, PRD section 6.2
+- **Supersedes**: ADR-0001 deployment platform and region only
 
 ## Context
 
@@ -30,7 +31,7 @@ Cons: Adds patching, process supervision, backup, and deployment operations beyo
 
 ## Decision
 
-No hosting platform is accepted yet. Build one representative vertical slice and deploy it to Vercel and Cloudflare Workers before application implementation depends on either platform.
+Accept the validation spike as a mandatory gate. No hosting platform is accepted yet. Build one representative vertical slice and deploy it to Vercel and Cloudflare Workers before application implementation depends on either platform.
 
 The spike must verify:
 
@@ -44,7 +45,7 @@ The spike must verify:
 - Cold and warm TTFB, error rate, CPU use, bundle size, and estimated monthly cost.
 - UK and mainland China tests on the same representative routes.
 
-An accepted follow-up ADR will select the host and supersede the deployment details in ADR-0001. The image pipeline and Prisma major version remain provisional until this spike passes.
+This ADR supersedes only ADR-0001's selection of Vercel and its deployment region. ADR-0001's full-stack application decision remains accepted. A follow-up ADR will select the host after the spike. The image pipeline and Prisma major version remain provisional until the spike passes.
 
 ## Consequences
 
