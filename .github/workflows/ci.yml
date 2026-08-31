@@ -1,0 +1,16 @@
+# Placeholder workflow. Replace this file after package scripts and the runtime are present.
+# It is manual-only so merging the documentation foundation cannot trigger a fake CI gate.
+name: CI placeholder
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain placeholder
+        run: echo "CI will be enabled after project scripts exist."

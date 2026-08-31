@@ -1,21 +1,22 @@
-# 架构决策记录（ADR）
+# Architecture Decision Records
 
-每做一个重要技术决策，在这里写一份。文件名格式 `NNNN-短标题.md`，编号递增。
+One record per significant technical decision. Filename format `NNNN-short-title.md`, numbered sequentially.
 
-## 规矩
+## Rules
 
-1. **只增不改**。决策被推翻时，不修改旧文件，而是新写一份，并把旧的状态改成「已被 NNNN 取代」。
-2. 什么算「重要决策」：影响面广、难以撤回、或者当时纠结过的。选 Prisma 还是 Drizzle 算；用 `map` 还是 `for` 不算。
-3. 写作时间控制在 20 分钟内。写不出「其它选项」说明还没想清楚，那正是该停下来想的时候。
+1. **Append only.** A reversed decision produces a new record; the old file is not edited beyond setting its status to `Superseded by NNNN`.
+2. A decision is significant when it is broad in impact, hard to reverse, or genuinely contested. Prisma versus Drizzle qualifies; `map` versus `for` does not.
+3. Keep writing to 20 minutes. If the alternatives section is hard to fill, the decision is not yet understood.
 
-## 模板
+Template: `template.md`.
 
-见 `template.md`。
+## Index
 
-## 索引
-
-| 编号 | 标题 | 状态 | 日期 |
+| ID | Title | Status | Date |
 |---|---|---|---|
-| [0001](0001-fullstack-over-static.md) | 采用全栈自建而非静态站点 | 已接受 | 2026-08-29 |
-| [0002](0002-unified-item-table.md) | 四类清单条目共用一张表 | 已接受 | 2026-08-29 |
-| [0003](0003-china-accessibility.md) | 将大陆可访问性作为硬约束 | 已接受 | 2026-08-29 |
+| [0001](0001-fullstack-over-static.md) | Full-stack application over a static site | Accepted | 2026-08-29 |
+| [0002](0002-unified-item-table.md) | One shared table for all life-list categories | Accepted | 2026-08-29 |
+| [0003](0003-china-accessibility.md) | Mainland China accessibility as a hard constraint | Accepted | 2026-08-29 |
+| [0004](0004-better-auth-email-otp.md) | Better Auth with email OTP | Accepted | 2026-08-31 |
+| [0005](0005-markdown-authoring.md) | Pure Markdown authoring | Accepted | 2026-08-31 |
+| [0006](0006-hosting-platform-spike.md) | Hosting platform validation spike | Accepted | 2026-08-31 |

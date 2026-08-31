@@ -1,149 +1,101 @@
-# AGENTS.md — 本项目唯一的 AI 规则文件
+# AGENTS.md — the single AI rule file
 
-> **这份文件是所有 AI 助手的唯一规则来源。**
-> Claude（Code / Chat / Cowork 模式）和 ChatGPT 都读这一份。
-> `CLAUDE.md` 只是一个指向这里的指路条，不要往它里面写内容。
-> 要改规则，只能改这份文件，不要新建自己的规则文件。改完要提交。
+> The only source of AI rules. Claude (Code / Chat / Cowork) and ChatGPT all read this file.
+> `CLAUDE.md` is a pointer; put no content there. Change rules only here, and commit the change.
 
 ---
 
-## 1. 项目是什么
+## 1. Project
 
-个人网站 + 技术博客 + 移动优先的管理后台。
-技术栈：Next.js App Router + TypeScript + Postgres (Neon) + Prisma + Auth.js + Cloudflare R2 + Vercel。
-v1 目标上线：2026-09-30。
+Personal site: homepage, technical blog, mobile-first admin. v1 target 2026-09-30.
 
-## 2. 开工前必读
+## 2. Required reading
 
-| 想知道什么 | 去看哪个文件 |
+| Question | File |
 |---|---|
-| 要做什么功能、v1 范围 | `docs/01-requirements.md` |
-| 怎么分层、怎么写 | `docs/02-architecture.md` |
-| 为什么这么选 | `docs/adr/` |
-| 哪里凑合了 | `docs/tech-debt.md` |
-| 现在做到哪了、谁在做 | `docs/WORKLOG.md` |
+| What to build, v1 scope | `docs/PRD.md` |
+| How to structure code | `docs/architecture.md` |
+| Why a decision was made | `docs/adr/` |
+| Where we compromised | `docs/tech-debt.md` |
+| What ships when | `docs/ROADMAP.md` |
+| Git, Issue, PR workflow | `CONTRIBUTING.md` |
 
-想改已经定下来的决策，写一份新 ADR，不要直接改旧的。
+Revise a settled decision with a new ADR, never by editing an old one.
 
-## 3. 硬约束
+## 3. Hard constraints
 
-**中国大陆必须可访问。** 禁用 Google Fonts、Google Analytics、reCAPTCHA 等被墙资源；字体自托管并子集化；登录主方式是邮箱 6 位验证码，不是魔法链接。引入任何新的第三方依赖或 CDN 前，先确认大陆可达，并写进 ADR。详见 ADR-0003。
+**Mainland China MUST be able to reach the site.** No Google Fonts, Analytics, reCAPTCHA, or other blocked resources. Fonts are self-hosted and subsetted. Primary login is a 6-digit email code, not a magic link. Confirm mainland reachability and record an ADR before adding any third-party dependency or CDN. See ADR-0003.
 
-## 4. 工作规矩
+**All content written or rewritten by AI MUST use concise technical English.** Applies to documentation, rules, comments, config descriptions, and templates.
 
-1. 任何新想法先写进 `01-requirements.md` 并标注版本，不直接写进代码。
-2. 任何重要技术决策先写 ADR，再动手。
-3. 任何妥协立刻记进 `tech-debt.md`。
-4. 文档改动和代码改动一起提交，不要分开。
-5. v1 范围之外的想法一律推后，不要塞进 v1。
-6. 注释默认用英文，关键点中英双语。用户是新手，改动要解释清楚为什么。
+- Lead with the rule, decision, or outcome.
+- Short sentences, clear headings, precise terms.
+- No tutorials, filler, repetition, or decorative prose.
+- One authoritative location per rule; link to it elsewhere.
+- Preserve untouched legacy Chinese content; convert anything rewritten.
+- Another language only when the user requires it for product content.
 
----
+## 4. Working rules
 
-## 5. 多 AI 协作规则
+1. New ideas go into `docs/PRD.md` with a version tag before any code.
+2. Significant technical decisions get an ADR before implementation.
+3. Compromises are recorded in `docs/tech-debt.md` immediately.
+4. Documentation ships in the same commit as the code it describes.
+5. Ideas outside v1 scope are deferred, not absorbed.
+6. Code comments MUST use English and explain non-obvious decisions, not syntax.
 
-这个项目同时由 Claude 桌面版（Claude Code 模式 / Chat 和 Cowork 模式）和 ChatGPT 桌面版协助开发，三者都直接读写 `D:\Blog`。
+## 5. Agent rules
 
-**核心前提：它们的记忆是分开的，互相看不见对方说过什么。**
-所以所有约定、决策、进度，只有写进这个仓库的文件里才算数。任何「我上次跟 AI 说过」都不作数。
+### 5.1 Responsibilities
 
-### 5.1 分工
+- **Claude Code** is the primary implementation agent.
+- **Claude Chat / Cowork** may inspect code, plan, and edit `docs/`. It MUST NOT edit application code.
+- **ChatGPT** may edit documentation and application code.
 
-- **Claude Code 模式** — 主力写代码。在 `init` 分支上干活。
-- **Claude Chat / Cowork 模式** — 读代码、规划、写和改 `docs/`。不改 `app/`、`lib/` 等代码目录。
-- **ChatGPT** — 可以写代码，但**只在 `chatgpt/<任务名>` 分支上**。不要直接改 `init`，不要自己合并分支，写完交给人工审核。如果发现工作区里有未提交的改动，那是别人留下的，不要覆盖，先提醒用户。
+Branch names follow `CONTRIBUTING.md` and MUST NOT contain actor identity. AI MUST NOT edit `main` directly or merge without authorisation.
 
-### 5.2 串行原则（最重要的一条）
+### 5.2 Serial execution
 
-**同一时刻只允许一个 AI 写盘。**
+1. Run `git status` before starting. Unrelated uncommitted changes: stop and notify the user.
+2. AI stages but never commits. See 5.6.
+3. The worktree MUST be clean before handing off to another AI.
+4. No concurrent AI work sessions.
 
-文件系统没有锁。两个 AI 同时改同一个文件，后写的会直接盖掉先写的，而且没有任何提示。git 也救不回未提交的内容。
+### 5.3 Prohibited
 
-1. 开工前先跑 `git status`。工作区不干净就先问人，不要在别人没提交的改动上面继续写。
-2. **AI 不自己执行 `git commit`**（除非用户当场明确说「帮我提交」）。到检查点就停下来，按 5.8 提议提交。
-3. 切换到另一个 AI 之前，工作区必须已经是干净的——由用户来执行提交。没提交就不要换窗口。
-4. 提交后在 `docs/WORKLOG.md` 追加一条交接记录。
-5. 不要在两个窗口里同时按下「开始」。
+- `git push --force`; `git reset --hard` on others' commits.
+- Deleting or rewriting existing decisions in `docs/`. Append only.
+- Third-party dependencies or CDNs unreachable from mainland China.
+- Changes to `.claude/` or `.git/` internals.
+- Experimental work on `main`.
+- Additional rule files (`.cursorrules`, `.github/copilot-instructions.md`, and similar).
 
-### 5.3 交接记录格式
+### 5.4 Conflict resolution
 
-新记录加在 `docs/WORKLOG.md` 最上面：
+Git is the arbiter; `main` wins.
 
-```
-## 2026-08-29 · Claude Code · init
-做了：搭好 Prisma schema 的 Item 和 Media 表
-没做完：Media 的 R2 上传逻辑还是空的
-下一步：接 R2 SDK，见 FR-xx
-```
+- Uncommitted work overwritten: it is gone. Redo it.
+- Merge conflict: a human decides. AI MUST NOT choose automatically.
+- Contradictory documents: the newest ADR wins. Fix the stale document immediately.
 
-### 5.4 禁止事项
+### 5.5 Branches and commits
 
-- 不要 `git push --force`，不要 `git reset --hard` 别人的提交。
-- 不要删除或重写 `docs/` 里已有的决策，只能追加。
-- 不要引入中国大陆不可达的第三方依赖或 CDN。
-- 不要动 `.claude/`、`.git/` 内部文件。
-- 不要在 `init` 分支上做实验性大改，开分支。
-- 不要新建自己的规则文件（`.cursorrules`、`.github/copilot-instructions.md` 之类）。规则只有这一份。
+Naming, lifecycle, merge strategy, and commit format: `CONTRIBUTING.md`.
 
-### 5.5 冲突了怎么办
+### 5.6 Workflow automation
 
-git 是唯一裁判，`init` 分支为准。
+AI owns workflow bookkeeping and staging. The user owns commits.
 
-- 工作区被覆盖但还没提交 → 内容找不回来了，重做。这就是为什么 5.2 要频繁提交。
-- 分支合并冲突 → 由人来决定保留哪边，不要让 AI 自动选。
-- 两份文档说法不一致 → 以 `docs/adr/` 里最新的 ADR 为准，然后立刻改掉旧文档。
+At task start, AI MUST create or select the relevant Issue, create or switch to the correct branch when the worktree is clean, keep a branch the user explicitly selected, and move the Project item to `In progress` when Project access is available.
 
-### 5.6 分支约定
+At each atomic, verified checkpoint, AI MUST run `git add .` and stop, presenting:
 
-```
-init              主干，唯一可发布的分支
-chatgpt/<任务名>   ChatGPT 的工作分支，合并后删除
-claude/<任务名>    Claude 需要做大改动时的临时分支，合并后删除
-```
+- the Issue and branch;
+- the staged file list;
+- validation results;
+- the next checkpoint;
+- a `git commit` command in a runnable shell block: one subject line and the co-author trailer, no body.
 
-### 5.7 Commit message 规范
+**AI MUST NOT commit.** The user runs the command. Once the commit exists, AI MAY push the current branch, open or update the PR, and move the Project item to `In review`. AI MUST report every branch, Issue, and PR it creates.
 
-**Commit message 一律用英文，写短。** 中文只出现在代码注释的关键点和 `docs/` 里，不出现在 git 历史里。
-
-格式：`<type>: <做了什么>`，祈使句、小写开头、不加句号，标题一行不超过 50 字符。
-
-```
-feat: add item model and media table
-fix: handle empty slug in post route
-docs: record editor choice in ADR-0004
-chore: add gitignore
-refactor: merge agent rules into AGENTS.md
-wip: half-done R2 upload, do not merge
-```
-
-常用 type：`feat` 新功能、`fix` 修 bug、`docs` 只改文档、`refactor` 重构、`style` 格式、`test` 测试、`chore` 杂务、`wip` 半成品交接。
-
-只有当「为什么这么改」不明显时才写正文，也用英文，一两句话说清原因，不要复述改了哪些文件——那个 diff 里有。
-
-### 5.8 提交检查点
-
-git 历史是用户的，由用户决定什么进去。AI 负责把活干到一个干净的点，然后**提议**提交，不代劳。
-
-到了下面任何一个点就停下来提议：
-
-- 一个功能或一个 FR 编号做完了，能跑起来
-- 一个 bug 修好了，验证过了
-- 加完依赖、改完配置，装好能启动
-- 重构做完了，行为没变
-- 文档或 ADR 写完了
-- 一次会话要结束、或者要交给另一个 AI 之前
-- 接下来准备做一件风险大的改动，先存个档
-
-提议的格式，简短说清三件事：
-
-```
-建议提交：
-
-  git add prisma/schema.prisma docs/adr/0004-editor.md
-  git commit -m "feat: add item and media models"
-
-改了 2 个文件：Item / Media 两张表，和对应的 ADR-0004。
-下一个检查点：接上 R2 上传逻辑之后。
-```
-
-不要一次憋一大堆改动才提议。宁可多提几次小的，也别攒成一个改了 20 个文件的巨型提交——出问题时回滚不了。
+AI MUST NOT merge without explicit authorisation. After merge, AI SHOULD verify Issue closure, set the Project item to `Done`, and delete the branch.

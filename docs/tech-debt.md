@@ -1,9 +1,8 @@
-# 技术债台账
+# Technical debt ledger
 
-写代码时凡是「先这样凑合一下」，立刻在这里记一条。不记就会忘，忘了就变成永久的坑。
+Records accepted compromises only, not ideas or future features. Every entry needs a GitHub Issue; the Issue tracks live status, this table keeps the long-term context and links.
 
-格式：位置 · 问题 · 影响 · 建议何时还。
-
-| 日期 | 位置 | 问题 | 影响 | 建议何时处理 | 状态 |
+| ID | Location | Compromise and reason | Impact | Repayment trigger | Issue |
 |---|---|---|---|---|---|
-| | | | | | |
+
+<!-- Append a row when taking on debt. Delete the row once repaid; history stays in the closed Issue and in Git. -->
