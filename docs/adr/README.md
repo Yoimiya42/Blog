@@ -20,3 +20,4 @@ Template: `template.md`.
 | [0004](0004-better-auth-email-otp.md) | Better Auth with email OTP | Accepted | 2026-08-31 |
 | [0005](0005-markdown-authoring.md) | Pure Markdown authoring | Accepted | 2026-08-31 |
 | [0006](0006-hosting-platform-spike.md) | Hosting platform validation spike | Accepted | 2026-08-31 |
+| [0007](0007-default-locale-urls.md) | English root with prefixed translations | Accepted | 2026-09-01 |
