@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.6 · 2026-08-31 · Draft
+> v0.7 · 2026-09-01 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -39,7 +39,7 @@ A restrained academic and career homepage, with a private interest space behind 
 
 ### 2.1 v1 — launch by 2026-09-30
 
-Homepage · blog (list, detail, tags) · mobile-first admin (write, upload, publish) · domain · deployment · owner login (email code, 30-day session) · hidden entrance.
+Homepage · blog (list, detail, tags) · mobile-first admin (write, upload, publish) · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance.
 
 Excluded: life list, gallery, moments, visitor login, comments, ratings, whispers, subscriptions, dark mode, i18n.
 
@@ -93,7 +93,19 @@ Gallery · whisper inbox · update subscriptions · dark mode · RSS · travel m
 
 **URLs are permanent once published.** Changing one breaks inbound links and search indexing.
 
-### 3.2 Hidden entrance
+### 3.2 Public hosts and locale paths
+
+- `fangmingluan.com` hosts the formal academic and career homepage and technical blog.
+- `life.fangmingluan.com` is reserved for the personal space. Its detailed visual system ships with the personal content, not v1.
+- English is the primary locale and has no path prefix.
+- Future locales use lowercase BCP 47 path prefixes: `/zh-hans`, `/zh-hant`, `/ja`, and `/fr`.
+- The personal host follows the same locale convention.
+- Language selection never redirects implicitly from browser settings.
+- Translations may ship independently. Related translations use an internal association rather than a shared slug requirement.
+
+See ADR-0007.
+
+### 3.3 Hidden entrance
 
 Must not distract P1 visitors; must reward curiosity.
 
@@ -101,6 +113,7 @@ Must not distract P1 visitors; must reward curiosity.
 - Subtle response on hover or long press.
 - 600–900ms full-page transition, not a standard navigation.
 - Targets `/moments`, or `/blog` in v1. The inner layer uses a different visual language and an equally quiet exit.
+- Targets `/blog` until personal content is available on `life.fangmingluan.com`.
 - Keyboard reachable, `aria-label` present.
 
 ---
@@ -119,11 +132,26 @@ Serves a 30-second judgement: dense, clearly ranked, no background animation, no
 | FR-HOME-02 | Education (UCL BSc CS) | v1 | School, degree, dates, optional GPA and highlights |
 | FR-HOME-03 | Projects and experience | v1 | Title, dates, stack, one-line outcome, link |
 | FR-HOME-04 | Skills by category | v1 | No percentage bars |
-| FR-HOME-05 | Contact and external links | v1 | Email, GitHub, LinkedIn, optional CV |
+| FR-HOME-05 | Contact and external links | v1 | Email, GitHub, LinkedIn; no CV in v1 |
 | FR-HOME-06 | Three most recent posts | v1 | |
-| FR-HOME-07 | Hidden entrance | v1 | See 3.2 |
+| FR-HOME-07 | Hidden entrance | v1 | See 3.3 |
 | FR-HOME-08 | Homepage content editable in admin | v1.5 | Hardcoded in v1 |
-| FR-HOME-09 | EN/ZH toggle | v2 | Pending, OQ-05 |
+| FR-HOME-09 | Locale navigation | v2 | Explicit navigation between available locale paths; see ADR-0007 |
+
+The v1 homepage uses this fixed order. Empty sections remain unpublished until source content is ready.
+
+| Order | Visible heading | Content |
+|---:|---|---|
+| 1 | None | Name, identity line, location, and primary contact actions |
+| 2 | `Profile` | Short biography, focus, and current objective |
+| 3 | `Education` | Institution, degree, dates, and selected details |
+| 4 | `Experience` | Employment, research, and relevant organisations |
+| 5 | `Selected Projects` | Two to four representative projects |
+| 6 | `Skills` | Languages, frameworks, and tools grouped by category |
+| 7 | `Writing` | Up to three latest published technical posts |
+| 8 | `Contact` | Email, GitHub, and LinkedIn |
+
+Primary navigation labels are `Profile`, `Experience`, `Projects`, `Writing`, and `Contact`. Source status is tracked in `launch-content.md`.
 
 ### 4.2 Blog (FR-BLOG)
 
@@ -526,15 +554,15 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 
 | ID | Question | Impact | Decide by |
 |---|---|---|---|
-| OQ-01 | Domain name (`.com` preferred, `.dev` second) | Site, email, SEO | Before v1 |
-| OQ-02 | Visual direction: references, palette, type, motion | All design work | v1 design phase |
+| OQ-01 | Resolved: `fangmingluan.com` is the formal host; `life.fangmingluan.com` is reserved for personal content | Site, email, SEO | Closed 2026-09-01 |
+| OQ-02 | Partially resolved: formal pages are restrained; personal pages may use an opening sequence, expressive colour, and richer motion. Exact references, palette, type, and motion remain open | All design work | Before personal-space implementation |
 | OQ-03 | Resolved: pure Markdown with preview and a mobile toolbar | FR-ADMIN-03 | Closed 2026-08-31; ADR-0005 |
 | OQ-04 | Rating scale: 5 stars with halves, 10-point, or none | FR-LIFE-04 data type | Before v2 |
-| OQ-05 | Bilingual EN/ZH content | FR-HOME-09, architectural | Before v1, hard to retrofit |
+| OQ-05 | Resolved: v1 is English-only and unprefixed; future locales use explicit path prefixes | FR-HOME-09, architectural | Closed 2026-09-01; ADR-0007 |
 | OQ-06 | Track repeat experiences | Whether to split out `ItemLog` | Before v2 |
 | OQ-07 | Watermark or right-click protection | FR-GALLERY-09 | Before v2.5 |
-| OQ-08 | Publish the CV PDF, given it carries contact details | FR-HOME-05 | Before v1 |
-| OQ-09 | Existing content inventory | Whether a bulk import script is needed | During v1 |
+| OQ-08 | Resolved: do not publish a CV in v1; add it after the source document is complete and reviewed | FR-HOME-05 | Closed 2026-09-01 |
+| OQ-09 | Resolved: build against a fixed content structure and add source content incrementally; no v1 bulk import | Content preparation | Closed 2026-09-01; `launch-content.md` |
 | OQ-10 | Allow fully anonymous whispers | FR-SOCIAL-06 | Before v2.5 |
 
 ---
@@ -549,3 +577,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-08-30 | v0.4 | Condensed to concise technical English. No requirements changed |
 | 2026-08-31 | v0.5 | Recorded the confirmed technology baseline and isolated platform-dependent choices |
 | 2026-08-31 | v0.6 | Aligned FR-AUTH with ADR-0004: owner email login and session persistence move to v1; visitor access and GitHub login remain in v1.5 |
+| 2026-09-01 | v0.7 | Fixed launch hosts, locale URLs, homepage structure, CV policy, visual boundaries, and incremental content preparation |

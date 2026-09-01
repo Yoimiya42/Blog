@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.5 · 2026-08-31
+> v0.6 · 2026-09-01
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -97,6 +97,18 @@ tests/
 ```
 
 The five `*` entries are the project's only extension points.
+
+### Public presentation boundary
+
+- Content and business modules remain independent of the public visual system.
+- Formal and personal pages use separate layout shells, design tokens, and style entry points.
+- Content components expose semantic structure and contain no opening-sequence or ambient-motion logic.
+- Layout shells own page transitions and decorative motion. Effects cannot own navigation, data loading, or content visibility.
+- The formal shell stays restrained and has no background animation. The personal shell may add expressive colour and richer motion later.
+- Motion is progressive enhancement, respects `prefers-reduced-motion`, and never delays readable content.
+- Do not select a motion dependency or personal-host routing implementation until the personal visual direction is approved.
+
+This boundary allows visual redesigns to remain inside layouts, public components, styles, and motion adapters. It does not promise zero presentation-layer changes.
 
 ### Technology baseline
 
@@ -251,3 +263,4 @@ Any failing row is an architectural defect.
 | 2026-08-30 | v0.3 | Renamed from `02-architecture.md` |
 | 2026-08-30 | v0.4 | Condensed to concise technical English. No standards changed |
 | 2026-08-31 | v0.5 | Aligned architecture with the confirmed technology baseline and provisional hosting decision |
+| 2026-09-01 | v0.6 | Added the formal and personal presentation boundary for deferred visual and motion work |
