@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.7 · 2026-09-01 · Draft
+> v0.8 · 2026-09-01 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -472,7 +472,7 @@ Every rule is blocking. Violating one prevents mainland visitors from loading th
 | NFR-CN-07 | Verify every third-party script is reachable before launch | Comments, analytics, maps, fonts, emoji: any one breaks the page |
 | NFR-CN-08 | First paint never depends on third-party resources | The body renders even if a third party is down |
 | NFR-CN-09 | No ICP filing; 2–5s first paint accepted | Filing needs a domestic entity, and personal filings forbid interactive features |
-| NFR-CN-10 | A mainland tester completes load, browse, register, log in, comment before launch | The only reliable verification |
+| NFR-CN-10 | A mainland tester completes load, browse, and an isolated preview login before v1 launch. Add registration and comments when those features ship | The only reliable verification without exposing the production owner account |
 
 Hosting is provisional under ADR-0006. Keep compute and Neon in nearby regions where the selected platform permits.
 
@@ -540,7 +540,7 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Content | Pure Markdown with remark, rehype, and Shiki | Current compatible | Confirmed | Markdown is authoritative; MDX is excluded; see ADR-0005 |
 | Editor | Text area, preview, and mobile toolbar | — | Confirmed | Keep authoring portable and dependency-light; see ADR-0005 |
 | Email | Resend | Current managed service | Confirmed | Release requires successful code delivery to QQ Mail and 163 Mail |
-| Hosting | Vercel or Cloudflare Workers with OpenNext | — | Provisional | Select through a representative deployment spike; see ADR-0006 |
+| Hosting | Vercel or Cloudflare Workers | — | Provisional | Compare vinext and OpenNext compatibility in the representative deployment spike; see ADR-0006 |
 | Analytics | None in v1 | — | Confirmed | Reconsider cookie-free analytics in v1.5 |
 | Code quality | ESLint, Prettier, Husky, lint-staged | Current compatible | Confirmed | Run local checks before user commits |
 | CI | GitHub Actions | — | Confirmed | Run lint, type checks, tests, and a production build on every PR |
@@ -578,3 +578,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-08-31 | v0.5 | Recorded the confirmed technology baseline and isolated platform-dependent choices |
 | 2026-08-31 | v0.6 | Aligned FR-AUTH with ADR-0004: owner email login and session persistence move to v1; visitor access and GitHub login remain in v1.5 |
 | 2026-09-01 | v0.7 | Fixed launch hosts, locale URLs, homepage structure, CV policy, visual boundaries, and incremental content preparation |
+| 2026-09-01 | v0.8 | Aligned mainland validation with v1 scope and updated the Cloudflare Next.js candidate |

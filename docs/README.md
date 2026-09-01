@@ -10,4 +10,5 @@ AI rules live in [AGENTS.md](../AGENTS.md). Git and GitHub workflow lives in [CO
 | [tech-debt.md](tech-debt.md) | Accepted compromises | Whenever you accept a shortcut |
 | [ROADMAP.md](ROADMAP.md) | Release scope and order; live status is not tracked here | When deciding what the next release contains |
 | [engineering/](engineering/) | Placeholders for engineering detail, not yet active | When the corresponding practice is actually in use |
+| [engineering/hosting-spike.md](engineering/hosting-spike.md) | Issue #4 validation protocol and evidence | During hosting, Prisma, and image-pipeline validation |
 | [runbooks/](runbooks/) | Placeholders for deployment, rollback, and recovery procedures | After the system is live |
