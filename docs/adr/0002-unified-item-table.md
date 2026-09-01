@@ -1,39 +1,26 @@
-# 0002. 四类清单条目共用一张表
+# 0002. One shared table for life-list categories
 
-- **状态**：已接受
-- **日期**：2026-08-29
-- **相关需求**：FR-LIFE-*
+- **Status**: Accepted
+- **Date**: 2026-08-29
+- **Requirements**: FR-LIFE-*
 
-## 背景
+## Context
 
-人生清单包含电影、书籍、游戏、旅行地点四类。它们的共同点很多：都有标题、封面、年份、完成状态、我的评分、我的短评与长评、完成日期、标签。差异点较少：电影有导演和片长，书有作者和页数，游戏有平台，地点有经纬度和关联照片。
+Films, books, games, and places share most fields and workflows. New categories are expected, while category-specific data is mostly display-only.
 
-未来大概率还会想加新类型（播客、展览、专辑等）。
+## Decision
 
-## 考虑过的选项
+Store every category in one `Item` table with a `type` discriminator. Keep shared and queryable fields as typed columns. Store display-only category fields in `meta` JSON and validate each shape with zod. Drive category behaviour through `config/content-types.ts`.
 
-### 选项 A：四张独立的表（Movie / Book / Game / Place）
-优点：每张表字段精确，有数据库层面的类型约束；查询直观。
-缺点：约 80% 的字段和逻辑重复；列表页、详情页、后台表单要写四套或做复杂的泛型；新增类型要建新表、写新迁移、复制一遍所有代码；「今年一共完成了多少件事」这类跨类型统计需要 UNION 四张表。
+Any field used for filtering, sorting, or aggregation must be a real column.
 
-### 选项 B：单表 + type 字段，特有字段放 JSON
-优点：一套组件通吃；新增类型只需加配置，零迁移；跨类型统计一条查询搞定；代码量减少约四分之三。
-缺点：JSON 字段没有数据库层面的类型约束（靠应用层 zod 校验兜底）；JSON 内的字段做筛选和排序性能较差；表会有一些对特定类型永远为空的列。
+## Trade-offs
 
-### 选项 C：单表存共有字段 + 每类一张扩展表（类表继承）
-优点：兼顾类型约束与复用。
-缺点：每次查询都要 join；新增类型仍要建表和迁移；对单人项目而言复杂度收益不成正比。
+- **Gain**: One list, detail, form, and statistics pipeline supports every category.
+- **Accept**: The application, not PostgreSQL, enforces category-specific JSON shapes.
+- **Reversal**: Medium — a complex category can move to its own table through a migration.
 
-## 决定
+## Rejected alternatives
 
-选择 **选项 B：单表 + `type` 字段 + `meta` JSON 字段**。
-
-配套规则：**凡是需要筛选、排序、聚合的字段，必须是正经的列，不能放进 JSON**。JSON 只用于纯展示性的类型特有信息。类型的行为差异（封面比例、数据源、启用哪些功能）由 `config/content-types.ts` 注册表驱动，不写在代码分支里。
-
-## 后果
-
-**好的**：一套列表 / 详情 / 表单组件服务全部类型；新增内容类型只需改配置文件；跨类型统计与「人生待办清单」的整体视图天然可实现。
-
-**坏的 / 需要承担的代价**：失去数据库层的类型约束，必须用 zod 在应用层严格校验，且校验规则要和注册表保持同步；`meta` 里的内容需要在代码中定义清楚每种类型的形状，否则会变成垃圾场；预计条目量在数千级以内，此规模下 JSON 的性能问题可忽略。
-
-**以后如果要改**：若某个类型复杂到撑不住（例如旅行地点将来要支持多次到访、行程、路线），可以单独把它拆成独立表，其余三类继续共用。拆分成本中等，属于可接受的退路。
+- One table per category — duplicates fields, UI, queries, and migrations.
+- Shared base table plus extension tables — adds joins and migrations without enough v1 value.

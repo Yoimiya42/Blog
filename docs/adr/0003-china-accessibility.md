@@ -1,47 +1,26 @@
-# 0003. 将大陆可访问性作为硬约束
+# 0003. Mainland China accessibility as a hard constraint
 
-- **状态**：已接受
-- **日期**：2026-08-29
-- **相关需求**：NFR-CN-01 ~ NFR-CN-10
+- **Status**: Accepted
+- **Date**: 2026-08-29
+- **Requirements**: NFR-CN-01 to NFR-CN-10
 
-## 背景
+## Context
 
-站主人在英国，但相当一部分朋友在中国大陆，明确要求他们既能正常访问网站，也能注册并登录。
+The owner is in the UK, but important visitors are in mainland China. Blocked scripts, fonts, provider domains, and rewritten email links can make the site or login unusable.
 
-技术现实：Google 系服务（Fonts、Analytics、reCAPTCHA、OAuth）在大陆不可访问；`*.vercel.app`、`*.r2.dev` 等平台默认域名在大陆被污染；国内邮箱服务商常改写或拦截邮件中的外链；境内加速需要 ICP 备案。
+## Decision
 
-关键风险点：如果页面同步引用了被墙的资源（尤其是字体样式表），浏览器会阻塞渲染直到超时，导致大陆访客看到长时间白屏——这比功能缺失严重得多。
+Deploy outside mainland China without ICP filing, while treating mainland reachability as a release gate. Use custom application and media domains. Self-host fonts. Do not depend on Google services or another blocked runtime resource. Use six-digit email codes instead of magic links. Validate every new third-party dependency and CDN from a mainland network before release.
 
-## 考虑过的选项
+Hosting platform and region follow the ADR-0006 validation process.
 
-### 选项 A：不特别处理，按国际通行做法开发
-优点：开发最省事，可直接使用绝大多数教程和模板。
-缺点：大陆朋友大概率打不开或打开极慢，且登录功能不可用。与明确需求冲突。
+## Trade-offs
 
-### 选项 B：办理 ICP 备案，使用境内 CDN 或服务器加速
-优点：大陆访问速度最优。
-缺点：个人备案需国内主体、身份证与国内通信地址，站主长期在英国，办理与年审都很麻烦；个人性质备案通常不允许提供论坛、评论、用户注册等交互功能，与本项目核心需求直接冲突；内容需持续接受监管。
+- **Gain**: One deployment can serve UK and mainland visitors without mainland hosting obligations.
+- **Accept**: Mainland access targets usable, not locally accelerated, performance and requires recurring real-network tests.
+- **Reversal**: High — blocked dependencies can spread through rendering, authentication, and delivery paths.
 
-### 选项 C：境外部署 + 严格规避被墙依赖 + 就近区域
-优点：不需要备案；无合规冲突；成本为零；只需要在技术选型上守纪律。
-缺点：大陆访问速度只能做到「可用」而非「快」（预计首屏 2–5 秒）；每引入一个新的第三方依赖都需要额外确认可达性，是长期的纪律成本。
+## Rejected alternatives
 
-### 选项 D：双站部署（境外 + 境内各一套）
-优点：两边都快。
-缺点：备案问题依旧存在；两套部署与数据同步的复杂度对单人项目不可接受。
-
-## 决定
-
-选择 **选项 C：境外部署 + 严格规避被墙依赖**。
-
-具体规则写入需求文档 6.1 节，共十条，均为否决性约束。其中最关键的三条：字体必须自托管并做中文子集化，绝不引用 Google Fonts；必须使用自有域名，不暴露平台默认域名；登录主方式为邮箱六位验证码而非魔法链接。
-
-部署区域选择香港或新加坡，兼顾大陆与英国的延迟。
-
-## 后果
-
-**好的**：零成本、零合规负担；大陆朋友可正常使用全部功能；作为副作用，自托管字体和减少第三方依赖也让全球访客的性能变好。
-
-**坏的 / 需要承担的代价**：无法使用大量现成教程和模板中的默认配置，需要逐一替换；中文字体子集化需要额外的构建步骤；每次引入新的第三方脚本或 CDN，都必须先验证大陆可达性，这是长期纪律成本；大陆访问速度只能做到可接受，做不到快；需要有大陆的朋友配合实测，无法自行完全验证。
-
-**以后如果要改**：若将来确实需要大陆高速访问，可在保持现有架构不变的前提下，单独为静态资源接入国内 CDN。届时才需要面对备案问题，且那时可以只备案一个纯静态的资源域名，规避交互内容的限制。
+- Ignore mainland constraints — violates a primary audience requirement.
+- Mainland hosting or dual deployment — adds ICP, regulatory, and operational costs beyond project scope.

@@ -6,38 +6,21 @@
 
 ## Context
 
-v1 needs fast mobile publishing, preview, code highlighting, and a table of contents. Content must remain portable and safe to render. The owner does not need arbitrary interactive components inside posts.
-
-## Options considered
-
-### Pure Markdown with a text editor
-
-Pros: Portable source, small editor surface, predictable sanitisation, and simple migrations.
-
-Cons: Formatting syntax is visible and split preview needs deliberate mobile design.
-
-### Rich-text editor
-
-Pros: Direct visual editing and familiar controls.
-
-Cons: Larger client bundle, complex document schema, and more migration and sanitisation work.
-
-### MDX
-
-Pros: Supports interactive React components in posts.
-
-Cons: Expands the trusted execution surface and couples stored content to application code.
+v1 needs portable content, fast mobile publishing, preview, code highlighting, and a table of contents. Posts do not need arbitrary interactive components.
 
 ## Decision
 
-Store pure Markdown as the authoritative post source. Use a text area with a preview toggle and a mobile formatting toolbar. Render through remark and rehype. Highlight code with Shiki on the server. Do not support MDX in stored content.
+Keep pure Markdown as the authoritative post source. Author through a text area with preview and a mobile formatting toolbar. Render with remark and rehype, and highlight code with Shiki on the server. Do not store MDX.
 
 Rendered HTML may be cached or materialised after the hosting decision. Markdown remains the recovery and migration source.
 
-## Consequences
+## Trade-offs
 
-**Benefits**: Content is portable, reviewable, and independent of an editor framework. Public pages need no editor runtime.
+- **Gain**: Content stays portable, reviewable, and independent of the editor runtime.
+- **Accept**: The project must implement preview parity, sanitisation, cursor-safe toolbar actions, and mobile keyboard tests.
+- **Reversal**: Medium — rich text can import Markdown, but round-trip fidelity needs migration tests.
 
-**Costs accepted**: The project must implement preview parity, cursor-safe toolbar actions, sanitisation, and mobile keyboard tests.
+## Rejected alternatives
 
-**Cost of reversing**: A rich-text editor can import Markdown, but round-trip fidelity and stored-content migration require explicit testing.
+- Rich text — adds a larger runtime, document schema, and sanitisation surface.
+- MDX — couples stored content to executable application code.
