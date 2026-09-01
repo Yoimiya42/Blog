@@ -1,3 +1,4 @@
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -50,10 +51,7 @@ const eslintConfig = defineConfig([
   },
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: [
-      "src/lib/db.ts",
-      "src/features/**/server/*.repository.ts",
-    ],
+    ignores: ["src/lib/db.ts", "src/features/**/server/*.repository.ts"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -67,12 +65,8 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
+  eslintConfigPrettier,
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

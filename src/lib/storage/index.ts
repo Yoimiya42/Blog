@@ -1,5 +1,1 @@
-export type {
-  StorageAdapter,
-  StoredObject,
-  StorageUpload,
-} from "./types";
+export type { StorageAdapter, StoredObject, StorageUpload } from "./types";

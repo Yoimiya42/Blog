@@ -6,6 +6,10 @@ const environmentSchema = z.object({
     .default("development"),
 });
 
-export const env = environmentSchema.parse({
+export function parseEnvironment(input: { NODE_ENV?: string }) {
+  return environmentSchema.parse(input);
+}
+
+export const env = parseEnvironment({
   NODE_ENV: process.env.NODE_ENV,
 });
