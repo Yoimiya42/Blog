@@ -14,6 +14,13 @@ dist/
 .env.local
 .env.*.local
 
+# certificates
+*.pem
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
 # vercel / prisma
 .vercel
 prisma/*.db
@@ -30,3 +37,6 @@ Thumbs.db
 *.log
 .idea/
 .vscode/
+
+# testing
+coverage/
