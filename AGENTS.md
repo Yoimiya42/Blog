@@ -15,12 +15,13 @@ Personal site: homepage, technical blog, mobile-first admin. v1 target 2026-09-3
 |---|---|
 | What to build, v1 scope | `docs/PRD.md` |
 | How to structure code | `docs/architecture.md` |
-| Why a decision was made | `docs/adr/` |
+| Why a decision was made | `docs/adr/README.md`, then only relevant records |
 | Where we compromised | `docs/tech-debt.md` |
 | What ships when | `docs/ROADMAP.md` |
 | Git, Issue, PR workflow | `CONTRIBUTING.md` |
 
 Revise a settled decision with a new ADR, never by editing an old one.
+Use the ADR index to select records. Do not preload every ADR.
 
 ## 3. Hard constraints
 
@@ -38,7 +39,7 @@ Revise a settled decision with a new ADR, never by editing an old one.
 ## 4. Working rules
 
 1. New ideas go into `docs/PRD.md` with a version tag before any code.
-2. Significant technical decisions get an ADR before implementation.
+2. Significant technical decisions get an ADR before implementation. Follow the scope and length rules in `docs/adr/README.md`.
 3. Compromises are recorded in `docs/tech-debt.md` immediately.
 4. Documentation ships in the same commit as the code it describes.
 5. Ideas outside v1 scope are deferred, not absorbed.

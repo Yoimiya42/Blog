@@ -3,33 +3,22 @@
 - **Status**: Proposed / Accepted / Deprecated / Superseded by NNNN
 - **Date**: YYYY-MM-DD
 - **Requirements**: FR-XXX-NN
+- **Supersedes**: Optional ADR reference and scope
 
 ## Context
 
-The problem, the constraints, and why the decision is needed now. Facts only, no conclusions.
-
-## Options considered
-
-### Option A
-Pros:
-Cons:
-
-### Option B
-Pros:
-Cons:
-
-### Option C
-Pros:
-Cons:
+State why the decision is needed and the constraints that control it. Use two or three sentences.
 
 ## Decision
 
-We chose __ because __.
+State the exact choice, scope, and implementation boundary.
 
-## Consequences
+## Trade-offs
 
-**Benefits**:
+- **Gain**: Primary benefit.
+- **Accept**: Primary cost or limitation.
+- **Reversal**: Low / Medium / High — one-line reason.
 
-**Costs accepted**:
+## Rejected alternatives
 
-**Cost of reversing**:
+- Alternative — one-line rejection reason. Omit this section when no real alternative was evaluated.
