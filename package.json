@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "prepare": "husky",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "next typegen && tsc --noEmit",
@@ -29,9 +30,15 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.4",
     "eslint-config-prettier": "10.1.8",
+    "husky": "9.1.7",
+    "lint-staged": "16.4.0",
     "prettier": "3.9.6",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "4.1.11"
+  },
+  "lint-staged": {
+    "*": "prettier --check --ignore-unknown",
+    "*.{js,cjs,mjs,ts,tsx}": "eslint --max-warnings=0"
   }
 }
