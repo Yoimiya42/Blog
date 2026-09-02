@@ -1,4 +1,4 @@
-import { PrismaNeonHttp } from "@prisma/adapter-neon";
+import { PrismaNeon } from "@prisma/adapter-neon";
 
 import { PrismaClient } from "@/generated/prisma/client";
 import { getDatabaseEnvironment } from "@/lib/env";
@@ -13,7 +13,7 @@ export function getDatabase() {
   }
 
   const { DATABASE_URL } = getDatabaseEnvironment();
-  const adapter = new PrismaNeonHttp(DATABASE_URL, {});
+  const adapter = new PrismaNeon({ connectionString: DATABASE_URL });
   const prisma = new PrismaClient({ adapter });
 
   if (process.env.NODE_ENV !== "production") {

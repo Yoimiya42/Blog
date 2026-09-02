@@ -7,15 +7,19 @@ async function seed() {
   const database = getDatabase();
   const { OWNER_EMAIL } = getOwnerEnvironment();
 
-  await database.user.upsert({
+  const existingOwner = await database.user.findUnique({
     where: { email: OWNER_EMAIL },
-    update: {},
-    create: {
-      id: randomUUID(),
-      name: "Spike Owner",
-      email: OWNER_EMAIL,
-    },
   });
+
+  if (!existingOwner) {
+    await database.user.create({
+      data: {
+        id: randomUUID(),
+        name: "Spike Owner",
+        email: OWNER_EMAIL,
+      },
+    });
+  }
 
   await database.$disconnect();
   console.log("Preview owner prepared.");

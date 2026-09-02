@@ -19,6 +19,14 @@ function createAuth() {
 
   return betterAuth({
     secret: BETTER_AUTH_SECRET,
+    baseURL: {
+      allowedHosts: [
+        "localhost:3000",
+        "vercel-spike.fangmingluan.com",
+        "workers-spike.fangmingluan.com",
+      ],
+      protocol: "auto",
+    },
     database: createAuthDatabaseAdapter(),
     session: {
       expiresIn: SESSION_EXPIRY_SECONDS,

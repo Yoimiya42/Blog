@@ -25,6 +25,8 @@ Select the v1 host, Prisma major version, and image pipeline from one controlled
 | Neon            | Project `Blog`; AWS Singapore; Neon Auth disabled                                |
 | Mainland tester | Available                                                                        |
 
+The isolated Neon branch `issue-4-hosting-spike` expires on 2026-09-09. All spike migrations and test identities use this branch.
+
 ## Representative slice
 
 The slice MUST expose the same routes and behavior on both hosts.
@@ -82,6 +84,18 @@ When both candidates pass, prefer lower operational complexity, then lower mainl
 | ---------- | ------- | ------------------------- | --------- | --------------- | ------- | ------- |
 | Vercel     | Pending | Native Next.js            | Pending   | Pending         | Pending | Pending |
 | Cloudflare | Pending | vinext; OpenNext fallback | Pending   | Pending         | Pending | Pending |
+
+### Local integration
+
+| Date       | Check                         | Result                                                                                     |
+| ---------- | ----------------------------- | ------------------------------------------------------------------------------------------ |
+| 2026-09-02 | Prisma 7.10 migration         | Passed against the isolated Singapore branch                                               |
+| 2026-09-02 | Owner seed                    | Passed twice; the second run confirmed idempotence without transactions                    |
+| 2026-09-02 | Dynamic database route        | Passed with the WebSocket adapter; three warm queries reported 665 ms, 257 ms, and 163 ms   |
+| 2026-09-02 | Better Auth database adapter  | Passed twice with `200`; the database rate-limit counter advanced to two                    |
+| 2026-09-02 | Authentication host allowlist | Passed; `localhost:3000` worked and an unlisted host was rejected                            |
+| 2026-09-02 | Neon HTTP transaction support | Failed; Better Auth atomic rate-limit updates require transactions                          |
+| 2026-09-02 | Neon WebSocket pool adapter   | Passed locally; retain for Vercel and Cloudflare deployment verification                    |
 
 ## References
 
