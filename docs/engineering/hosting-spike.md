@@ -21,7 +21,7 @@ Select the v1 host, Prisma major version, and image pipeline from one controlled
 | vinext          | 1.0.0-beta.8; compatibility check reports 83% and only requires ESM package mode |
 | Vercel          | Hobby account; repository visible; no project imported                           |
 | Cloudflare      | Account available; `fangmingluan.com` registration active                        |
-| R2              | Subscription active; no bucket; no billable usage                                |
+| R2              | Empty `blog-issue-4-spike` bucket; APAC location hint; Standard storage class      |
 | Neon            | Project `Blog`; AWS Singapore; Neon Auth disabled                                |
 | Mainland tester | Available                                                                        |
 
@@ -96,6 +96,9 @@ When both candidates pass, prefer lower operational complexity, then lower mainl
 | 2026-09-02 | Authentication host allowlist | Passed; `localhost:3000` worked and an unlisted host was rejected                            |
 | 2026-09-02 | Neon HTTP transaction support | Failed; Better Auth atomic rate-limit updates require transactions                          |
 | 2026-09-02 | Neon WebSocket pool adapter   | Passed locally; retain for Vercel and Cloudflare deployment verification                    |
+| 2026-09-02 | R2 adapter contract            | Passed 11 unit tests for object operations, path safety, signed operations, and safe errors  |
+
+The R2 adapter uses the S3-compatible API through `aws4fetch`. It buffers uploads so the same signing path can run in Node.js and Workers. Real object operations remain pending until bucket-scoped spike credentials exist.
 
 ## References
 

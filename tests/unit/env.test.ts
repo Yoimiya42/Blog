@@ -5,6 +5,7 @@ import {
   parseDatabaseEnvironment,
   parseEnvironment,
   parseOwnerEnvironment,
+  parseR2Environment,
 } from "@/lib/env";
 
 describe("parseEnvironment", () => {
@@ -102,4 +103,34 @@ describe("parseAuthEnvironment", () => {
       }),
     ).toThrow();
   });
+});
+
+describe("parseR2Environment", () => {
+  const validEnvironment = {
+    R2_ACCOUNT_ID: "0123456789abcdef0123456789abcdef",
+    R2_ACCESS_KEY_ID: "r2-access-key-id",
+    R2_SECRET_ACCESS_KEY: "r2-secret-access-key-with-32-characters",
+    R2_BUCKET_NAME: "blog-issue-4-spike",
+    R2_PUBLIC_BASE_URL: "https://media-spike.fangmingluan.com",
+  };
+
+  it("accepts the complete R2 environment", () => {
+    expect(parseR2Environment(validEnvironment)).toEqual(validEnvironment);
+  });
+
+  it.each([
+    { R2_ACCOUNT_ID: "not-an-account-id" },
+    { R2_BUCKET_NAME: "Invalid_Bucket" },
+    { R2_PUBLIC_BASE_URL: "http://media.example.com" },
+  ])(
+    "rejects invalid R2 configuration: $R2_ACCOUNT_ID$R2_BUCKET_NAME$R2_PUBLIC_BASE_URL",
+    (override) => {
+      expect(() =>
+        parseR2Environment({
+          ...validEnvironment,
+          ...override,
+        }),
+      ).toThrow();
+    },
+  );
 });
