@@ -25,6 +25,7 @@ next-env.d.ts
 .vercel
 prisma/*.db
 prisma/*.db-journal
+src/generated/prisma/
 
 # agent workspaces
 .claude/worktrees/

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseEnvironment } from "@/lib/env";
+import { parseDatabaseEnvironment, parseEnvironment } from "@/lib/env";
 
 describe("parseEnvironment", () => {
   it("defaults to development", () => {
@@ -26,6 +26,31 @@ describe("parseEnvironment", () => {
     expect(() =>
       parseEnvironment({
         NODE_ENV: "staging",
+      }),
+    ).toThrow();
+  });
+});
+
+describe("parseDatabaseEnvironment", () => {
+  it("accepts a PostgreSQL connection string", () => {
+    expect(
+      parseDatabaseEnvironment({
+        DATABASE_URL: "postgresql://user:password@example.com/blog",
+      }),
+    ).toEqual({
+      DATABASE_URL: "postgresql://user:password@example.com/blog",
+    });
+  });
+
+  it.each([
+    undefined,
+    "",
+    "mysql://user:password@example.com/blog",
+    "not-a-url",
+  ])("rejects an invalid database URL: %s", (databaseUrl) => {
+    expect(() =>
+      parseDatabaseEnvironment({
+        DATABASE_URL: databaseUrl,
       }),
     ).toThrow();
   });
