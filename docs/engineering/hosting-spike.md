@@ -21,7 +21,7 @@ Select the v1 host, Prisma major version, and image pipeline from one controlled
 | vinext          | 1.0.0-beta.8; compatibility check reports 83% and only requires ESM package mode |
 | Vercel          | Hobby account; repository visible; no project imported                           |
 | Cloudflare      | Account available; `fangmingluan.com` registration active                        |
-| R2              | Empty `blog-issue-4-spike` bucket; APAC location hint; Standard storage class      |
+| R2              | APAC Standard bucket; scoped one-week user token; custom media domain active       |
 | Neon            | Project `Blog`; AWS Singapore; Neon Auth disabled                                |
 | Mainland tester | Available                                                                        |
 
@@ -97,8 +97,11 @@ When both candidates pass, prefer lower operational complexity, then lower mainl
 | 2026-09-02 | Neon HTTP transaction support | Failed; Better Auth atomic rate-limit updates require transactions                          |
 | 2026-09-02 | Neon WebSocket pool adapter   | Passed locally; retain for Vercel and Cloudflare deployment verification                    |
 | 2026-09-02 | R2 adapter contract            | Passed 11 unit tests for object operations, path safety, signed operations, and safe errors  |
+| 2026-09-02 | R2 S3 object operations        | Passed upload, metadata read, download, signed GET, signed PUT, and cleanup against R2       |
+| 2026-09-02 | R2 custom media domain         | Passed TLS validation and public object retrieval with `200`; the disposable object was removed |
+| 2026-09-02 | R2 browser CORS                | Passed allowed-origin preflight with `204`; an unlisted origin was rejected with `403`       |
 
-The R2 adapter uses the S3-compatible API through `aws4fetch`. It buffers uploads so the same signing path can run in Node.js and Workers. Real object operations remain pending until bucket-scoped spike credentials exist.
+The R2 adapter uses the S3-compatible API through `aws4fetch`. It buffers uploads so the same signing path can run in Node.js and Workers. The spike credential is limited to object read and write on `blog-issue-4-spike` and expires after one week. CORS permits only local development and the two spike application domains.
 
 ## References
 
