@@ -118,7 +118,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.
 - Pure Markdown is authoritative. remark, rehype, and Shiki render content on the server. See ADR-0005.
-- Hosting and image processing remain provisional until the ADR-0006 deployment spike passes.
+- Vercel Preview supports current development. Production hosting and image processing remain provisional under ADR-0008.
 
 ---
 
@@ -228,7 +228,7 @@ Any failing row is an architectural defect.
 
 **CI/CD.**
 - GitHub Actions runs `lint`, `typecheck`, `test`, `build` on every push and PR. Any failure blocks merge.
-- Every PR gets a provider preview URL, openable on a phone. The provider remains provisional under ADR-0006.
+- Every PR gets a Vercel Preview URL, openable on a phone. The production host remains provisional under ADR-0008.
 - Merging to `main` deploys to production.
 - Husky and lint-staged gate commits locally.
 
@@ -264,3 +264,4 @@ Any failing row is an architectural defect.
 | 2026-08-30 | v0.4 | Condensed to concise technical English. No standards changed |
 | 2026-08-31 | v0.5 | Aligned architecture with the confirmed technology baseline and provisional hosting decision |
 | 2026-09-01 | v0.6 | Added the formal and personal presentation boundary for deferred visual and motion work |
+| 2026-09-03 | v0.7 | Adopted Vercel previews before final production host selection |

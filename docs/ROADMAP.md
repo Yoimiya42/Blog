@@ -22,7 +22,7 @@
 - Blog list, post detail, tags, pagination, code highlighting, table of contents, responsive images, drafts, and protected previews.
 - Owner-only email OTP authentication.
 - Mobile post management, Markdown editing, autosave, publishing, media upload, and media library.
-- Custom-domain application and image delivery on the platform selected by the ADR-0006 spike.
+- Custom-domain application and image delivery on the production platform confirmed after representative features exist.
 - GitHub Actions, local quality gates, versioned database migrations, and release validation.
 
 ### Non-goals
@@ -37,7 +37,7 @@
 
 | Window | Exit condition |
 |---|---|
-| 2026-09-01 to 2026-09-04 | Hosting evidence, application skeleton, and launch identity are ready |
+| 2026-09-01 to 2026-09-04 | Vercel Preview, application skeleton, and launch identity are ready |
 | 2026-09-05 to 2026-09-10 | Database, authentication, and Markdown foundations are complete |
 | 2026-09-11 to 2026-09-19 | Public homepage, blog, admin, editor, and media vertical slices work |
 | 2026-09-20 to 2026-09-25 | Publishing workflow, hidden entrance, and cross-cutting gates pass |
@@ -51,24 +51,27 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 |---|---|---:|---:|---|---|
 | [#1](https://github.com/Yoimiya42/Blog/issues/1) | Record technology baseline | P0 | S | In review | — |
 | [#3](https://github.com/Yoimiya42/Blog/issues/3) | Establish the v1 release plan | P0 | S | In progress | #1 |
-| [#4](https://github.com/Yoimiya42/Blog/issues/4) | Select hosting, Prisma release, and image pipeline | P0 | L | Backlog | #1 |
+| [#4](https://github.com/Yoimiya42/Blog/issues/4) | Compare hosting and image-pipeline options after representative features exist | P2 | L | Backlog | Representative feature set |
 | [#5](https://github.com/Yoimiya42/Blog/issues/5) | Bootstrap application and quality gates | P0 | M | Backlog | #1 |
+| [#27](https://github.com/Yoimiya42/Blog/issues/27) | Establish Vercel preview deployment | P0 | S | In progress | #5 |
 | [#6](https://github.com/Yoimiya42/Blog/issues/6) | Freeze launch identity and content | P0 | M | Ready | Owner decisions |
-| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement database foundation | P0 | M | Backlog | #4, #5 |
-| [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | Backlog | #4, #5, #7 |
+| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement database foundation | P0 | M | Backlog | #5, #27 |
+| [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | Backlog | #5, #7 |
 | [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement Markdown rendering | P0 | M | Backlog | #5 |
 | [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | P0 | L | Backlog | #7, #9, #14 |
 | [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | P0 | L | Backlog | #6, #7 |
 | [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | P0 | M | Backlog | #7, #8 |
 | [#13](https://github.com/Yoimiya42/Blog/issues/13) | Implement mobile Markdown editor | P0 | L | Backlog | #9, #12 |
-| [#14](https://github.com/Yoimiya42/Blog/issues/14) | Implement media upload and library | P0 | L | Backlog | #4, #7, #8 |
+| [#14](https://github.com/Yoimiya42/Blog/issues/14) | Implement media upload and library | P0 | L | Backlog | #7, #8 |
 | [#15](https://github.com/Yoimiya42/Blog/issues/15) | Implement draft and publish workflow | P0 | M | Backlog | #10, #12, #13, #14 |
 | [#16](https://github.com/Yoimiya42/Blog/issues/16) | Implement hidden entrance | P1 | S | Backlog | #6, #11 |
 | [#17](https://github.com/Yoimiya42/Blog/issues/17) | Meet security, privacy, and accessibility gates | P0 | L | Backlog | All feature Issues |
 | [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy production and custom domains | P0 | M | Backlog | #4, #6, feature-complete build |
 | [#19](https://github.com/Yoimiya42/Blog/issues/19) | Validate the v1 release | P0 | M | Backlog | #6, #17, #18 |
 
-Publishing path: `#1 -> #4/#5 -> #7 -> #8/#9/#14 -> #10/#12 -> #13 -> #15 -> #17/#18 -> #19`.
+Publishing path: `#1 -> #5 -> #27 -> #7 -> #8/#9/#14 -> #10/#12 -> #13 -> #15 -> #17/#18 -> #19`.
+
+Platform practice: start #4 after the application has representative database, authentication, media, and rendering workloads. It does not block feature development.
 
 Public identity path: `#6 -> #11 -> #16 -> #17/#18 -> #19`.
 
@@ -77,7 +80,7 @@ Public identity path: `#6 -> #11 -> #16 -> #17/#18 -> #19`.
 v1 ships only when:
 
 - Every Milestone Issue is `Done`, or removed through an explicit PRD version change.
-- An accepted ADR selects hosting, Prisma, and image processing.
+- An accepted ADR confirms production hosting and image processing before launch.
 - All required CI checks pass on `main`.
 - The owner publishing flow completes on supported mobile browsers in under five minutes.
 - The production application and image domains pass UK and mainland China tests.
