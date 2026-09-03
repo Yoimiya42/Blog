@@ -1,6 +1,6 @@
 # 0006. Hosting platform validation spike
 
-- **Status**: Accepted
+- **Status**: Superseded by 0008
 - **Date**: 2026-08-31
 - **Requirements**: NFR-CN-05, NFR-CN-06, NFR-CN-08, NFR-CN-09, NFR-CN-10, PRD section 6.2
 - **Supersedes**: ADR-0001 deployment platform and region only

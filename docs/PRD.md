@@ -474,7 +474,7 @@ Every rule is blocking. Violating one prevents mainland visitors from loading th
 | NFR-CN-09 | No ICP filing; 2–5s first paint accepted | Filing needs a domestic entity, and personal filings forbid interactive features |
 | NFR-CN-10 | A mainland tester completes load, browse, register, log in, comment before launch | The only reliable verification |
 
-Hosting is provisional under ADR-0006. Keep compute and Neon in nearby regions where the selected platform permits.
+Vercel Preview is the current development environment under ADR-0008. Production hosting remains provisional. Keep compute and Neon in nearby regions where the selected platform permits.
 
 ### 6.2 Performance
 
@@ -512,7 +512,7 @@ Target £15–30 per year before paid compute. Cloudflare Workers Paid adds at l
 | Item | Choice | Cost |
 |---|---|---|
 | Domain | Cloudflare Registrar / Namecheap | £10–15 / year |
-| Hosting | Provisional: Vercel Hobby or Cloudflare Workers Paid | Free or $5 minimum / month |
+| Hosting | Vercel Preview; production host provisional | Free during preview; production cost pending |
 | Database | Neon free tier | Free, 0.5GB |
 | Image storage | Cloudflare R2 | Free under 10GB, no egress fees |
 | Email | Resend free tier | 3000 / month |
@@ -524,7 +524,7 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 
 ## 7. Technology
 
-`Confirmed` choices are implementation defaults. `Provisional` choices require the named validation before implementation.
+`Confirmed` choices are implementation defaults. `Provisional` choices follow the validation boundary named in their decision.
 
 | Layer | Choice | Version | Status | Decision |
 |---|---|---|---|---|
@@ -536,11 +536,11 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | ORM | Prisma | 7.x candidate | Provisional | Confirm the current production release, runtime adapter, and migration path during bootstrap |
 | Authentication | Better Auth with email OTP | Current compatible | Confirmed | Six-digit email codes and database sessions; see ADR-0004 |
 | Object storage | Cloudflare R2 on a custom domain | Current managed service | Confirmed | Store all uploaded media behind the project domain |
-| Image pipeline | Host-dependent | — | Provisional | Compare server-side `sharp` with browser preprocessing in the hosting spike; see ADR-0006 |
+| Image pipeline | Application-led | — | Provisional | Validate against representative media workloads without blocking unrelated features; see ADR-0008 |
 | Content | Pure Markdown with remark, rehype, and Shiki | Current compatible | Confirmed | Markdown is authoritative; MDX is excluded; see ADR-0005 |
 | Editor | Text area, preview, and mobile toolbar | — | Confirmed | Keep authoring portable and dependency-light; see ADR-0005 |
 | Email | Resend | Current managed service | Confirmed | Release requires successful code delivery to QQ Mail and 163 Mail |
-| Hosting | Vercel or Cloudflare Workers with OpenNext | — | Provisional | Select through a representative deployment spike; see ADR-0006 |
+| Hosting | Vercel Preview for development; production host unselected | — | Provisional | Use Git previews now and reassess after representative features; see ADR-0008 |
 | Analytics | None in v1 | — | Confirmed | Reconsider cookie-free analytics in v1.5 |
 | Code quality | ESLint, Prettier, Husky, lint-staged | Current compatible | Confirmed | Run local checks before user commits |
 | CI | GitHub Actions | — | Confirmed | Run lint, type checks, tests, and a production build on every PR |
@@ -578,3 +578,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-08-31 | v0.5 | Recorded the confirmed technology baseline and isolated platform-dependent choices |
 | 2026-08-31 | v0.6 | Aligned FR-AUTH with ADR-0004: owner email login and session persistence move to v1; visitor access and GitHub login remain in v1.5 |
 | 2026-09-01 | v0.7 | Fixed launch hosts, locale URLs, homepage structure, CV policy, visual boundaries, and incremental content preparation |
+| 2026-09-03 | v0.8 | Adopted Vercel-first preview delivery without selecting the permanent production host |
