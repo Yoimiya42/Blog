@@ -73,12 +73,15 @@ Issue #29 rehearsed this procedure on 2026-09-03 from commit `62d7131`.
 
 - Compatibility: five supported checks, zero partial checks; vinext added the required ESM package setting.
 - Dry-run size: 728.10 KiB total and 215.91 KiB compressed.
+- Remote startup time: 29 ms against the 1,000 ms Workers limit.
 - Bindings: `ASSETS` and `CF_VERSION_METADATA` only.
 - Baseline Version: `faa4fb30-b745-4c61-b3c3-a8699ae55bad`.
 - Preview Version: `7fdf62be-25e1-4e8d-b5c0-f0367bb37980`.
 - Fixed preview alias: `https://issue-29-personal-site.yoimiyacyy.workers.dev`.
 - Browser checks: homepage, hard refresh, 404, console, static assets, and Vercel visual comparison passed.
 - Rollback: the preview version served HTTP 200 at 100% traffic; the baseline was then restored to 100% and served HTTP 200.
+
+The startup measurement used version `7efa30de-e498-422d-b23d-020424221dd7`. Representative request CPU is deferred to Issue #19 because this foundation Worker has no D1, authentication, article rendering, R2, or image workload. The release stays on Workers Free unless that measurement exceeds the 10 ms request CPU limit or traffic approaches 100,000 requests per day. Workers Paid requires explicit approval.
 
 The rehearsal did not include D1, authentication, R2, image processing, custom domains, or mainland China testing.
 
