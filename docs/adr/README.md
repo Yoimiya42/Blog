@@ -23,4 +23,5 @@ Template: `template.md`.
 | [0005](0005-markdown-authoring.md) | Pure Markdown authoring | Keep Markdown authoritative and render it on the server | Accepted | 2026-08-31 |
 | [0006](0006-hosting-platform-spike.md) | Hosting platform validation spike | Required a dual-platform spike before product development | Superseded | 2026-08-31 |
 | [0007](0007-default-locale-urls.md) | English root with prefixed translations | Keep English unprefixed and prefix each future locale | Accepted | 2026-09-01 |
-| [0008](0008-vercel-previews-before-host-selection.md) | Vercel previews before host selection | Use Vercel previews now and reassess production hosting after representative features | Accepted | 2026-09-03 |
+| [0008](0008-vercel-previews-before-host-selection.md) | Vercel previews before host selection | Use Vercel previews now and reassess production hosting after representative features | Superseded by 0009 | 2026-09-03 |
+| [0009](0009-cloudflare-workers-d1-drizzle.md) | Cloudflare Workers, D1, and Drizzle | Use Workers with D1 and Drizzle; validate the Next.js adapter before implementation | Accepted | 2026-09-03 |

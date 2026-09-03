@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.7 · 2026-09-01 · Draft
+> v0.9 · 2026-09-03 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -262,13 +262,13 @@ Core of v1. All screens designed from 375px up.
 
 ## 5. Data model (draft)
 
-Prisma syntax. Fields are cheap to add; relations are not — review those first.
+The following compact notation defines the logical model, not an executable ORM schema. Issue #7 translates the v1 subset into Drizzle for D1. Fields are cheap to add; relations are not — review those first.
 
 1. All four life-list categories share one `Item` table, discriminated by `type`, category-specific fields in `meta`. See ADR-0002.
 2. Comments are polymorphic (`targetType` + `targetId`), serving posts, moments, items, photos.
 3. All images go through `Media`. Business tables store a Media id, so compression, CDN, and cleanup live in one place.
 
-```prisma
+```text
 // ---------- Users ----------
 model User {
   id            String    @id @default(cuid())
@@ -474,7 +474,7 @@ Every rule is blocking. Violating one prevents mainland visitors from loading th
 | NFR-CN-09 | No ICP filing; 2–5s first paint accepted | Filing needs a domestic entity, and personal filings forbid interactive features |
 | NFR-CN-10 | A mainland tester completes load, browse, register, log in, comment before launch | The only reliable verification |
 
-Vercel Preview is the current development environment under ADR-0008. Production hosting remains provisional. Keep compute and Neon in nearby regions where the selected platform permits.
+Cloudflare Workers is the selected production platform under ADR-0009. The verified Vercel Preview remains a temporary rollback path until the Workers preview passes. Provider domains are development evidence only; production requires custom domains and real mainland China tests.
 
 ### 6.2 Performance
 
@@ -507,13 +507,13 @@ Vercel Preview is the current development environment under ADR-0008. Production
 
 ### 6.6 Budget
 
-Target £15–30 per year before paid compute. Cloudflare Workers Paid adds at least $60 per year and requires explicit approval.
+Target £15–30 per year while the application remains within free compute and storage limits. Workers Paid requires explicit approval after representative CPU measurements.
 
 | Item | Choice | Cost |
 |---|---|---|
 | Domain | Cloudflare Registrar / Namecheap | £10–15 / year |
-| Hosting | Vercel Preview; production host provisional | Free during preview; production cost pending |
-| Database | Neon free tier | Free, 0.5GB |
+| Hosting | Cloudflare Workers Free | Free within request and CPU limits |
+| Database | Cloudflare D1 Free | Free; 500MB per database and 5GB per account |
 | Image storage | Cloudflare R2 | Free under 10GB, no egress fees |
 | Email | Resend free tier | 3000 / month |
 | Analytics | None in v1 | Free |
@@ -532,15 +532,16 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Language | TypeScript, strict mode | Current compatible | Confirmed | Required for all application code |
 | Styling | Tailwind CSS plus custom CSS | v4 | Confirmed | Utilities for admin; custom CSS is allowed for the public visual system |
 | Components | shadcn/ui and Radix | Current compatible | Confirmed | Admin primitives only; do not impose the library on public pages |
-| Database | PostgreSQL on Neon, Singapore | Current managed service | Confirmed | Relational source of truth close to the target deployment region |
-| ORM | Prisma | 7.x candidate | Provisional | Confirm the current production release, runtime adapter, and migration path during bootstrap |
+| Database | Cloudflare D1 | Current managed service | Confirmed | Relational source of truth through a Workers binding; see ADR-0009 |
+| ORM | Drizzle | Current compatible | Confirmed | Use the D1 SQLite driver and committed SQL migrations; see ADR-0009 |
 | Authentication | Better Auth with email OTP | Current compatible | Confirmed | Six-digit email codes and database sessions; see ADR-0004 |
 | Object storage | Cloudflare R2 on a custom domain | Current managed service | Confirmed | Store all uploaded media behind the project domain |
-| Image pipeline | Application-led | — | Provisional | Validate against representative media workloads without blocking unrelated features; see ADR-0008 |
+| Image pipeline | Unselected | — | Provisional | Issue #4 must validate conversion, EXIF removal, CPU use, and delivery before media implementation |
 | Content | Pure Markdown with remark, rehype, and Shiki | Current compatible | Confirmed | Markdown is authoritative; MDX is excluded; see ADR-0005 |
 | Editor | Text area, preview, and mobile toolbar | — | Confirmed | Keep authoring portable and dependency-light; see ADR-0005 |
 | Email | Resend | Current managed service | Confirmed | Release requires successful code delivery to QQ Mail and 163 Mail |
-| Hosting | Vercel Preview for development; production host unselected | — | Provisional | Use Git previews now and reassess after representative features; see ADR-0008 |
+| Hosting | Cloudflare Workers | Current managed service | Confirmed | Use Workers for production; keep Vercel only as a temporary rollback path; see ADR-0009 |
+| Next.js runtime adapter | vinext first; OpenNext fallback | Current compatible | Provisional | Accept one adapter only after Issue #29 passes its compatibility and preview checks |
 | Analytics | None in v1 | — | Confirmed | Reconsider cookie-free analytics in v1.5 |
 | Code quality | ESLint, Prettier, Husky, lint-staged | Current compatible | Confirmed | Run local checks before user commits |
 | CI | GitHub Actions | — | Confirmed | Run lint, type checks, tests, and a production build on every PR |
@@ -579,3 +580,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-08-31 | v0.6 | Aligned FR-AUTH with ADR-0004: owner email login and session persistence move to v1; visitor access and GitHub login remain in v1.5 |
 | 2026-09-01 | v0.7 | Fixed launch hosts, locale URLs, homepage structure, CV policy, visual boundaries, and incremental content preparation |
 | 2026-09-03 | v0.8 | Adopted Vercel-first preview delivery without selecting the permanent production host |
+| 2026-09-03 | v0.9 | Selected Cloudflare Workers, D1, and Drizzle while retaining adapter and image validation gates |

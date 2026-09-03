@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.6 · 2026-09-01
+> v0.8 · 2026-09-03
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -37,13 +37,13 @@ Service layer                 Business rules, authorisation, transactions, event
         |  may call
 Repository layer              The only code that touches the database
         |
-        Prisma / PostgreSQL
+        Drizzle / Cloudflare D1
 ```
 
 Enforced by ESLint `no-restricted-imports`:
 
-1. `app/` MUST NOT import `prisma`.
-2. Only `*.repository.ts` may import `prisma`.
+1. `app/` MUST NOT import the database client.
+2. Only `*.repository.ts` may import the Drizzle client.
 3. Cross-module imports MUST target the other module's `index.ts`.
 
 Rule 3 is the foundation: while the exported signature holds, internals can be restructured freely.
@@ -66,7 +66,7 @@ src/
       components/
       server/
         post.service.ts       #   Business logic
-        post.repository.ts    #   Only prisma consumer
+        post.repository.ts    #   Only database consumer
       schema.ts               #   zod schemas and inferred types
       index.ts                #   Sole public export
     moment/  item/  photo/  comment/  auth/  media/  tag/
@@ -74,7 +74,9 @@ src/
     ui/                       # Admin primitives; public pages may use custom components
     layout/
   lib/
-    db.ts                     #   Prisma singleton
+    db/
+      client.ts               #   Drizzle client from the current D1 binding
+      schema.ts               #   Drizzle schema
     storage/                  # * Storage adapter
     mail/                     # * Mail adapter
     metadata/                 # * Metadata adapters
@@ -86,10 +88,8 @@ src/
     site.ts
     navigation.ts
   styles/
-prisma/
-  schema.prisma
-  migrations/                 # One file per change; never edit production by hand
-  seed.ts
+drizzle/
+  migrations/                 # Generated SQL; never edit production by hand
 docs/
   PRD.md  architecture.md  ROADMAP.md  tech-debt.md  adr/
 tests/
@@ -114,11 +114,12 @@ This boundary allows visual redesigns to remain inside layouts, public component
 
 - Next.js 16 App Router and strict TypeScript form the application runtime.
 - Tailwind CSS v4 is the styling base. shadcn/ui and Radix are limited to admin primitives. Public pages may use custom CSS and components.
-- Neon PostgreSQL in Singapore is the source of truth. Prisma is selected, but its major version and runtime adapter remain provisional until bootstrap validation.
+- Cloudflare D1 is the relational source of truth. Drizzle owns the schema and migrations. See ADR-0009.
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.
 - Pure Markdown is authoritative. remark, rehype, and Shiki render content on the server. See ADR-0005.
-- Vercel Preview supports current development. Production hosting and image processing remain provisional under ADR-0008.
+- Cloudflare Workers is the production target. Issue #29 validates vinext first and retains OpenNext as a fallback. Vercel remains a temporary rollback path until the Workers preview passes.
+- Image processing remains provisional under Issue #4.
 
 ---
 
@@ -186,13 +187,16 @@ An in-memory bus is sufficient. Replace it with a queue behind the same interfac
 
 ### 3.5 Database evolution
 
-- All structural changes go through `prisma migrate`. Migration files are committed. Never modify production by hand.
+- Drizzle generates versioned SQL migrations. Migration files are reviewed, committed, and applied to D1 through Wrangler. Never modify production by hand.
 - New columns are nullable or defaulted.
 - Never drop or rename a column directly. Use expand–migrate–contract: add, backfill and switch reads, drop a release or two later.
 - Every table has `createdAt` and `updatedAt`. Deletion is soft, via `deletedAt`.
 - Add indexes in response to real queries; indexes slow writes.
-- JSON is an escape hatch. Any field used for filtering, sorting, or aggregation MUST be a real column.
-- Neon is serverless: account for cold starts and connection limits; configure Prisma pooling.
+- JSON text is an escape hatch. Any field used for filtering, sorting, or aggregation MUST be a real column.
+- Model many-to-many relations with explicit join tables. Do not depend on implicit ORM relations.
+- Treat D1 as SQLite. Schema code must make enum, boolean, timestamp, and JSON representations explicit.
+- Use separate local, test, preview, and production D1 databases. Never bind a preview deployment to production data.
+- Account for D1 storage, query, parameter, and write-concurrency limits. No connection pool is required.
 
 ### 3.6 Acceptance criteria
 
@@ -223,16 +227,16 @@ Any failing row is an architectural defect.
 **Testing.**
 - Vitest for service-layer logic, utilities, zod schemas, authorisation. UI coverage is not a target.
 - Playwright for critical-path smoke tests only: homepage loads, admin login, publish a post, view it. Cap at 10.
-- Database tests run against a dedicated test database seeded by `prisma/seed.ts`.
+- Database tests run against an isolated D1-compatible test database with a deterministic owner-safe seed path.
 - v1 covers authorisation and validation only. v1.5 adds key business logic and E2E smoke. Coverage percentage is not a goal.
 
 **CI/CD.**
 - GitHub Actions runs `lint`, `typecheck`, `test`, `build` on every push and PR. Any failure blocks merge.
-- Every PR gets a Vercel Preview URL, openable on a phone. The production host remains provisional under ADR-0008.
-- Merging to `main` deploys to production.
+- Issue #29 establishes versioned Workers preview URLs for non-production branches. The verified Vercel preview remains available only as a temporary rollback path until that gate passes.
+- Production deployment from `main` starts only after the Workers preview, environment isolation, and rollback checks pass.
 - Husky and lint-staged gate commits locally.
 
-**Database operations.** Migrations via `prisma migrate`, committed. `prisma/seed.ts` populates a new environment in one command. The Neon restore procedure MUST be rehearsed; an untested backup is not a backup. Review slow queries after launch and use `EXPLAIN` to catch ORM N+1 patterns.
+**Database operations.** Drizzle generates committed SQL migrations; Wrangler applies them to the selected D1 environment. A deterministic seed populates a new environment. Rehearse D1 Time Travel restore before launch; an untested backup is not a backup. Review query plans and row-read volume after launch to catch missing indexes and ORM N+1 patterns.
 
 **Observability.** Structured logs cover login, publish, upload, and delete. Error and availability providers require a separate decision and mainland reachability check. Traffic analytics are deferred beyond v1.
 
@@ -244,7 +248,7 @@ Any failing row is an architectural defect.
 
 ## 5. Adoption sequence
 
-**v1.** TypeScript strict · ESLint + Prettier + Husky · layered structure with import boundaries · migration discipline · zod validation · `lib/env.ts` · branch strategy, Conventional Commits, self-reviewed PRs · ADRs · GitHub Actions baseline · provider preview · structured error capture · authorisation and validation unit tests · debt ledger
+**v1.** TypeScript strict · ESLint + Prettier + Husky · layered structure with import boundaries · migration discipline · zod validation · `lib/env.ts` · branch strategy, Conventional Commits, self-reviewed PRs · ADRs · GitHub Actions baseline · Workers preview · structured error capture · authorisation and validation unit tests · debt ledger
 
 **v1.5.** Business-logic unit tests · Playwright smoke tests · GitHub Projects in active use · Dependabot · structured logging · generated CHANGELOG
 
@@ -265,3 +269,4 @@ Any failing row is an architectural defect.
 | 2026-08-31 | v0.5 | Aligned architecture with the confirmed technology baseline and provisional hosting decision |
 | 2026-09-01 | v0.6 | Added the formal and personal presentation boundary for deferred visual and motion work |
 | 2026-09-03 | v0.7 | Adopted Vercel previews before final production host selection |
+| 2026-09-03 | v0.8 | Selected Cloudflare Workers, D1, and Drizzle with explicit runtime validation gates |
