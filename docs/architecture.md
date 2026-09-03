@@ -118,7 +118,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.
 - Pure Markdown is authoritative. remark, rehype, and Shiki render content on the server. See ADR-0005.
-- Cloudflare Workers is the production target. Issue #29 validates vinext first and retains OpenNext as a fallback. Vercel remains a temporary rollback path until the Workers preview passes.
+- Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal. OpenNext remains a fallback only for a documented blocker. Vercel remains a temporary platform fallback until Issue #29 closes.
 - Image processing remains provisional under Issue #4.
 
 ---
@@ -232,8 +232,8 @@ Any failing row is an architectural defect.
 
 **CI/CD.**
 - GitHub Actions runs `lint`, `typecheck`, `test`, `build` on every push and PR. Any failure blocks merge.
-- Issue #29 establishes versioned Workers preview URLs for non-production branches. The verified Vercel preview remains available only as a temporary rollback path until that gate passes.
-- Production deployment from `main` starts only after the Workers preview, environment isolation, and rollback checks pass.
+- Issue #29 established versioned Workers preview URLs and rehearsed code rollback without stateful bindings. The verified procedure is in `runbooks/cloudflare-workers-preview.md`.
+- Production deployment from `main` starts only after environment isolation, stateful recovery, and release checks pass. Vercel remains a temporary platform fallback until Issue #29 closes.
 - Husky and lint-staged gate commits locally.
 
 **Database operations.** Drizzle generates committed SQL migrations; Wrangler applies them to the selected D1 environment. A deterministic seed populates a new environment. Rehearse D1 Time Travel restore before launch; an untested backup is not a backup. Review query plans and row-read volume after launch to catch missing indexes and ORM N+1 patterns.
@@ -270,3 +270,4 @@ Any failing row is an architectural defect.
 | 2026-09-01 | v0.6 | Added the formal and personal presentation boundary for deferred visual and motion work |
 | 2026-09-03 | v0.7 | Adopted Vercel previews before final production host selection |
 | 2026-09-03 | v0.8 | Selected Cloudflare Workers, D1, and Drizzle with explicit runtime validation gates |
+| 2026-09-03 | v0.9 | Confirmed vinext through a versioned Workers preview and code rollback rehearsal |

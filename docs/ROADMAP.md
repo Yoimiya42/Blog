@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v1.1 · 2026-09-03
+> v1.2 · 2026-09-03
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## v1 — Initial Launch
@@ -73,7 +73,7 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 
 Publishing path: `#1 -> #5 -> #27 -> #29 -> #7 -> #8/#9/#14 -> #10/#12 -> #13 -> #15 -> #17/#18 -> #19`.
 
-Platform path: #29 validates the Workers runtime before D1 work starts. #4 selects image processing before #14 implements media upload. Vercel remains a rollback path until #29 passes.
+Platform path: #29 confirms the Workers runtime and code rollback before D1 work starts. #4 selects image processing before #14 implements media upload. Vercel remains a temporary platform fallback until #29 closes.
 
 Public identity path: `#6 -> #11 -> #16 -> #17/#18 -> #19`.
 
