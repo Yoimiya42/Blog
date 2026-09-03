@@ -10,4 +10,4 @@ AI rules live in [AGENTS.md](../AGENTS.md). Git and GitHub workflow lives in [CO
 | [tech-debt.md](tech-debt.md) | Accepted compromises | Whenever you accept a shortcut |
 | [ROADMAP.md](ROADMAP.md) | Release scope and order; live status is not tracked here | When deciding what the next release contains |
 | [engineering/](engineering/) | Placeholders for engineering detail, not yet active | When the corresponding practice is actually in use |
-| [runbooks/](runbooks/) | Placeholders for deployment, rollback, and recovery procedures | After the system is live |
+| [runbooks/](runbooks/) | Rehearsed deployment, rollback, and recovery procedures | When a live procedure is verified |

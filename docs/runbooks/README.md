@@ -1,4 +1,7 @@
-<!--
-Reserved for executable operational runbooks: deployment, rollback, database recovery, incident response.
-Add a runbook only after the procedure has been rehearsed against the live system.
--->
+# Operational runbooks
+
+Use only procedures rehearsed against the live service named in each runbook.
+
+| Procedure | Scope |
+|---|---|
+| [Vercel Preview deployment](vercel-preview.md) | Deploy and verify a Git feature branch without changing production traffic |
