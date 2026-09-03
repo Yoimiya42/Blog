@@ -1,6 +1,6 @@
 # 0008. Use Vercel previews before production host selection
 
-- **Status**: Accepted
+- **Status**: Superseded by 0009
 - **Date**: 2026-09-03
 - **Requirements**: NFR-CN-05, NFR-CN-07, NFR-CN-08, NFR-CN-10
 - **Supersedes**: ADR-0006 development sequencing

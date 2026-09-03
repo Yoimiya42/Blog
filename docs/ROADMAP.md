@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v1.0 · 2026-08-31
+> v1.2 · 2026-09-03
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## v1 — Initial Launch
@@ -22,7 +22,7 @@
 - Blog list, post detail, tags, pagination, code highlighting, table of contents, responsive images, drafts, and protected previews.
 - Owner-only email OTP authentication.
 - Mobile post management, Markdown editing, autosave, publishing, media upload, and media library.
-- Custom-domain application and image delivery on the production platform confirmed after representative features exist.
+- Custom-domain application delivery on Cloudflare Workers and image delivery through the approved pipeline.
 - GitHub Actions, local quality gates, versioned database migrations, and release validation.
 
 ### Non-goals
@@ -37,8 +37,9 @@
 
 | Window | Exit condition |
 |---|---|
-| 2026-09-01 to 2026-09-04 | Vercel Preview, application skeleton, and launch identity are ready |
-| 2026-09-05 to 2026-09-10 | Database, authentication, and Markdown foundations are complete |
+| 2026-09-01 to 2026-09-03 | Vercel Preview, application skeleton, and launch identity are ready |
+| 2026-09-03 to 2026-09-05 | Cloudflare platform decision and minimal Workers preview are complete |
+| 2026-09-06 to 2026-09-10 | Drizzle/D1, authentication, and Markdown foundations are complete |
 | 2026-09-11 to 2026-09-19 | Public homepage, blog, admin, editor, and media vertical slices work |
 | 2026-09-20 to 2026-09-25 | Publishing workflow, hidden entrance, and cross-cutting gates pass |
 | 2026-09-26 to 2026-09-30 | Production deployment and UK/mainland release validation pass |
@@ -47,15 +48,16 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 
 ## Work breakdown
 
-| Issue | Outcome | Priority | Size | Initial state | Depends on |
+| Issue | Outcome | Priority | Size | State | Depends on |
 |---|---|---:|---:|---|---|
-| [#1](https://github.com/Yoimiya42/Blog/issues/1) | Record technology baseline | P0 | S | In review | — |
-| [#3](https://github.com/Yoimiya42/Blog/issues/3) | Establish the v1 release plan | P0 | S | In progress | #1 |
-| [#4](https://github.com/Yoimiya42/Blog/issues/4) | Compare hosting and image-pipeline options after representative features exist | P2 | L | Backlog | Representative feature set |
-| [#5](https://github.com/Yoimiya42/Blog/issues/5) | Bootstrap application and quality gates | P0 | M | Backlog | #1 |
-| [#27](https://github.com/Yoimiya42/Blog/issues/27) | Establish Vercel preview deployment | P0 | S | In progress | #5 |
-| [#6](https://github.com/Yoimiya42/Blog/issues/6) | Freeze launch identity and content | P0 | M | Ready | Owner decisions |
-| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement database foundation | P0 | M | Backlog | #5, #27 |
+| [#1](https://github.com/Yoimiya42/Blog/issues/1) | Record technology baseline | P0 | S | Done | — |
+| [#3](https://github.com/Yoimiya42/Blog/issues/3) | Establish the v1 release plan | P0 | S | Done | #1 |
+| [#5](https://github.com/Yoimiya42/Blog/issues/5) | Bootstrap application and quality gates | P0 | M | Done | #1 |
+| [#6](https://github.com/Yoimiya42/Blog/issues/6) | Freeze launch identity and content | P0 | M | Done | Owner decisions |
+| [#27](https://github.com/Yoimiya42/Blog/issues/27) | Establish Vercel preview deployment | P0 | S | Done | #5 |
+| [#29](https://github.com/Yoimiya42/Blog/issues/29) | Establish Cloudflare platform foundation | P0 | M | In progress | #5, #27 |
+| [#4](https://github.com/Yoimiya42/Blog/issues/4) | Select the Workers image pipeline | P0 | M | Backlog | #29, representative media |
+| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement Drizzle/D1 database foundation | P0 | M | Backlog | #29 |
 | [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | Backlog | #5, #7 |
 | [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement Markdown rendering | P0 | M | Backlog | #5 |
 | [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | P0 | L | Backlog | #7, #9, #14 |
@@ -66,12 +68,12 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 | [#15](https://github.com/Yoimiya42/Blog/issues/15) | Implement draft and publish workflow | P0 | M | Backlog | #10, #12, #13, #14 |
 | [#16](https://github.com/Yoimiya42/Blog/issues/16) | Implement hidden entrance | P1 | S | Backlog | #6, #11 |
 | [#17](https://github.com/Yoimiya42/Blog/issues/17) | Meet security, privacy, and accessibility gates | P0 | L | Backlog | All feature Issues |
-| [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy production and custom domains | P0 | M | Backlog | #4, #6, feature-complete build |
+| [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy Workers production and custom domains | P0 | M | Backlog | #4, #6, #29, feature-complete build |
 | [#19](https://github.com/Yoimiya42/Blog/issues/19) | Validate the v1 release | P0 | M | Backlog | #6, #17, #18 |
 
-Publishing path: `#1 -> #5 -> #27 -> #7 -> #8/#9/#14 -> #10/#12 -> #13 -> #15 -> #17/#18 -> #19`.
+Publishing path: `#1 -> #5 -> #27 -> #29 -> #7 -> #8/#9/#14 -> #10/#12 -> #13 -> #15 -> #17/#18 -> #19`.
 
-Platform practice: start #4 after the application has representative database, authentication, media, and rendering workloads. It does not block feature development.
+Platform path: #29 confirms the Workers runtime and code rollback before D1 work starts. #4 selects image processing before #14 implements media upload. Vercel remains a temporary platform fallback until #29 closes.
 
 Public identity path: `#6 -> #11 -> #16 -> #17/#18 -> #19`.
 
