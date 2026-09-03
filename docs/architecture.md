@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.8 · 2026-09-03
+> v0.10 · 2026-09-03
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -13,9 +13,10 @@ Build seams only where change is already identified. Speculative abstraction cos
 |---|---|
 | Content types beyond film, book, game, place | User and session models |
 | Interaction types (like, bookmark, vote) | Media storage and reference model |
-| External metadata providers | Markdown rendering pipeline |
-| Image host, mail provider, database host | Routing and page organisation |
-| Login methods | Tag system |
+| External metadata providers | Routing and page organisation |
+| Article node types and renderers | Tag system |
+| Image host, mail provider, database host | |
+| Login methods | |
 | Side effects after publishing | |
 
 Principles:
@@ -64,6 +65,7 @@ src/
   features/                   # Self-contained business modules
     post/
       components/
+      content/                 # * Article schema and runtime-specific registries
       server/
         post.service.ts       #   Business logic
         post.repository.ts    #   Only database consumer
@@ -96,7 +98,7 @@ tests/
   unit/  e2e/
 ```
 
-The five `*` entries are the project's only extension points.
+The six `*` entries are the project's only extension points.
 
 ### Public presentation boundary
 
@@ -117,7 +119,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Cloudflare D1 is the relational source of truth. Drizzle owns the schema and migrations. See ADR-0009.
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.
-- Pure Markdown is authoritative. remark, rehype, and Shiki render content on the server. See ADR-0005.
+- Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
 - Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal. OpenNext remains a fallback only for a documented blocker. Vercel remains a temporary platform fallback until Issue #29 closes.
 - Image processing remains provisional under Issue #4.
 
@@ -149,7 +151,13 @@ export const contentTypes = {
 
 List pages, detail pages, and admin forms render from this config. A new content type is one entry here, with no changes elsewhere.
 
-### 3.2 Adapters — `lib/storage`, `lib/mail`, `lib/metadata`
+### 3.2 Article content — `features/post/content`
+
+One shared schema defines persisted node names and attributes. A client-only registry maps those names to TipTap extensions. A server-safe registry maps them to React renderers. No module imports both registries, so public rendering cannot include the editor runtime.
+
+Adding a persisted node requires a PRD version, a content schema version, deterministic migration coverage, and both runtime mappings. HTML and Markdown are one-way derived outputs and MUST NOT be written back as article source.
+
+### 3.3 Adapters — `lib/storage`, `lib/mail`, `lib/metadata`
 
 ```ts
 // lib/storage/types.ts
@@ -165,13 +173,13 @@ export interface StorageAdapter {
 
 Swapping a provider changes one line in `index.ts`. Mail and metadata follow the same shape: a `SpotifyProvider` enables albums without touching other code.
 
-### 3.3 Polymorphic interactions
+### 3.4 Polymorphic interactions
 
 Comments use `targetType` + `targetId` (`PRD.md` section 5); the pattern extends to a future `Reaction` table. Making a type commentable is one enum value plus `features.comment: true`.
 
 Cost: no foreign keys. Referential integrity is enforced in the application layer — deleting a post must delete its comments. See ADR-0002.
 
-### 3.4 Event bus — `lib/events.ts`
+### 3.5 Event bus — `lib/events.ts`
 
 Publishing triggers a growing set of side effects. Hardcoding them into `publishPost()` means editing it for every addition.
 
@@ -185,7 +193,7 @@ events.on('post.published', revalidateSitemap)
 
 An in-memory bus is sufficient. Replace it with a queue behind the same interface if reliable delivery is needed.
 
-### 3.5 Database evolution
+### 3.6 Database evolution
 
 - Drizzle generates versioned SQL migrations. Migration files are reviewed, committed, and applied to D1 through Wrangler. Never modify production by hand.
 - New columns are nullable or defaulted.
@@ -198,11 +206,12 @@ An in-memory bus is sufficient. Replace it with a queue behind the same interfac
 - Use separate local, test, preview, and production D1 databases. Never bind a preview deployment to production data.
 - Account for D1 storage, query, parameter, and write-concurrency limits. No connection pool is required.
 
-### 3.6 Acceptance criteria
+### 3.7 Acceptance criteria
 
 | Scenario | Target |
 |---|---|
 | Add a life-list content type | Edit `config/content-types.ts`, optionally add a provider |
+| Add an article node | Update the shared schema, both runtime registries, one migration, and focused tests |
 | Make a content type commentable | One enum value plus one config line |
 | Add a login method | One change in `lib/auth.ts` |
 | Swap image host or mail provider | One change in the adapter's `index.ts` |
@@ -271,3 +280,4 @@ Any failing row is an architectural defect.
 | 2026-09-03 | v0.7 | Adopted Vercel previews before final production host selection |
 | 2026-09-03 | v0.8 | Selected Cloudflare Workers, D1, and Drizzle with explicit runtime validation gates |
 | 2026-09-03 | v0.9 | Confirmed vinext through a versioned Workers preview and code rollback rehearsal |
+| 2026-09-03 | v0.10 | Adopted TipTap JSON with separate editor and public-renderer boundaries |
