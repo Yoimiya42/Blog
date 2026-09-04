@@ -7,7 +7,6 @@ const SAFE_LINK_PROTOCOLS = ["http:", "https:", "mailto:"];
 /** Heading ids become URL fragments, so keep them fragment-safe. */
 const HEADING_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
-/** Control characters can smuggle a blocked protocol past URL parsing. */
 function hasControlCharacter(value: string): boolean {
   for (const character of value) {
     const code = character.codePointAt(0) ?? 0;
@@ -22,6 +21,10 @@ function hasControlCharacter(value: string): boolean {
  * would miss encoded and future variants.
  */
 function isSafeHref(href: string): boolean {
+  // Site-relative hrefs below skip URL parsing, so they are never normalised.
+  // These two guards keep unnormalised input out of that shortcut; absolute
+  // URLs do not need them because new URL() normalises before the protocol
+  // check.
   if (href !== href.trim()) return false;
   if (hasControlCharacter(href)) return false;
   // Protocol-relative URLs inherit the page protocol and point off-site.
