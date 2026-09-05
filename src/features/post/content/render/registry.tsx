@@ -7,6 +7,8 @@ import type {
   Mark,
   TextNode,
 } from "../types";
+import { ArticleImage } from "./image";
+import type { ArticleMediaMap } from "./media";
 
 export type RenderableNode = BlockNode | ListItemNode;
 export type RenderableNodeType = RenderableNode["type"];
@@ -17,9 +19,14 @@ export type RenderableNodeOfType<Type extends RenderableNodeType> = Extract<
 
 export type RenderResult = ReactNode | Promise<ReactNode>;
 
+export type RenderContext = {
+  mediaById: ArticleMediaMap;
+};
+
 export type NodeRenderer<Type extends RenderableNodeType> = (
   node: RenderableNodeOfType<Type>,
   path: string,
+  context: RenderContext,
 ) => RenderResult;
 
 export type NodeRendererRegistry = {
@@ -137,30 +144,30 @@ export const nodeRenderers = {
     const exhaustiveLevel: never = node.attrs.level;
     return exhaustiveLevel;
   },
-  blockquote: async (node, path) => (
-    <blockquote key={path}>{await renderNodes(node.content, path)}</blockquote>
+  blockquote: async (node, path, context) => (
+    <blockquote key={path}>
+      {await renderNodes(node.content, context, path)}
+    </blockquote>
   ),
-  bulletList: async (node, path) => (
-    <ul key={path}>{await renderNodes(node.content, path)}</ul>
+  bulletList: async (node, path, context) => (
+    <ul key={path}>{await renderNodes(node.content, context, path)}</ul>
   ),
-  orderedList: async (node, path) => (
+  orderedList: async (node, path, context) => (
     <ol key={path} start={node.attrs?.start}>
-      {await renderNodes(node.content, path)}
+      {await renderNodes(node.content, context, path)}
     </ol>
   ),
-  listItem: async (node, path) => (
-    <li key={path}>{await renderNodes(node.content, path)}</li>
+  listItem: async (node, path, context) => (
+    <li key={path}>{await renderNodes(node.content, context, path)}</li>
   ),
   horizontalRule: (_node, path) => <hr key={path} />,
-  image: (node, path) => {
-    const label = node.attrs.caption?.trim() || node.attrs.alt.trim();
-
-    return (
-      <figure data-media-id={node.attrs.mediaId} key={path}>
-        {label ? <figcaption>{label}</figcaption> : null}
-      </figure>
-    );
-  },
+  image: (node, path, context) => (
+    <ArticleImage
+      key={path}
+      media={context.mediaById[node.attrs.mediaId]}
+      node={node}
+    />
+  ),
   codeBlock: (node, path) => {
     const code = node.content?.map((textNode) => textNode.text).join("") ?? "";
 
@@ -175,6 +182,7 @@ export const nodeRenderers = {
 async function renderNode(
   node: RenderableNode,
   path: string,
+  context: RenderContext,
 ): Promise<ReactNode> {
   switch (node.type) {
     case "paragraph":
@@ -182,17 +190,17 @@ async function renderNode(
     case "heading":
       return nodeRenderers.heading(node, path);
     case "blockquote":
-      return nodeRenderers.blockquote(node, path);
+      return nodeRenderers.blockquote(node, path, context);
     case "bulletList":
-      return nodeRenderers.bulletList(node, path);
+      return nodeRenderers.bulletList(node, path, context);
     case "orderedList":
-      return nodeRenderers.orderedList(node, path);
+      return nodeRenderers.orderedList(node, path, context);
     case "listItem":
-      return nodeRenderers.listItem(node, path);
+      return nodeRenderers.listItem(node, path, context);
     case "horizontalRule":
       return nodeRenderers.horizontalRule(node, path);
     case "image":
-      return nodeRenderers.image(node, path);
+      return nodeRenderers.image(node, path, context);
     case "codeBlock":
       return nodeRenderers.codeBlock(node, path);
   }
@@ -209,9 +217,12 @@ async function renderNode(
 
 export async function renderNodes(
   nodes: readonly RenderableNode[],
+  context: RenderContext,
   parentPath = "article",
 ): Promise<ReactNode[]> {
   return Promise.all(
-    nodes.map((node, index) => renderNode(node, `${parentPath}.${index}`)),
+    nodes.map((node, index) =>
+      renderNode(node, `${parentPath}.${index}`, context),
+    ),
   );
 }

@@ -4,9 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 import type { ArticleDocument } from "@/features/post/content/types";
 import { validArticleFixtures } from "@/features/post/content/fixtures";
 import { ArticleContent } from "@/features/post/content/render/article-content";
+import type { ArticleMediaMap } from "@/features/post/content/render/media";
 
-async function renderArticle(document: ArticleDocument): Promise<string> {
-  return renderToStaticMarkup(await ArticleContent({ document }));
+async function renderArticle(
+  document: ArticleDocument,
+  mediaById: ArticleMediaMap = {},
+): Promise<string> {
+  return renderToStaticMarkup(await ArticleContent({ document, mediaById }));
 }
 
 describe("article renderer", () => {
@@ -57,26 +61,58 @@ describe("article renderer", () => {
     );
   });
 
-  it("preserves ordered-list starts and renders basic media blocks", async () => {
+  it("preserves ordered-list starts and renders resolved media", async () => {
+    const mediaById = {
+      med_01: {
+        url: "/media/cat.webp",
+        width: 1200,
+        height: 800,
+        blurhash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
+      },
+      med_02: {
+        url: "/media/decorative.webp",
+        width: 640,
+        height: 480,
+      },
+    } satisfies ArticleMediaMap;
     const ordered = await renderArticle(
       validArticleFixtures.orderedListWithStart,
     );
-    const image = await renderArticle(validArticleFixtures.image);
+    const image = await renderArticle(validArticleFixtures.image, mediaById);
     const decorativeImage = await renderArticle(
       validArticleFixtures.decorativeImage,
+      mediaById,
     );
     const code = await renderArticle(validArticleFixtures.codeBlocks);
 
     expect(ordered).toContain('<ol start="3"><li><p>third</p></li></ol>');
     expect(image).toContain(
-      '<figure data-media-id="med_01"><figcaption>My cat</figcaption></figure>',
+      '<figure data-media-id="med_01"><img alt="a grey cat" decoding="async" height="800" loading="lazy" src="/media/cat.webp" width="1200"/><figcaption>My cat</figcaption></figure>',
     );
     expect(decorativeImage).toContain(
-      '<figure data-media-id="med_02"></figure>',
+      '<figure data-media-id="med_02"><img alt="" decoding="async" height="480" loading="lazy" src="/media/decorative.webp" width="640"/></figure>',
     );
     expect(code).toContain(
       '<pre data-language="typescript"><code>const a = 1;</code></pre>',
     );
+  });
+
+  it("renders a safe fallback when referenced media is unavailable", async () => {
+    const error = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    const markup = await renderArticle(validArticleFixtures.image);
+
+    expect(error).toHaveBeenCalledWith(
+      "Article image media is unavailable.",
+      "med_01",
+    );
+    expect(markup).toContain(
+      '<figure data-media-id="med_01"><div role="note">Image unavailable.</div></figure>',
+    );
+    expect(markup).not.toContain("a grey cat");
+    expect(markup).not.toContain("My cat");
   });
 
   it("renders a non-sensitive fallback for unsupported runtime nodes", async () => {
