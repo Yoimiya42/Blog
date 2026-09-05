@@ -149,6 +149,72 @@ describe("heading id assignment", () => {
     expect(ids[1]).toMatch(HEADING_ID_PATTERN);
   });
 
+  it("keeps the original id when a copy is pasted above it", () => {
+    const instance = createEditor();
+
+    instance.commands.setContent({
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { level: 2, id: "original-id" },
+          content: [{ type: "text", text: "ORIGINAL" }],
+        },
+      ],
+    });
+
+    instance.commands.insertContentAt(0, {
+      type: "heading",
+      attrs: { level: 2, id: "original-id" },
+      content: [{ type: "text", text: "COPY" }],
+    });
+
+    const [copy, original] = headings(instance);
+    expect(instance.getText()).toContain("COPY");
+    // The anchor must follow the heading that already existed, not the copy
+    // that happens to sit first in the document.
+    expect(original.attrs?.id).toBe("original-id");
+    expect(copy.attrs?.id).not.toBe("original-id");
+    expect(copy.attrs?.id).toMatch(HEADING_ID_PATTERN);
+  });
+
+  it("keeps the original id when a copy is pasted between headings", () => {
+    const instance = createEditor();
+
+    instance.commands.setContent({
+      type: "doc",
+      content: [
+        {
+          type: "heading",
+          attrs: { level: 2, id: "first" },
+          content: [{ type: "text", text: "FIRST" }],
+        },
+        {
+          type: "heading",
+          attrs: { level: 2, id: "second" },
+          content: [{ type: "text", text: "SECOND" }],
+        },
+      ],
+    });
+
+    instance.commands.insertContentAt(0, {
+      type: "heading",
+      attrs: { level: 2, id: "second" },
+      content: [{ type: "text", text: "COPY OF SECOND" }],
+    });
+
+    const byText = new Map(
+      headings(instance).map((node) => [
+        (node as { content?: { text?: string }[] }).content?.[0]?.text,
+        node.attrs?.id,
+      ]),
+    );
+
+    expect(byText.get("FIRST")).toBe("first");
+    expect(byText.get("SECOND")).toBe("second");
+    expect(byText.get("COPY OF SECOND")).not.toBe("second");
+  });
+
   it("replaces an id the shared schema would reject", () => {
     const instance = createEditor();
 

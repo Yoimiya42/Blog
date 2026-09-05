@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.11 · 2026-09-03 · Draft
+> v0.12 · 2026-09-05 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -509,12 +509,12 @@ Cloudflare Workers is the selected production platform under ADR-0009. The Worke
 
 ### 6.6 Budget
 
-Target £15–30 per year while the application remains within free compute and storage limits. Workers Paid requires explicit approval after representative CPU measurements.
+Target £15–70 per year. Server-side code highlighting exceeds the 10 ms per-request CPU limit on Workers Free, so the owner approved Workers Paid for production; see ADR-0011. Development and preview stay on the free plan.
 
 | Item | Choice | Cost |
 |---|---|---|
 | Domain | Cloudflare Registrar / Namecheap | £10–15 / year |
-| Hosting | Cloudflare Workers Free | Free within request and CPU limits |
+| Hosting | Cloudflare Workers Paid from production launch | $5 / month; free plan for development and preview |
 | Database | Cloudflare D1 Free | Free; 500MB per database and 5GB per account |
 | Image storage | Cloudflare R2 | Free under 10GB, no egress fees |
 | Email | Resend free tier | 3000 / month |
@@ -585,3 +585,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-09-03 | v0.9 | Selected Cloudflare Workers, D1, and Drizzle while retaining adapter and image validation gates |
 | 2026-09-03 | v0.10 | Confirmed vinext after the Workers preview and rollback rehearsal |
 | 2026-09-03 | v0.11 | Replaced authoritative Markdown with versioned TipTap JSON stored through Drizzle and D1 |
+| 2026-09-05 | v0.12 | Approved Workers Paid for production because server-side code highlighting exceeds the free CPU limit |

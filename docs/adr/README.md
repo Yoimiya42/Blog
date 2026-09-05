@@ -26,3 +26,4 @@ Template: `template.md`.
 | [0008](0008-vercel-previews-before-host-selection.md) | Vercel previews before host selection | Use Vercel previews now and reassess production hosting after representative features | Superseded by 0009 | 2026-09-03 |
 | [0009](0009-cloudflare-workers-d1-drizzle.md) | Cloudflare Workers, D1, and Drizzle | Use Workers with D1 and Drizzle; validate the Next.js adapter before implementation | Accepted | 2026-09-03 |
 | [0010](0010-tiptap-json-article-content.md) | TipTap JSON article content | Store versioned TipTap JSON in D1 as the only authoritative article body | Accepted | 2026-09-03 |
+| [0011](0011-shiki-javascript-engine-workers-paid.md) | Shiki JavaScript engine and Workers Paid | Highlight on the server with Shiki's JavaScript regex engine and run production on Workers Paid | Accepted | 2026-09-05 |

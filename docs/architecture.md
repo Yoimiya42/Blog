@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.10 · 2026-09-03
+> v0.11 · 2026-09-05
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -121,6 +121,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Cloudflare R2 stores media behind the project domain.
 - Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
 - Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal. OpenNext remains a fallback only for a documented blocker. Vercel remains a temporary platform fallback until Issue #29 closes.
+- Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. Production runs on Workers Paid because first-use grammar setup exceeds the free per-request CPU limit. See ADR-0011.
 - Image processing remains provisional under Issue #4.
 
 ---
@@ -281,3 +282,4 @@ Any failing row is an architectural defect.
 | 2026-09-03 | v0.8 | Selected Cloudflare Workers, D1, and Drizzle with explicit runtime validation gates |
 | 2026-09-03 | v0.9 | Confirmed vinext through a versioned Workers preview and code rollback rehearsal |
 | 2026-09-03 | v0.10 | Adopted TipTap JSON with separate editor and public-renderer boundaries |
+| 2026-09-05 | v0.11 | Fixed the server highlighting engine and the production Workers plan |

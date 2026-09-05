@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   CODE_LANGUAGES,
   CONTENT_SCHEMA_VERSION,
+  collectMediaReferences,
   parseArticleDocument,
   validateArticleDocument,
+  validateMediaReferences,
 } from "@/features/post";
 import {
   invalidArticleFixtures,
@@ -212,6 +214,78 @@ describe("parseArticleDocument", () => {
     expect(() =>
       parseArticleDocument(documentWithHref("javascript:alert(1)")),
     ).toThrow(/unsupported link target/);
+  });
+});
+
+describe("media references", () => {
+  const document = {
+    type: "doc",
+    content: [
+      { type: "image", attrs: { mediaId: "med_01", alt: "one" } },
+      {
+        type: "blockquote",
+        content: [
+          { type: "paragraph", content: [{ type: "text", text: "q" }] },
+        ],
+      },
+      { type: "image", attrs: { mediaId: "med_02", alt: "two" } },
+      { type: "image", attrs: { mediaId: "med_01", alt: "one again" } },
+    ],
+  } as const;
+
+  const parsed = parseArticleDocument(document);
+
+  it("collects each referenced id once, in document order", () => {
+    expect(collectMediaReferences(parsed)).toEqual(["med_01", "med_02"]);
+  });
+
+  it("returns no references for a document without images", () => {
+    expect(
+      collectMediaReferences(
+        parseArticleDocument(validArticleFixtures.cjkProse),
+      ),
+    ).toEqual([]);
+  });
+
+  it("accepts a document whose references all resolve", async () => {
+    const resolver = {
+      findExisting: async (ids: string[]) => new Set(ids),
+    };
+
+    await expect(
+      validateMediaReferences(parsed, resolver).then((result) => result.ok),
+    ).resolves.toBe(true);
+  });
+
+  it("reports every reference the resolver does not know", async () => {
+    const resolver = {
+      findExisting: async () => new Set(["med_01"]),
+    };
+
+    const result = await validateMediaReferences(parsed, resolver);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.issues).toEqual([
+      { path: "content", message: "unknown media reference: med_02" },
+    ]);
+  });
+
+  it("does not call the resolver when there is nothing to resolve", async () => {
+    let calls = 0;
+    const resolver = {
+      findExisting: async (ids: string[]) => {
+        calls += 1;
+        return new Set(ids);
+      },
+    };
+
+    await validateMediaReferences(
+      parseArticleDocument(validArticleFixtures.cjkProse),
+      resolver,
+    );
+
+    expect(calls).toBe(0);
   });
 });
 

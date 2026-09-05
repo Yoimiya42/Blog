@@ -96,7 +96,10 @@ export const headingNodeSchema = z.strictObject({
 
 export const blockquoteNodeSchema = z.strictObject({
   type: z.literal("blockquote"),
-  content: z.tuple([paragraphNodeSchema], paragraphNodeSchema),
+  // Getter defers evaluation because the allowed children include lists.
+  get content() {
+    return z.tuple([blockquoteContentNodeSchema], blockquoteContentNodeSchema);
+  },
 });
 
 export const listItemNodeSchema = z.strictObject({
@@ -104,7 +107,7 @@ export const listItemNodeSchema = z.strictObject({
   // Getter defers evaluation so listItem and the list nodes can reference
   // each other; nested lists are only reachable through this cycle.
   get content() {
-    return z.tuple([paragraphNodeSchema], listBlockNodeSchema);
+    return z.tuple([paragraphNodeSchema], listItemContentNodeSchema);
   },
 });
 
@@ -149,6 +152,21 @@ export const codeBlockNodeSchema = z.strictObject({
   attrs: z.strictObject({ language: z.literal(CODE_LANGUAGES) }),
   content: z.array(plainTextNodeSchema).optional(),
 });
+
+export const blockquoteContentNodeSchema = z.discriminatedUnion("type", [
+  paragraphNodeSchema,
+  bulletListNodeSchema,
+  orderedListNodeSchema,
+  codeBlockNodeSchema,
+  horizontalRuleNodeSchema,
+]);
+
+export const listItemContentNodeSchema = z.discriminatedUnion("type", [
+  paragraphNodeSchema,
+  bulletListNodeSchema,
+  orderedListNodeSchema,
+  codeBlockNodeSchema,
+]);
 
 export const blockNodeSchema = z.discriminatedUnion("type", [
   paragraphNodeSchema,

@@ -1,6 +1,6 @@
 # Article Content Schema
 
-> Schema v1 · 2026-09-03
+> Schema v1 · 2026-09-05
 > Decision: ADR-0010. Requirement: FR-BLOG-13.
 
 ## 1. Invariants
@@ -8,6 +8,7 @@
 - `Post.content` stores one TipTap JSON document in D1 `TEXT` through Drizzle JSON mode. It is the only authoritative article body.
 - `Post.contentSchemaVersion` identifies the project schema. Version 1 is the launch schema.
 - The server validates every write. Drizzle typing does not replace runtime validation.
+- Shape validation is synchronous and database-free. Confirming that every `mediaId` resolves is a separate step, run only by callers that persist a document.
 - Unknown nodes, marks, attributes, and unsafe URLs are rejected.
 - Nodes store content data only. They never store HTML, JavaScript, React component names, or third-party embed code.
 - HTML, Markdown, plain text, table-of-contents data, reading time, and highlighted code are derived outputs.
@@ -22,10 +23,10 @@ The root is a `doc` node with one or more block nodes. A blank draft contains on
 | Node | `doc` | Block nodes |
 | Node | `paragraph` | Inline content |
 | Node | `heading` | Inline content; `level` is 2, 3, or 4; `id` is unique and stable within the document |
-| Node | `blockquote` | Paragraphs |
+| Node | `blockquote` | Paragraphs, lists, code blocks, and rules; no headings, images, or nested quotes |
 | Node | `bulletList` | `listItem` nodes |
 | Node | `orderedList` | `listItem` nodes; optional positive `start` |
-| Node | `listItem` | Paragraph followed by optional list blocks |
+| Node | `listItem` | An opening paragraph, then paragraphs, lists, and code blocks; no headings or images |
 | Node | `horizontalRule` | No content or attributes |
 | Node | `hardBreak` | No content or attributes |
 | Node | `text` | UTF-8 text |
@@ -41,7 +42,7 @@ Heading IDs are generated when a heading is created and remain unchanged when it
 
 ## 3. Runtime boundaries
 
-Use TipTap StarterKit with only the v1 nodes and marks enabled. Disable level-one, level-five, and level-six headings and underline. Register project-owned `image` and heading-ID extensions; do not register the URL-based image extension. Drop cursor, gap cursor, undo/redo, list keymap, and trailing-node behaviour are editor-only and are not persisted.
+Use TipTap StarterKit with only the v1 nodes and marks enabled. Override the bundled `blockquote` and `listItem` content expressions: StarterKit accepts any block in both, which lets the editor build content the server rejects. Disable level-one, level-five, and level-six headings and underline. Register project-owned `image` and heading-ID extensions; do not register the URL-based image extension. Drop cursor, gap cursor, undo/redo, list keymap, and trailing-node behaviour are editor-only and are not persisted.
 
 The shared schema contains no React or TipTap runtime imports. A client-only editor registry and server-safe React renderer registry use the same node names. Public code cannot import the editor registry.
 

@@ -10,7 +10,7 @@
  */
 
 /** Attributes schema v1 keeps, by node name. Any other attribute is dropped. */
-const NODE_ATTRIBUTES: Record<string, readonly string[]> = {
+export const PERSISTED_NODE_ATTRIBUTES: Record<string, readonly string[]> = {
   heading: ["level", "id"],
   orderedList: ["start"],
   image: ["mediaId", "alt", "caption"],
@@ -18,7 +18,7 @@ const NODE_ATTRIBUTES: Record<string, readonly string[]> = {
 };
 
 /** Attributes schema v1 keeps, by mark name. */
-const MARK_ATTRIBUTES: Record<string, readonly string[]> = {
+export const PERSISTED_MARK_ATTRIBUTES: Record<string, readonly string[]> = {
   link: ["href"],
 };
 
@@ -45,7 +45,10 @@ function pickAttributes(
 function normalizeMark(mark: unknown): unknown {
   if (!isRecord(mark) || typeof mark.type !== "string") return mark;
 
-  const attrs = pickAttributes(MARK_ATTRIBUTES[mark.type], mark.attrs);
+  const attrs = pickAttributes(
+    PERSISTED_MARK_ATTRIBUTES[mark.type],
+    mark.attrs,
+  );
   return attrs ? { type: mark.type, attrs } : { type: mark.type };
 }
 
@@ -54,7 +57,10 @@ function normalizeNode(node: unknown): unknown {
 
   const result: Record<string, unknown> = { type: node.type };
 
-  const attrs = pickAttributes(NODE_ATTRIBUTES[node.type], node.attrs);
+  const attrs = pickAttributes(
+    PERSISTED_NODE_ATTRIBUTES[node.type],
+    node.attrs,
+  );
   if (attrs) result.attrs = attrs;
 
   if (typeof node.text === "string") result.text = node.text;

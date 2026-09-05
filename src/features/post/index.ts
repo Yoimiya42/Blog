@@ -25,6 +25,12 @@ export type {
 export {
   validateArticleDocument,
   parseArticleDocument,
+  collectMediaReferences,
+  validateMediaReferences,
 } from "./content/validate";
 
-export type { ValidationIssue, ValidationResult } from "./content/validate";
+export type {
+  ValidationIssue,
+  ValidationResult,
+  MediaReferenceResolver,
+} from "./content/validate";

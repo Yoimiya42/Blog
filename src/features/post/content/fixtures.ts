@@ -128,6 +128,67 @@ export const validArticleFixtures = {
     ],
   },
 
+  richBlockquote: {
+    type: "doc",
+    content: [
+      {
+        type: "blockquote",
+        content: [
+          { type: "paragraph", content: [{ type: "text", text: "quoted" }] },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "quoted item" }],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            type: "codeBlock",
+            attrs: { language: "go" },
+            content: [{ type: "text", text: "a := 1" }],
+          },
+          { type: "horizontalRule" },
+        ],
+      },
+    ],
+  },
+
+  richListItem: {
+    type: "doc",
+    content: [
+      {
+        type: "orderedList",
+        content: [
+          {
+            type: "listItem",
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "Run the migration:" }],
+              },
+              {
+                type: "codeBlock",
+                attrs: { language: "plaintext" },
+                content: [{ type: "text", text: "npm run db:migrate" }],
+              },
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "Then verify the output." }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
   nestedLists: {
     type: "doc",
     content: [
@@ -501,6 +562,73 @@ export const invalidArticleFixtures = {
   hardBreakAtTopLevel: {
     document: { type: "doc", content: [{ type: "hardBreak" }] },
     reason: "hard breaks are inline, not blocks",
+  },
+  headingInsideBlockquote: {
+    document: {
+      type: "doc",
+      content: [
+        {
+          type: "blockquote",
+          content: [{ type: "heading", attrs: { level: 2, id: "q" } }],
+        },
+      ],
+    },
+    reason: "a quoted heading would appear in the table of contents",
+  },
+  nestedBlockquote: {
+    document: {
+      type: "doc",
+      content: [
+        {
+          type: "blockquote",
+          content: [{ type: "blockquote", content: [{ type: "paragraph" }] }],
+        },
+      ],
+    },
+    reason: "quotes do not nest in schema v1",
+  },
+  imageInsideListItem: {
+    document: {
+      type: "doc",
+      content: [
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                { type: "paragraph" },
+                { type: "image", attrs: { mediaId: "m1", alt: "" } },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    reason: "images are top-level blocks in schema v1",
+  },
+  listItemOpeningWithCode: {
+    document: {
+      type: "doc",
+      content: [
+        {
+          type: "bulletList",
+          content: [
+            {
+              type: "listItem",
+              content: [
+                {
+                  type: "codeBlock",
+                  attrs: { language: "go" },
+                  content: [{ type: "text", text: "a := 1" }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    reason: "a list item opens with a paragraph so it has a readable label",
   },
   orderedListStartZero: {
     document: {

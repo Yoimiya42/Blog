@@ -43,14 +43,26 @@ export type HeadingNode = {
   content?: InlineNode[];
 };
 
+/** No headings and no nested quotes: both break the table of contents. */
+export type BlockquoteContentNode =
+  | ParagraphNode
+  | BulletListNode
+  | OrderedListNode
+  | CodeBlockNode
+  | HorizontalRuleNode;
+
 export type BlockquoteNode = {
   type: "blockquote";
-  content: [ParagraphNode, ...ParagraphNode[]];
+  content: [BlockquoteContentNode, ...BlockquoteContentNode[]];
 };
+
+/** A list item opens with a paragraph so it always has a readable label. */
+export type ListItemContentNode =
+  ParagraphNode | BulletListNode | OrderedListNode | CodeBlockNode;
 
 export type ListItemNode = {
   type: "listItem";
-  content: [ParagraphNode, ...ListBlockNode[]];
+  content: [ParagraphNode, ...ListItemContentNode[]];
 };
 
 export type BulletListNode = {

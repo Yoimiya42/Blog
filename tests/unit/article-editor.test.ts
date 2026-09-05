@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import { validateArticleDocument } from "@/features/post";
 import { articleEditorExtensions } from "@/features/post/content/editor/extensions";
-import { normalizeEditorDocument } from "@/features/post/content/editor/normalize";
+import {
+  normalizeEditorDocument,
+  PERSISTED_MARK_ATTRIBUTES,
+  PERSISTED_NODE_ATTRIBUTES,
+} from "@/features/post/content/editor/normalize";
 
 const schema = getSchema(articleEditorExtensions);
 
@@ -41,6 +45,163 @@ describe("editor schema matches schema v1", () => {
     expect(schema.nodes.codeBlock.spec.attrs?.language.default).toBe(
       "plaintext",
     );
+  });
+
+  // Matching node names is not enough: StarterKit's own content expressions
+  // let the editor build quotes and list items the shared schema rejects.
+  it("registers the v1 content expressions", () => {
+    const expressions = Object.fromEntries(
+      Object.keys(schema.nodes)
+        .sort()
+        .map((name) => [name, schema.nodes[name].spec.content]),
+    );
+
+    expect(expressions).toEqual({
+      blockquote:
+        "(paragraph | bulletList | orderedList | codeBlock | horizontalRule)+",
+      bulletList: "listItem+",
+      codeBlock: "text*",
+      doc: "block+",
+      hardBreak: undefined,
+      heading: "inline*",
+      horizontalRule: undefined,
+      image: undefined,
+      listItem: "paragraph (paragraph | bulletList | orderedList | codeBlock)*",
+      orderedList: "listItem+",
+      paragraph: "inline*",
+      text: undefined,
+    });
+  });
+
+  const paragraphNode = () =>
+    schema.nodes.paragraph.create(null, schema.text("x"));
+  const codeBlockNode = () =>
+    schema.nodes.codeBlock.create({ language: "go" }, schema.text("a := 1"));
+
+  function buildsSuccessfully(build: () => unknown): boolean {
+    try {
+      build();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  it.each([
+    [
+      "a heading inside a quote",
+      () =>
+        schema.nodes.blockquote.createChecked(null, [
+          schema.nodes.heading.create({ level: 2, id: "q" }, schema.text("H")),
+        ]),
+    ],
+    [
+      "a quote inside a quote",
+      () =>
+        schema.nodes.blockquote.createChecked(null, [
+          schema.nodes.blockquote.create(null, [paragraphNode()]),
+        ]),
+    ],
+    [
+      "an image inside a list item",
+      () =>
+        schema.nodes.listItem.createChecked(null, [
+          paragraphNode(),
+          schema.nodes.image.create({ mediaId: "m1", alt: "a" }),
+        ]),
+    ],
+    [
+      "a list item that opens with a code block",
+      () => schema.nodes.listItem.createChecked(null, [codeBlockNode()]),
+    ],
+  ])("refuses %s", (_name, build) => {
+    expect(buildsSuccessfully(build)).toBe(false);
+  });
+
+  it.each([
+    [
+      "a quote holding prose, a list, code, and a rule",
+      () =>
+        schema.nodes.blockquote.createChecked(null, [
+          paragraphNode(),
+          schema.nodes.bulletList.create(null, [
+            schema.nodes.listItem.create(null, paragraphNode()),
+          ]),
+          codeBlockNode(),
+          schema.nodes.horizontalRule.create(),
+        ]),
+    ],
+    [
+      "a list item holding two paragraphs, code, and a nested list",
+      () =>
+        schema.nodes.listItem.createChecked(null, [
+          paragraphNode(),
+          paragraphNode(),
+          codeBlockNode(),
+          schema.nodes.bulletList.create(null, [
+            schema.nodes.listItem.create(null, paragraphNode()),
+          ]),
+        ]),
+    ],
+  ])("accepts %s", (_name, build) => {
+    expect(buildsSuccessfully(build)).toBe(true);
+  });
+});
+
+describe("editor attribute drift", () => {
+  function attributeNames(spec: { attrs?: Record<string, unknown> }): string[] {
+    return Object.keys(spec.attrs ?? {}).sort();
+  }
+
+  // A new extension version can add attributes that normalisation would drop
+  // in silence. Pinning the full set forces that change to be looked at.
+  it("registers exactly the known node attributes", () => {
+    const attributes = Object.fromEntries(
+      Object.keys(schema.nodes)
+        .filter((name) => schema.nodes[name].spec.attrs)
+        .sort()
+        .map((name) => [name, attributeNames(schema.nodes[name].spec)]),
+    );
+
+    expect(attributes).toEqual({
+      codeBlock: ["language"],
+      heading: ["id", "level"],
+      image: ["alt", "caption", "mediaId"],
+      // start is persisted; type is a presentation attribute normalisation drops.
+      orderedList: ["start", "type"],
+    });
+  });
+
+  it("registers exactly the known mark attributes", () => {
+    const attributes = Object.fromEntries(
+      Object.keys(schema.marks)
+        .filter((name) => schema.marks[name].spec.attrs)
+        .sort()
+        .map((name) => [name, attributeNames(schema.marks[name].spec)]),
+    );
+
+    expect(attributes).toEqual({
+      // Only href is persisted; the rest are link presentation defaults.
+      link: ["class", "href", "rel", "target", "title"],
+    });
+  });
+
+  it("only persists attributes the editor actually produces", () => {
+    for (const [node, attributes] of Object.entries(
+      PERSISTED_NODE_ATTRIBUTES,
+    )) {
+      expect(attributeNames(schema.nodes[node].spec)).toEqual(
+        expect.arrayContaining([...attributes]),
+      );
+    }
+
+    for (const [mark, attributes] of Object.entries(
+      PERSISTED_MARK_ATTRIBUTES,
+    )) {
+      expect(attributeNames(schema.marks[mark].spec)).toEqual(
+        expect.arrayContaining([...attributes]),
+      );
+    }
   });
 });
 

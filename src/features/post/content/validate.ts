@@ -33,6 +33,52 @@ function collectHeadingIds(node: ContentNode, ids: string[] = []): string[] {
   return ids;
 }
 
+function collectMediaIds(node: ContentNode, ids: string[] = []): string[] {
+  if (node.type === "image" && typeof node.attrs?.mediaId === "string") {
+    ids.push(node.attrs.mediaId);
+  }
+  for (const child of node.content ?? []) {
+    collectMediaIds(child, ids);
+  }
+
+  return ids;
+}
+
+/** Distinct media ids the document references, in document order. */
+export function collectMediaReferences(document: ArticleDocument): string[] {
+  return [...new Set(collectMediaIds(document))];
+}
+
+/** Implemented by the media module once Issue #14 owns the Media table. */
+export type MediaReferenceResolver = {
+  findExisting(mediaIds: string[]): Promise<Set<string>>;
+};
+
+/**
+ * Separate from validateArticleDocument so shape validation stays synchronous
+ * and database-free. Only this step needs I/O, and only callers that persist a
+ * document need to run it.
+ */
+export async function validateMediaReferences(
+  document: ArticleDocument,
+  resolver: MediaReferenceResolver,
+): Promise<ValidationResult> {
+  const referenced = collectMediaReferences(document);
+  if (referenced.length === 0) return { ok: true, document };
+
+  const existing = await resolver.findExisting(referenced);
+  const missing = referenced.filter((mediaId) => !existing.has(mediaId));
+  if (missing.length === 0) return { ok: true, document };
+
+  return {
+    ok: false,
+    issues: missing.map((mediaId) => ({
+      path: "content",
+      message: `unknown media reference: ${mediaId}`,
+    })),
+  };
+}
+
 export function validateArticleDocument(input: unknown): ValidationResult {
   const parsed = articleDocumentSchema.safeParse(input);
   if (!parsed.success) {
