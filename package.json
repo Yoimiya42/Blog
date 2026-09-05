@@ -21,11 +21,18 @@
     "deploy:vinext": "vinext-cloudflare deploy --config dist/server/wrangler.json"
   },
   "dependencies": {
+    "@tiptap/core": "3.31.3",
+    "@tiptap/extension-blockquote": "3.31.3",
+    "@tiptap/extension-heading": "3.31.3",
+    "@tiptap/extension-list": "3.31.3",
+    "@tiptap/pm": "3.31.3",
+    "@tiptap/starter-kit": "3.31.3",
     "@vinext/cloudflare": "^1.0.0-beta.7",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-server-dom-webpack": "^19.2.8",
+    "shiki": "^4.4.3",
     "vinext": "^1.0.0-beta.9",
     "zod": "^4.5.4"
   },
@@ -40,6 +47,7 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.4",
     "eslint-config-prettier": "10.1.8",
+    "happy-dom": "^20.14.0",
     "husky": "9.1.7",
     "lint-staged": "16.4.0",
     "prettier": "3.9.6",

@@ -23,6 +23,12 @@ const databasePattern = {
   message: "Only repository files may import the database client.",
 };
 
+const editorRuntimePattern = {
+  group: ["@tiptap/*", "@tiptap/*/**"],
+  message:
+    "Only src/features/post/content/editor may import the TipTap runtime; public pages must not bundle the editor.",
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -60,6 +66,27 @@ const eslintConfig = defineConfig([
             featureInternalsPattern,
             prismaClientPattern,
             databasePattern,
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/lib/db.ts",
+      "src/features/**/server/*.repository.ts",
+      "src/features/post/content/editor/**",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            featureInternalsPattern,
+            prismaClientPattern,
+            databasePattern,
+            editorRuntimePattern,
           ],
         },
       ],
