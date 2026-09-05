@@ -34,3 +34,16 @@ export type {
   ValidationResult,
   MediaReferenceResolver,
 } from "./content/validate";
+
+export {
+  deriveArticleContent,
+  type ArticleDerivedData,
+  type TableOfContentsItem,
+} from "./content/derive";
+
+export {
+  ArticleContent,
+  type ArticleContentProps,
+} from "./content/render/article-content";
+
+export type { ArticleMedia, ArticleMediaMap } from "./content/render/media";

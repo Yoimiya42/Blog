@@ -60,6 +60,8 @@ The shared schema contains no React or TipTap runtime imports. A client-only edi
 
 Marks map to semantic React elements. Links receive protocol validation and safe external-link attributes. An unsupported node produces a visible non-sensitive fallback and an error log; it never executes stored data.
 
+Plain-text derivation preserves hard breaks and block boundaries. Images contribute their caption, then their non-empty alternative text. Reading time adds CJK characters at 300 per minute and non-CJK words at 200 per minute. The total rounds up and has a one-minute minimum. CJK includes Han, Hiragana, Katakana, and Hangul characters.
+
 ## 5. Evolution
 
 Adding or changing a persisted node requires:
