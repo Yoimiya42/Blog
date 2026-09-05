@@ -294,3 +294,68 @@ describe("schema version", () => {
     expect(CONTENT_SCHEMA_VERSION).toBe(1);
   });
 });
+
+describe("remaining schema rejection matrix", () => {
+  it.each([1, 5, 6])("rejects heading level %s", (level) => {
+    expect(
+      validateArticleDocument({ type: "doc", content: [heading("id", level)] })
+        .ok,
+    ).toBe(false);
+  });
+
+  it.each(["", "a b", "a/b", "x".repeat(65)])("rejects heading id %j", (id) => {
+    expect(
+      validateArticleDocument({ type: "doc", content: [heading(id)] }).ok,
+    ).toBe(false);
+  });
+
+  it.each([-1, 0, 1.5, "2", null])("rejects ordered-list start %j", (start) => {
+    expect(
+      validateArticleDocument({
+        type: "doc",
+        content: [
+          {
+            type: "orderedList",
+            attrs: { start },
+            content: [{ type: "listItem", content: [{ type: "paragraph" }] }],
+          },
+        ],
+      }).ok,
+    ).toBe(false);
+  });
+
+  it("rejects an unknown inline node", () => {
+    expect(
+      validateArticleDocument({
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [{ type: "mention", attrs: { id: "user" } }],
+          },
+        ],
+      }).ok,
+    ).toBe(false);
+  });
+
+  it.each(["bold", "italic", "strike", "link"])(
+    "rejects code combined with %s",
+    (type) => {
+      const mark =
+        type === "link" ? { type, attrs: { href: "/blog" } } : { type };
+      expect(
+        validateArticleDocument({
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                { type: "text", text: "x", marks: [{ type: "code" }, mark] },
+              ],
+            },
+          ],
+        }).ok,
+      ).toBe(false);
+    },
+  );
+});

@@ -27,6 +27,30 @@ const outsideEditor = sourceFiles.filter(
 );
 
 describe("editor runtime boundary", () => {
+  it("keeps public rendering database-free and avoids raw HTML injection", () => {
+    const renderFiles = collectSourceFiles(
+      join(SOURCE_ROOT, "features", "post", "content", "render"),
+    );
+    expect(renderFiles.length).toBeGreaterThan(0);
+    for (const path of renderFiles) {
+      const source = readFileSync(path, "utf8");
+      expect(source, path).not.toMatch(
+        /dangerouslySetInnerHTML|\bfetch\s*\(|drizzle|\.repository|lib\/db|cloudflare:workers/,
+      );
+    }
+  });
+
+  it("requires external consumers to use the public post entry point", () => {
+    const postRoot = join(SOURCE_ROOT, "features", "post");
+    for (const path of sourceFiles.filter(
+      (path) => !path.startsWith(postRoot),
+    )) {
+      expect(readFileSync(path, "utf8"), path).not.toMatch(
+        /(?:from\s*|import\s*\()\s*["'][^"']*features\/post\/(?!index["'])/,
+      );
+    }
+  });
+
   it("finds source files to check", () => {
     expect(sourceFiles.length).toBeGreaterThan(0);
     expect(outsideEditor.length).toBeGreaterThan(0);

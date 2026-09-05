@@ -1,3 +1,5 @@
+// @vitest-environment happy-dom
+import { Editor } from "@tiptap/core";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -5,10 +7,13 @@ import {
   ArticleContent,
   collectMediaReferences,
   deriveArticleContent,
+  parseArticleDocument,
   validateArticleDocument,
   type ArticleDocument,
   type ArticleMediaMap,
 } from "@/features/post";
+import { articleEditorExtensions } from "@/features/post/content/editor/extensions";
+import { normalizeEditorDocument } from "@/features/post/content/editor/normalize";
 
 const completeArticle = {
   type: "doc",
@@ -120,6 +125,41 @@ const mediaById = {
 } satisfies ArticleMediaMap;
 
 describe("article content integration", () => {
+  it("round-trips a real editor document through persistence, derivation, and HTML", async () => {
+    const editor = new Editor({ extensions: articleEditorExtensions });
+    try {
+      editor.commands.setContent(completeArticle);
+      const raw = editor.getJSON();
+      expect(validateArticleDocument(raw).ok).toBe(false);
+      const document = parseArticleDocument(normalizeEditorDocument(raw));
+      const saved = JSON.stringify(document);
+      const derived = deriveArticleContent(document);
+      expect(derived).toEqual({
+        tableOfContents: [
+          { id: "architecture", level: 2, text: "Architecture" },
+        ],
+        plainText:
+          'Architecture\n\nBold italic old const\ninternal and external\n\nQuoted guidance.\n\nQuoted item\n\nThird item\nNested item\n\nSystem architecture\n\nconst value: string = "<main>safe</main>";',
+        readingMinutes: 1,
+      });
+      const html = renderToStaticMarkup(
+        await ArticleContent({ document, mediaById }),
+      );
+      expect(html).toContain('<h2 id="architecture">Architecture</h2>');
+      expect(html).toContain('<ol start="3">');
+      expect(html).toContain('<a href="/blog/next">internal</a>');
+      expect(html).toContain("<figcaption>System architecture</figcaption>");
+      expect(html).toContain('data-code-line=""');
+      expect(JSON.stringify(document)).toBe(saved);
+      editor.commands.setContent(document);
+      expect(
+        parseArticleDocument(normalizeEditorDocument(editor.getJSON())),
+      ).toEqual(document);
+    } finally {
+      editor.destroy();
+    }
+  });
+
   it("derives metadata and media references through the public API", () => {
     expect(validateArticleDocument(completeArticle)).toEqual({
       ok: true,

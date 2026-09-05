@@ -1,10 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import type { ArticleDocument } from "@/features/post/content/types";
+import {
+  ArticleContent,
+  type ArticleDocument,
+  type ArticleMediaMap,
+} from "@/features/post";
 import { validArticleFixtures } from "@/features/post/content/fixtures";
-import { ArticleContent } from "@/features/post/content/render/article-content";
-import type { ArticleMediaMap } from "@/features/post/content/render/media";
 
 async function renderArticle(
   document: ArticleDocument,
@@ -18,6 +20,86 @@ function countOccurrences(value: string, search: string): number {
 }
 
 describe("article renderer", () => {
+  it("escapes HTML-like prose and image metadata", async () => {
+    const html = await renderArticle(
+      {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              { type: "text", text: '<script>alert("x")</script> & text' },
+            ],
+          },
+          {
+            type: "image",
+            attrs: {
+              mediaId: "one",
+              alt: '<img onerror="bad">',
+              caption: "<script>caption</script>",
+            },
+          },
+        ],
+      },
+      { one: { url: "/media/one.webp", width: 10, height: 20 } },
+    );
+    expect(html).toContain(
+      "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; text",
+    );
+    expect(html).toContain(
+      "<figcaption>&lt;script&gt;caption&lt;/script&gt;</figcaption>",
+    );
+    expect(html).not.toContain("<script>");
+  });
+
+  it("resolves repeated images from one map while preserving node metadata", async () => {
+    const record = {
+      url: "/media/shared.webp",
+      width: 800,
+      height: 600,
+      alt: "media alt",
+      caption: "media caption",
+    };
+    const lookup = vi.fn(() => record);
+    const mediaById: ArticleMediaMap = {
+      get shared() {
+        return lookup();
+      },
+    };
+    const html = await renderArticle(
+      {
+        type: "doc",
+        content: [
+          {
+            type: "image",
+            attrs: {
+              mediaId: "shared",
+              alt: "first",
+              caption: " First caption ",
+            },
+          },
+          {
+            type: "image",
+            attrs: { mediaId: "shared", alt: "", caption: " \n " },
+          },
+          { type: "image", attrs: { mediaId: "shared", alt: "third" } },
+        ],
+      },
+      mediaById,
+    );
+    expect(lookup).toHaveBeenCalledTimes(3);
+    expect(countOccurrences(html, 'src="/media/shared.webp"')).toBe(3);
+    expect(countOccurrences(html, 'height="600"')).toBe(3);
+    expect(countOccurrences(html, 'width="800"')).toBe(3);
+    expect(html).toContain('alt="first"');
+    expect(html).toContain('alt=""');
+    expect(html).toContain('alt="third"');
+    expect(countOccurrences(html, "<figcaption>")).toBe(1);
+    expect(html).toContain("<figcaption>First caption</figcaption>");
+    expect(html).not.toContain("media alt");
+    expect(html).not.toContain("media caption");
+  });
+
   it("renders the article root and stable heading anchors", async () => {
     const markup = await renderArticle(validArticleFixtures.headings);
 
