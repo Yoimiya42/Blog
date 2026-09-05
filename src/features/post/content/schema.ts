@@ -20,7 +20,7 @@ function hasControlCharacter(value: string): boolean {
  * anything not proven safe is rejected. A blocklist of javascript: and data:
  * would miss encoded and future variants.
  */
-function isSafeHref(href: string): boolean {
+export function isSafeHref(href: string): boolean {
   // Site-relative hrefs below skip URL parsing, so they are never normalised.
   // These two guards keep unnormalised input out of that shortcut; absolute
   // URLs do not need them because new URL() normalises before the protocol
