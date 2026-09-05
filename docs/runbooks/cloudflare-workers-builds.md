@@ -68,7 +68,17 @@ Revoke the token when the investigation ends.
 
 ## Rehearsal evidence
 
-Pending. Issue #33 verifies this configuration.
+Issue #33 verified the non-production trigger on 2026-09-05 from commit `4f7c006`.
+
+- Failing baseline: ten consecutive builds between 2026-09-04 and 2026-09-05 stopped at the deploy step with the ENOENT signature above. CI had never produced a Worker version.
+- Node: the build reported `nodejs@22.23.2`, so `.node-version` overrides the image default of 24.18.0.
+- Build: `npm run build:vinext` succeeded on the build image for the first time.
+- Deploy: `npx wrangler versions upload` reported 728.10 KiB total, 216.06 KiB gzip, 29 ms startup time, and only the `ASSETS` and `CF_VERSION_METADATA` bindings.
+- Version: `4c71bbff-fd7c-41da-af84-712be2495169`.
+- Preview alias `https://fix-33-workers-builds-deploy-personal-site.yoimiyacyy.workers.dev` returned HTTP 200.
+- The Active Deployment stayed on baseline `faa4fb30-b745-4c61-b3c3-a8699ae55bad` at 100%.
+
+The production trigger is unverified. No build has run against `main` since the correction.
 
 ## Official references
 
