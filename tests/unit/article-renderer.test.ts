@@ -13,6 +13,10 @@ async function renderArticle(
   return renderToStaticMarkup(await ArticleContent({ document, mediaById }));
 }
 
+function countOccurrences(value: string, search: string): number {
+  return value.split(search).length - 1;
+}
+
 describe("article renderer", () => {
   it("renders the article root and stable heading anchors", async () => {
     const markup = await renderArticle(validArticleFixtures.headings);
@@ -54,8 +58,12 @@ describe("article renderer", () => {
     const lists = await renderArticle(validArticleFixtures.nestedLists);
 
     expect(quote).toContain(
-      '<blockquote><p>quoted</p><ul><li><p>quoted item</p></li></ul><pre data-language="go"><code>a := 1</code></pre><hr/></blockquote>',
+      "<blockquote><p>quoted</p><ul><li><p>quoted item</p></li></ul>",
     );
+    expect(quote).toContain('<figure data-code-block="">');
+    expect(quote).toContain("<span>go</span>");
+    expect(quote).toContain("Copy code");
+    expect(quote).toContain("</figure><hr/></blockquote>");
     expect(lists).toContain(
       "<ul><li><p>one</p></li><li><p>two</p><ul><li><p>nested</p></li></ul></li></ul>",
     );
@@ -92,9 +100,21 @@ describe("article renderer", () => {
     expect(decorativeImage).toContain(
       '<figure data-media-id="med_02"><img alt="" decoding="async" height="480" loading="lazy" src="/media/decorative.webp" width="640"/></figure>',
     );
-    expect(code).toContain(
-      '<pre data-language="typescript"><code>const a = 1;</code></pre>',
-    );
+    expect(countOccurrences(code, '<figure data-code-block="">')).toBe(6);
+    expect(countOccurrences(code, "Copy code")).toBe(6);
+    for (const language of [
+      "plaintext",
+      "python",
+      "typescript",
+      "java",
+      "c",
+      "go",
+    ]) {
+      expect(code).toContain(`<span>${language}</span>`);
+    }
+    expect(code).toContain('data-code-line=""');
+    expect(code).toContain("background-color:#fff;color:#24292e");
+    expect(code).toMatch(/style="color:#[0-9A-F]{6}"/);
   });
 
   it("renders a safe fallback when referenced media is unavailable", async () => {

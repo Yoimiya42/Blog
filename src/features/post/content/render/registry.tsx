@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { CodeBlock } from "./code-block";
 
 import type {
   BlockNode,
@@ -168,15 +169,9 @@ export const nodeRenderers = {
       node={node}
     />
   ),
-  codeBlock: (node, path) => {
-    const code = node.content?.map((textNode) => textNode.text).join("") ?? "";
-
-    return (
-      <pre data-language={node.attrs.language} key={path}>
-        <code>{code}</code>
-      </pre>
-    );
-  },
+  codeBlock: async (node, path) => (
+    <Fragment key={path}>{await CodeBlock({ node })}</Fragment>
+  ),
 } satisfies NodeRendererRegistry;
 
 async function renderNode(
