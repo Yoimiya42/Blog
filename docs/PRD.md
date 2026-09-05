@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.10 · 2026-09-03 · Draft
+> v0.12 · 2026-09-05 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -169,6 +169,7 @@ Primary navigation labels are `Profile`, `Experience`, `Projects`, `Writing`, an
 | FR-BLOG-10 | Post series | v2 | Previous and next within a series |
 | FR-BLOG-11 | Comments | v1.5 | See 4.6 |
 | FR-BLOG-12 | RSS | v1.5 | |
+| FR-BLOG-13 | Structured article content | v1 | Store only versioned TipTap JSON; validate it against `article-content-schema.md`; treat HTML and Markdown as derived exports |
 
 ### 4.3 Moments (FR-MOMENT)
 
@@ -244,13 +245,13 @@ Core of v1. All screens designed from 375px up.
 |---|---|---|---|
 | FR-ADMIN-01 | Login and authorisation | v1 | Non-owner requests to `/admin/*` return 404 |
 | FR-ADMIN-02 | Post list grouped by state | v1 | One-handed on a phone |
-| FR-ADMIN-03 | Markdown editor with preview toggle | v1 | Editing area not obscured by the on-screen keyboard |
+| FR-ADMIN-03 | TipTap article editor with preview | v1 | Editing area and block controls remain usable above the on-screen keyboard |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur |
-| FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Markdown syntax inserted automatically |
+| FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record |
 | FR-ADMIN-06 | Compression and conversion on upload | v1 | WebP or AVIF, long-edge limit, GPS EXIF stripped |
 | FR-ADMIN-07 | Publish, unpublish, schedule | v1 | Scheduling may slip to v1.5 |
 | FR-ADMIN-08 | Media library management | v1 | Browse, copy link, delete |
-| FR-ADMIN-09 | Mobile Markdown toolbar | v1 | One-tap `#`, `**`, `[]()` |
+| FR-ADMIN-09 | Mobile rich-text toolbar | v1 | One-tap heading, bold, link, list, image, and code-block controls |
 | FR-ADMIN-10 | Offline tolerance | v1.5 | Content persists locally, resumes after reconnect |
 | FR-ADMIN-11 | Quick moment composer | v1.5 | Lighter than the post editor |
 | FR-ADMIN-12 | Item entry with cover fetch | v2 | |
@@ -309,7 +310,8 @@ model Post {
   slug        String     @unique
   title       String
   summary     String?
-  content     String                    // Markdown source
+  content     Text                      // TipTap JSON in D1 TEXT
+  contentSchemaVersion Int @default(1)
   coverId     String?
   cover       Media?     @relation(fields: [coverId], references: [id])
   status      PubStatus  @default(DRAFT)
@@ -507,12 +509,12 @@ Cloudflare Workers is the selected production platform under ADR-0009. The Worke
 
 ### 6.6 Budget
 
-Target £15–30 per year while the application remains within free compute and storage limits. Workers Paid requires explicit approval after representative CPU measurements.
+Target £15–70 per year. Server-side code highlighting exceeds the 10 ms per-request CPU limit on Workers Free, so the owner approved Workers Paid for production; see ADR-0011. Development and preview stay on the free plan.
 
 | Item | Choice | Cost |
 |---|---|---|
 | Domain | Cloudflare Registrar / Namecheap | £10–15 / year |
-| Hosting | Cloudflare Workers Free | Free within request and CPU limits |
+| Hosting | Cloudflare Workers Paid from production launch | $5 / month; free plan for development and preview |
 | Database | Cloudflare D1 Free | Free; 500MB per database and 5GB per account |
 | Image storage | Cloudflare R2 | Free under 10GB, no egress fees |
 | Email | Resend free tier | 3000 / month |
@@ -537,8 +539,8 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Authentication | Better Auth with email OTP | Current compatible | Confirmed | Six-digit email codes and database sessions; see ADR-0004 |
 | Object storage | Cloudflare R2 on a custom domain | Current managed service | Confirmed | Store all uploaded media behind the project domain |
 | Image pipeline | Unselected | — | Provisional | Issue #4 must validate conversion, EXIF removal, CPU use, and delivery before media implementation |
-| Content | Pure Markdown with remark, rehype, and Shiki | Current compatible | Confirmed | Markdown is authoritative; MDX is excluded; see ADR-0005 |
-| Editor | Text area, preview, and mobile toolbar | — | Confirmed | Keep authoring portable and dependency-light; see ADR-0005 |
+| Content | Versioned TipTap JSON in D1 TEXT | Schema v1 | Confirmed | JSON is authoritative; HTML and Markdown are derived exports; see ADR-0010 |
+| Editor | TipTap | 3.x candidate | Confirmed | Use the schema in `article-content-schema.md`; validate the exact package release during implementation |
 | Email | Resend | Current managed service | Confirmed | Release requires successful code delivery to QQ Mail and 163 Mail |
 | Hosting | Cloudflare Workers | Current managed service | Confirmed | Use Workers for production; keep Vercel only as a temporary rollback path; see ADR-0009 |
 | Next.js runtime adapter | vinext; OpenNext fallback | Current compatible | Confirmed | vinext passed Issue #29 compatibility, preview, and rollback checks; use OpenNext only for a documented blocker |
@@ -557,7 +559,7 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 |---|---|---|---|
 | OQ-01 | Resolved: `fangmingluan.com` is the formal host; `life.fangmingluan.com` is reserved for personal content | Site, email, SEO | Closed 2026-09-01 |
 | OQ-02 | Partially resolved: formal pages are restrained; personal pages may use an opening sequence, expressive colour, and richer motion. Exact references, palette, type, and motion remain open | All design work | Before personal-space implementation |
-| OQ-03 | Resolved: pure Markdown with preview and a mobile toolbar | FR-ADMIN-03 | Closed 2026-08-31; ADR-0005 |
+| OQ-03 | Resolved: TipTap JSON with a mobile rich-text editor and React renderer | FR-BLOG-13, FR-ADMIN-03 | Revised 2026-09-03; ADR-0010 supersedes ADR-0005 |
 | OQ-04 | Rating scale: 5 stars with halves, 10-point, or none | FR-LIFE-04 data type | Before v2 |
 | OQ-05 | Resolved: v1 is English-only and unprefixed; future locales use explicit path prefixes | FR-HOME-09, architectural | Closed 2026-09-01; ADR-0007 |
 | OQ-06 | Track repeat experiences | Whether to split out `ItemLog` | Before v2 |
@@ -582,3 +584,5 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-09-03 | v0.8 | Adopted Vercel-first preview delivery without selecting the permanent production host |
 | 2026-09-03 | v0.9 | Selected Cloudflare Workers, D1, and Drizzle while retaining adapter and image validation gates |
 | 2026-09-03 | v0.10 | Confirmed vinext after the Workers preview and rollback rehearsal |
+| 2026-09-03 | v0.11 | Replaced authoritative Markdown with versioned TipTap JSON stored through Drizzle and D1 |
+| 2026-09-05 | v0.12 | Approved Workers Paid for production because server-side code highlighting exceeds the free CPU limit |

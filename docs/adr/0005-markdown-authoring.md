@@ -1,6 +1,6 @@
 # 0005. Pure Markdown authoring
 
-- **Status**: Accepted
+- **Status**: Superseded by 0010
 - **Date**: 2026-08-31
 - **Requirements**: FR-BLOG-02, FR-BLOG-03, FR-BLOG-05, FR-BLOG-06, FR-ADMIN-03, FR-ADMIN-09
 

@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v1.2 · 2026-09-03
+> v1.3 · 2026-09-03
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## v1 — Initial Launch
@@ -21,7 +21,7 @@
 - Homepage identity, education, experience, projects, skills, contact links, recent posts, and hidden entrance.
 - Blog list, post detail, tags, pagination, code highlighting, table of contents, responsive images, drafts, and protected previews.
 - Owner-only email OTP authentication.
-- Mobile post management, Markdown editing, autosave, publishing, media upload, and media library.
+- Mobile post management, TipTap editing, autosave, publishing, media upload, and media library.
 - Custom-domain application delivery on Cloudflare Workers and image delivery through the approved pipeline.
 - GitHub Actions, local quality gates, versioned database migrations, and release validation.
 
@@ -39,7 +39,7 @@
 |---|---|
 | 2026-09-01 to 2026-09-03 | Vercel Preview, application skeleton, and launch identity are ready |
 | 2026-09-03 to 2026-09-05 | Cloudflare platform decision and minimal Workers preview are complete |
-| 2026-09-06 to 2026-09-10 | Drizzle/D1, authentication, and Markdown foundations are complete |
+| 2026-09-06 to 2026-09-10 | Drizzle/D1, authentication, and TipTap content foundations are complete |
 | 2026-09-11 to 2026-09-19 | Public homepage, blog, admin, editor, and media vertical slices work |
 | 2026-09-20 to 2026-09-25 | Publishing workflow, hidden entrance, and cross-cutting gates pass |
 | 2026-09-26 to 2026-09-30 | Production deployment and UK/mainland release validation pass |
@@ -55,15 +55,15 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 | [#5](https://github.com/Yoimiya42/Blog/issues/5) | Bootstrap application and quality gates | P0 | M | Done | #1 |
 | [#6](https://github.com/Yoimiya42/Blog/issues/6) | Freeze launch identity and content | P0 | M | Done | Owner decisions |
 | [#27](https://github.com/Yoimiya42/Blog/issues/27) | Establish Vercel preview deployment | P0 | S | Done | #5 |
-| [#29](https://github.com/Yoimiya42/Blog/issues/29) | Establish Cloudflare platform foundation | P0 | M | In progress | #5, #27 |
+| [#29](https://github.com/Yoimiya42/Blog/issues/29) | Establish Cloudflare platform foundation | P0 | M | Done | #5, #27 |
 | [#4](https://github.com/Yoimiya42/Blog/issues/4) | Select the Workers image pipeline | P0 | M | Backlog | #29, representative media |
 | [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement Drizzle/D1 database foundation | P0 | M | Backlog | #29 |
 | [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | Backlog | #5, #7 |
-| [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement Markdown rendering | P0 | M | Backlog | #5 |
+| [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement TipTap content foundation | P0 | M | In progress | #5, #29 |
 | [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | P0 | L | Backlog | #7, #9, #14 |
 | [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | P0 | L | Backlog | #6, #7 |
 | [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | P0 | M | Backlog | #7, #8 |
-| [#13](https://github.com/Yoimiya42/Blog/issues/13) | Implement mobile Markdown editor | P0 | L | Backlog | #9, #12 |
+| [#13](https://github.com/Yoimiya42/Blog/issues/13) | Implement mobile TipTap editor | P0 | L | Backlog | #9, #12 |
 | [#14](https://github.com/Yoimiya42/Blog/issues/14) | Implement media upload and library | P0 | L | Backlog | #7, #8 |
 | [#15](https://github.com/Yoimiya42/Blog/issues/15) | Implement draft and publish workflow | P0 | M | Backlog | #10, #12, #13, #14 |
 | [#16](https://github.com/Yoimiya42/Blog/issues/16) | Implement hidden entrance | P1 | S | Backlog | #6, #11 |
