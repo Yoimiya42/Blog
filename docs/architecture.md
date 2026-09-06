@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.12 · 2026-09-06
+> v0.13 · 2026-09-06
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -38,13 +38,13 @@ Service layer                 Business rules, authorisation, transactions, event
         |  may call
 Repository layer              The only code that touches the database
         |
-        Drizzle / Cloudflare D1
+        Cloudflare D1 binding
 ```
 
 Enforced by ESLint `no-restricted-imports`:
 
 1. `app/` MUST NOT import the database client.
-2. Only `*.repository.ts` may import the Drizzle client.
+2. Only `*.repository.ts` may import database access.
 3. Cross-module imports MUST target the other module's `index.ts`.
 
 Rule 3 is the foundation: while the exported signature holds, internals can be restructured freely.
@@ -77,8 +77,8 @@ src/
     layout/
   lib/
     db/
-      client.ts               #   Drizzle client from the current D1 binding
-      schema.ts               #   Drizzle schema
+      client.ts               #   D1 binding access behind the repository boundary
+      types.ts                #   Shared database value and row types
     storage/                  # * Storage adapter
     mail/                     # * Mail adapter
     metadata/                 # * Metadata adapters
@@ -90,8 +90,7 @@ src/
     site.ts
     navigation.ts
   styles/
-drizzle/
-  migrations/                 # Generated SQL; never edit production by hand
+migrations/                   # Versioned handwritten SQLite SQL
 docs/
   PRD.md  architecture.md  ROADMAP.md  tech-debt.md  adr/
 tests/
@@ -116,7 +115,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 
 - Next.js 16 App Router and strict TypeScript form the application runtime.
 - Tailwind CSS v4 is the styling base. shadcn/ui and Radix are limited to admin primitives. Public pages may use custom CSS and components.
-- Cloudflare D1 is the relational source of truth. Drizzle owns the schema and migrations. See ADR-0009.
+- Cloudflare D1 is the relational source of truth. Handwritten SQLite migrations and typed prepared statements own data access. See ADR-0009 and ADR-0012.
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.
 - Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
@@ -196,14 +195,14 @@ An in-memory bus is sufficient. Replace it with a queue behind the same interfac
 
 ### 3.6 Database evolution
 
-- Drizzle generates versioned SQL migrations. Migration files are reviewed, committed, and applied to D1 through Wrangler. Never modify production by hand.
+- Write versioned SQLite migrations by hand. Review and commit them, then apply them to D1 through Wrangler. Never modify production by hand.
 - New columns are nullable or defaulted.
 - Never drop or rename a column directly. Use expand–migrate–contract: add, backfill and switch reads, drop a release or two later.
-- Every table has `createdAt` and `updatedAt`. Deletion is soft, via `deletedAt`.
+- Application entity tables have `createdAt` and `updatedAt`. Their deletion is soft through `deletedAt`. Adapter, join, and ephemeral tables follow their owning contracts.
 - Add indexes in response to real queries; indexes slow writes.
 - JSON text is an escape hatch. Any field used for filtering, sorting, or aggregation MUST be a real column.
 - Model many-to-many relations with explicit join tables. Do not depend on implicit ORM relations.
-- Treat D1 as SQLite. Schema code must make enum, boolean, timestamp, and JSON representations explicit.
+- Treat D1 as SQLite. Migration SQL and row mappings must make enum, boolean, timestamp, and JSON representations explicit.
 - Use separate local, test, preview, and production D1 databases. Never bind a preview deployment to production data.
 - Account for D1 storage, query, parameter, and write-concurrency limits. No connection pool is required.
 
@@ -246,7 +245,7 @@ Any failing row is an architectural defect.
 - Workers Builds deploys `main` to the `workers.dev` baseline. The custom-domain production release stays with Issue #18 and starts only after environment isolation, stateful recovery, and release checks pass.
 - Husky and lint-staged gate commits locally.
 
-**Database operations.** Drizzle generates committed SQL migrations; Wrangler applies them to the selected D1 environment. A deterministic seed populates a new environment. Rehearse D1 Time Travel restore before launch; an untested backup is not a backup. Review query plans and row-read volume after launch to catch missing indexes and ORM N+1 patterns.
+**Database operations.** Wrangler creates and applies committed SQL migrations to the selected D1 environment. A deterministic seed populates a new environment. Rehearse D1 Time Travel restore before launch; an untested backup is not a backup. Review query plans, row-read volume, and repeated query patterns after launch.
 
 **Observability.** Structured logs cover login, publish, upload, and delete. Error and availability providers require a separate decision and mainland reachability check. Traffic analytics are deferred beyond v1.
 
@@ -283,3 +282,5 @@ Any failing row is an architectural defect.
 | 2026-09-03 | v0.9 | Confirmed vinext through a versioned Workers preview and code rollback rehearsal |
 | 2026-09-03 | v0.10 | Adopted TipTap JSON with separate editor and public-renderer boundaries |
 | 2026-09-05 | v0.11 | Fixed the server highlighting engine and the production Workers plan |
+| 2026-09-06 | v0.12 | Reconciled the platform foundation status after Issues #29 and #33 closed |
+| 2026-09-06 | v0.13 | Adopted handwritten SQLite migrations and typed D1 prepared statements |

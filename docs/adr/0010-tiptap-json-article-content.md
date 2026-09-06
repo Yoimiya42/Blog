@@ -1,6 +1,6 @@
 # 0010. TipTap JSON article content
 
-- **Status**: Accepted
+- **Status**: Accepted; Drizzle storage detail superseded by ADR-0012
 - **Date**: 2026-09-03
 - **Requirements**: FR-BLOG-02, FR-BLOG-03, FR-BLOG-05, FR-BLOG-07, FR-BLOG-13, FR-ADMIN-03, FR-ADMIN-09
 - **Supersedes**: ADR-0005 and ADR-0009's content-source clause

@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v1.4 · 2026-09-06
+> v1.5 · 2026-09-06
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## v1 — Initial Launch
@@ -39,7 +39,7 @@
 |---|---|
 | 2026-09-01 to 2026-09-03 | Vercel Preview, application skeleton, and launch identity are ready |
 | 2026-09-03 to 2026-09-05 | Cloudflare platform decision, minimal Workers preview, and TipTap content foundation are complete |
-| 2026-09-06 to 2026-09-10 | Drizzle/D1 and authentication foundations are complete |
+| 2026-09-06 to 2026-09-10 | SQL/D1 and authentication foundations are complete |
 | 2026-09-11 to 2026-09-19 | Public homepage, blog, admin, editor, and media vertical slices work |
 | 2026-09-20 to 2026-09-25 | Publishing workflow, hidden entrance, and cross-cutting gates pass |
 | 2026-09-26 to 2026-09-30 | Production deployment and UK/mainland release validation pass |
@@ -57,7 +57,7 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 | [#27](https://github.com/Yoimiya42/Blog/issues/27) | Establish Vercel preview deployment | P0 | S | Done | #5 |
 | [#29](https://github.com/Yoimiya42/Blog/issues/29) | Establish Cloudflare platform foundation | P0 | M | Done | #5, #27 |
 | [#4](https://github.com/Yoimiya42/Blog/issues/4) | Select the Workers image pipeline | P0 | M | Backlog | #29, representative media |
-| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement Drizzle/D1 database foundation | P0 | M | Backlog | #29 |
+| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement SQL/D1 database foundation | P0 | M | In progress | #29 |
 | [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | Backlog | #5, #7 |
 | [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement TipTap content foundation | P0 | M | Done | #5, #29 |
 | [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | P0 | L | Backlog | #7, #9, #14 |
