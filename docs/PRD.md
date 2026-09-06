@@ -263,7 +263,7 @@ Core of v1. All screens designed from 375px up.
 
 ## 5. Data model (draft)
 
-The following compact notation defines the logical model, not executable SQL. Issue #7 translates the v1 subset into versioned SQLite migrations for D1. Fields are cheap to add; relations are not — review those first.
+The following compact notation defines the logical model, not executable SQL. Issue #38 translates the v1 content subset into versioned SQLite migrations after its field contract is confirmed. Fields are cheap to add; relations are not — review those first.
 
 1. All four life-list categories share one `Item` table, discriminated by `type`, category-specific fields in `meta`. See ADR-0002.
 2. Comments are polymorphic (`targetType` + `targetId`), serving posts, moments, items, photos.
@@ -638,3 +638,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-09-06 | v0.13 | Reconciled the platform foundation status after Issue #29 closed |
 | 2026-09-06 | v0.14 | Defined the Better Auth and durable rate-limit data required by Issue #7 |
 | 2026-09-06 | v0.15 | Adopted handwritten SQLite migrations and D1 prepared statements while preserving a future Drizzle path |
+| 2026-09-07 | v0.16 | Deferred content persistence to Issue #38 until the v1 field contract is confirmed |

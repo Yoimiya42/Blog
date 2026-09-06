@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v1.5 · 2026-09-06
+> v1.6 · 2026-09-07
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## v1 — Initial Launch
@@ -57,21 +57,22 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 | [#27](https://github.com/Yoimiya42/Blog/issues/27) | Establish Vercel preview deployment | P0 | S | Done | #5 |
 | [#29](https://github.com/Yoimiya42/Blog/issues/29) | Establish Cloudflare platform foundation | P0 | M | Done | #5, #27 |
 | [#4](https://github.com/Yoimiya42/Blog/issues/4) | Select the Workers image pipeline | P0 | M | Backlog | #29, representative media |
-| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement SQL/D1 database foundation | P0 | M | In progress | #29 |
+| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement SQL-first D1 auth foundation | P0 | M | In progress | #29 |
 | [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | Backlog | #5, #7 |
 | [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement TipTap content foundation | P0 | M | Done | #5, #29 |
-| [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | P0 | L | Backlog | #7, #9, #14 |
-| [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | P0 | L | Backlog | #6, #7 |
-| [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | P0 | M | Backlog | #7, #8 |
+| [#38](https://github.com/Yoimiya42/Blog/issues/38) | Implement content persistence and D1 operations | P0 | M | Backlog | #7, #9, owner field contract |
+| [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | P0 | L | Backlog | #9, #14, #38 |
+| [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | P0 | L | Backlog | #6, #38 |
+| [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | P0 | M | Backlog | #8, #38 |
 | [#13](https://github.com/Yoimiya42/Blog/issues/13) | Implement mobile TipTap editor | P0 | L | Backlog | #9, #12 |
-| [#14](https://github.com/Yoimiya42/Blog/issues/14) | Implement media upload and library | P0 | L | Backlog | #7, #8 |
+| [#14](https://github.com/Yoimiya42/Blog/issues/14) | Implement media upload and library | P0 | L | Backlog | #4, #8, #38 |
 | [#15](https://github.com/Yoimiya42/Blog/issues/15) | Implement draft and publish workflow | P0 | M | Backlog | #10, #12, #13, #14 |
 | [#16](https://github.com/Yoimiya42/Blog/issues/16) | Implement hidden entrance | P1 | S | Backlog | #6, #11 |
 | [#17](https://github.com/Yoimiya42/Blog/issues/17) | Meet security, privacy, and accessibility gates | P0 | L | Backlog | All feature Issues |
 | [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy Workers production and custom domains | P0 | M | Backlog | #4, #6, #29, feature-complete build |
 | [#19](https://github.com/Yoimiya42/Blog/issues/19) | Validate the v1 release | P0 | M | Backlog | #6, #17, #18 |
 
-Publishing path: `#1 -> #5 -> #27 -> #29 -> #7 -> #8/#9/#14 -> #10/#12 -> #13 -> #15 -> #17/#18 -> #19`.
+Publishing path: `#1 -> #5 -> #27 -> #29 -> #7 -> #8/#9 -> #38 -> #10/#12/#14 -> #13 -> #15 -> #17/#18 -> #19`.
 
 Platform path: #29 confirmed the Workers runtime, code rollback, and the GitHub-connected build pipeline, so D1 work can start. #4 selects image processing before #14 implements media upload. Vercel now serves pull request previews only; the ADR-0009 Vercel rollback condition ended when #29 closed.
 
