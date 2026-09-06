@@ -15,4 +15,12 @@
   "version_metadata": {
     "binding": "CF_VERSION_METADATA",
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "personal-site-development",
+      "database_id": "ec5b45a3-6951-4ca3-8661-7f500ce8ecd7",
+      "migrations_dir": "migrations",
+    },
+  ],
 }
