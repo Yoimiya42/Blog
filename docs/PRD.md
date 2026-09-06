@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.13 · 2026-09-06 · Draft
+> v0.14 · 2026-09-06 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -272,12 +272,14 @@ The following compact notation defines the logical model, not an executable ORM 
 ```text
 // ---------- Users ----------
 model User {
-  id            String    @id @default(cuid())
-  email         String?   @unique
-  name          String?
-  avatarUrl     String?
+  id            String    @id
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String
+  image         String?
   role          Role      @default(VISITOR)
   createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   lastSeenAt    DateTime?
   accounts      Account[]      // Better Auth provider links
   sessions      Session[]
@@ -288,6 +290,53 @@ model User {
 }
 
 enum Role { OWNER VISITOR }
+
+model Account {
+  id                    String    @id
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest Int
+}
 
 // ---------- Media ----------
 model Media {
@@ -586,3 +635,5 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-09-03 | v0.10 | Confirmed vinext after the Workers preview and rollback rehearsal |
 | 2026-09-03 | v0.11 | Replaced authoritative Markdown with versioned TipTap JSON stored through Drizzle and D1 |
 | 2026-09-05 | v0.12 | Approved Workers Paid for production because server-side code highlighting exceeds the free CPU limit |
+| 2026-09-06 | v0.13 | Reconciled the platform foundation status after Issue #29 closed |
+| 2026-09-06 | v0.14 | Defined the Better Auth and durable rate-limit data required by Issue #7 |
