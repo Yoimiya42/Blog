@@ -154,7 +154,7 @@ The literal **no remote CDN URL in the bundle** check is not satisfied: both the
 
 Batch 2 local gates passed: `format:check`, `lint`, `typecheck`, 202 tests across 12 files, Next.js `build`, vinext build, Wrangler dry-run, and `git diff --check`. The final primary-checkout rebuild reported 728.10 KiB / gzip 215.91 KiB with the same bindings; generated build identifiers explain the compressed-size variation from the comparison table. Batch 1 coverage is mapped in [the test matrix](../article-content-test-matrix.md).
 
-Remote request CPU, cold starts, production traffic, and mainland testing remain outside this checkpoint. The latest observed PR #32 Cloudflare build check still failed; resolve it before merge. The CDN literal exception also requires explicit disposition before claiming every Checkpoint 4 safety check passed. Commit, push, PR status updates, and remote checks follow the repository's user-owned commit workflow.
+Remote request CPU, cold starts, production traffic, and mainland testing remain outside this checkpoint. That build check now succeeds: PR #32 merged as `main` commit `57fa62b` on 2026-09-05, where the GitHub Actions `check` job, `Workers Builds: personal-site`, and Vercel all reported success. The CDN literal exception also requires explicit disposition before claiming every Checkpoint 4 safety check passed. Commit, push, PR status updates, and remote checks follow the repository's user-owned commit workflow.
 
 ## Official references
 

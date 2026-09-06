@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v1.3 · 2026-09-03
+> v1.4 · 2026-09-06
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## v1 — Initial Launch
@@ -38,8 +38,8 @@
 | Window | Exit condition |
 |---|---|
 | 2026-09-01 to 2026-09-03 | Vercel Preview, application skeleton, and launch identity are ready |
-| 2026-09-03 to 2026-09-05 | Cloudflare platform decision and minimal Workers preview are complete |
-| 2026-09-06 to 2026-09-10 | Drizzle/D1, authentication, and TipTap content foundations are complete |
+| 2026-09-03 to 2026-09-05 | Cloudflare platform decision, minimal Workers preview, and TipTap content foundation are complete |
+| 2026-09-06 to 2026-09-10 | Drizzle/D1 and authentication foundations are complete |
 | 2026-09-11 to 2026-09-19 | Public homepage, blog, admin, editor, and media vertical slices work |
 | 2026-09-20 to 2026-09-25 | Publishing workflow, hidden entrance, and cross-cutting gates pass |
 | 2026-09-26 to 2026-09-30 | Production deployment and UK/mainland release validation pass |
@@ -59,7 +59,7 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 | [#4](https://github.com/Yoimiya42/Blog/issues/4) | Select the Workers image pipeline | P0 | M | Backlog | #29, representative media |
 | [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement Drizzle/D1 database foundation | P0 | M | Backlog | #29 |
 | [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | Backlog | #5, #7 |
-| [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement TipTap content foundation | P0 | M | In progress | #5, #29 |
+| [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement TipTap content foundation | P0 | M | Done | #5, #29 |
 | [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | P0 | L | Backlog | #7, #9, #14 |
 | [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | P0 | L | Backlog | #6, #7 |
 | [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | P0 | M | Backlog | #7, #8 |
@@ -73,7 +73,7 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 
 Publishing path: `#1 -> #5 -> #27 -> #29 -> #7 -> #8/#9/#14 -> #10/#12 -> #13 -> #15 -> #17/#18 -> #19`.
 
-Platform path: #29 confirms the Workers runtime and code rollback before D1 work starts. #4 selects image processing before #14 implements media upload. Vercel remains a temporary platform fallback until #29 closes.
+Platform path: #29 confirmed the Workers runtime, code rollback, and the GitHub-connected build pipeline, so D1 work can start. #4 selects image processing before #14 implements media upload. Vercel now serves pull request previews only; the ADR-0009 Vercel rollback condition ended when #29 closed.
 
 Public identity path: `#6 -> #11 -> #16 -> #17/#18 -> #19`.
 

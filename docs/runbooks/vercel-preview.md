@@ -1,6 +1,6 @@
 # Vercel Preview deployment
 
-Deploy a committed Git feature branch to the protected Vercel Preview environment. This verified procedure is a temporary platform fallback until Issue #29 closes. Cloudflare Workers is the primary preview target. Do not extend Vercel with new platform-specific integrations.
+Deploy a committed Git feature branch to the protected Vercel Preview environment. Issue #29 closed, so this verified procedure is no longer a production fallback; it now serves pull request preview checks only. Cloudflare Workers is the primary preview target. Do not extend Vercel with new platform-specific integrations.
 
 This procedure does not release production traffic or validate mainland China reachability.
 
