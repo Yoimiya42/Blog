@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.11 · 2026-09-05
+> v0.12 · 2026-09-06
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -120,7 +120,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.
 - Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
-- Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal. OpenNext remains a fallback only for a documented blocker. Vercel remains a temporary platform fallback until Issue #29 closes.
+- Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal, and Workers Builds now deploys `main`. OpenNext remains a fallback only for a documented blocker. Vercel serves pull request previews only since Issue #29 closed.
 - Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. Production runs on Workers Paid because first-use grammar setup exceeds the free per-request CPU limit. See ADR-0011.
 - Image processing remains provisional under Issue #4.
 
@@ -243,7 +243,7 @@ Any failing row is an architectural defect.
 **CI/CD.**
 - GitHub Actions runs `lint`, `typecheck`, `test`, `build` on every push and PR. Any failure blocks merge.
 - Issue #29 established versioned Workers preview URLs and rehearsed code rollback without stateful bindings. The verified procedure is in `runbooks/cloudflare-workers-preview.md`.
-- Production deployment from `main` starts only after environment isolation, stateful recovery, and release checks pass. Vercel remains a temporary platform fallback until Issue #29 closes.
+- Workers Builds deploys `main` to the `workers.dev` baseline. The custom-domain production release stays with Issue #18 and starts only after environment isolation, stateful recovery, and release checks pass.
 - Husky and lint-staged gate commits locally.
 
 **Database operations.** Drizzle generates committed SQL migrations; Wrangler applies them to the selected D1 environment. A deterministic seed populates a new environment. Rehearse D1 Time Travel restore before launch; an untested backup is not a backup. Review query plans and row-read volume after launch to catch missing indexes and ORM N+1 patterns.

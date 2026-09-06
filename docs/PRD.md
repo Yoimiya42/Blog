@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.12 · 2026-09-05 · Draft
+> v0.13 · 2026-09-06 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -476,7 +476,7 @@ Every rule is blocking. Violating one prevents mainland visitors from loading th
 | NFR-CN-09 | No ICP filing; 2–5s first paint accepted | Filing needs a domestic entity, and personal filings forbid interactive features |
 | NFR-CN-10 | A mainland tester completes load, browse, register, log in, comment before launch | The only reliable verification |
 
-Cloudflare Workers is the selected production platform under ADR-0009. The Workers preview and code rollback procedure passed Issue #29 rehearsal. Vercel remains a temporary platform fallback until Issue #29 closes. Provider domains are development evidence only; production requires custom domains and real mainland China tests.
+Cloudflare Workers is the selected production platform under ADR-0009. The Workers preview and code rollback procedure passed Issue #29 rehearsal, and Issue #29 is closed. Vercel now serves pull request previews only. Provider domains are development evidence only; production requires custom domains and real mainland China tests.
 
 ### 6.2 Performance
 
