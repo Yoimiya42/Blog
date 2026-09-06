@@ -28,3 +28,4 @@ Template: `template.md`.
 | [0010](0010-tiptap-json-article-content.md) | TipTap JSON article content | Store versioned TipTap JSON in D1 as the only authoritative article body | Accepted; Drizzle detail superseded by 0012 | 2026-09-03 |
 | [0011](0011-shiki-javascript-engine-workers-paid.md) | Shiki JavaScript engine and Workers Paid | Highlight on the server with Shiki's JavaScript regex engine and run production on Workers Paid | Accepted | 2026-09-05 |
 | [0012](0012-sql-first-d1.md) | Handwritten SQL for D1 | Use versioned SQLite migrations and typed D1 prepared statements | Accepted | 2026-09-06 |
+| [0013](0013-prettier-sql-formatting.md) | Prettier for SQLite migrations | Use a pinned SQLite parser in the existing Prettier workflow | Accepted | 2026-09-06 |

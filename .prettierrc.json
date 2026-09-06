@@ -1,3 +1,17 @@
 {
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "plugins": ["prettier-plugin-sql-cst"],
+  "overrides": [
+    {
+      "files": "*.sql",
+      "options": {
+        "parser": "sqlite",
+        "sqlCanonicalSyntax": false,
+        "sqlIdentifierCase": "preserve",
+        "sqlKeywordCase": "upper",
+        "sqlLiteralCase": "upper",
+        "sqlTypeCase": "upper"
+      }
+    }
+  ]
 }

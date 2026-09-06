@@ -196,6 +196,7 @@ An in-memory bus is sufficient. Replace it with a queue behind the same interfac
 ### 3.6 Database evolution
 
 - Write versioned SQLite migrations by hand. Review and commit them, then apply them to D1 through Wrangler. Never modify production by hand.
+- Format migrations with Prettier's pinned SQLite parser before applying them. Wrangler remains the authority for D1 execution.
 - New columns are nullable or defaulted.
 - Never drop or rename a column directly. Use expand–migrate–contract: add, backfill and switch reads, drop a release or two later.
 - Application entity tables have `createdAt` and `updatedAt`. Their deletion is soft through `deletedAt`. Adapter, join, and ephemeral tables follow their owning contracts.
@@ -284,3 +285,4 @@ Any failing row is an architectural defect.
 | 2026-09-05 | v0.11 | Fixed the server highlighting engine and the production Workers plan |
 | 2026-09-06 | v0.12 | Reconciled the platform foundation status after Issues #29 and #33 closed |
 | 2026-09-06 | v0.13 | Adopted handwritten SQLite migrations and typed D1 prepared statements |
+| 2026-09-06 | v0.14 | Added parser-backed SQLite formatting to the migration workflow |
