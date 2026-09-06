@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.13 · 2026-09-06 · Draft
+> v0.15 · 2026-09-06 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -263,7 +263,7 @@ Core of v1. All screens designed from 375px up.
 
 ## 5. Data model (draft)
 
-The following compact notation defines the logical model, not an executable ORM schema. Issue #7 translates the v1 subset into Drizzle for D1. Fields are cheap to add; relations are not — review those first.
+The following compact notation defines the logical model, not executable SQL. Issue #38 translates the v1 content subset into versioned SQLite migrations after its field contract is confirmed. Fields are cheap to add; relations are not — review those first.
 
 1. All four life-list categories share one `Item` table, discriminated by `type`, category-specific fields in `meta`. See ADR-0002.
 2. Comments are polymorphic (`targetType` + `targetId`), serving posts, moments, items, photos.
@@ -272,12 +272,14 @@ The following compact notation defines the logical model, not an executable ORM 
 ```text
 // ---------- Users ----------
 model User {
-  id            String    @id @default(cuid())
-  email         String?   @unique
-  name          String?
-  avatarUrl     String?
+  id            String    @id
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String
+  image         String?
   role          Role      @default(VISITOR)
   createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   lastSeenAt    DateTime?
   accounts      Account[]      // Better Auth provider links
   sessions      Session[]
@@ -288,6 +290,53 @@ model User {
 }
 
 enum Role { OWNER VISITOR }
+
+model Account {
+  id                    String    @id
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest Int
+}
 
 // ---------- Media ----------
 model Media {
@@ -535,7 +584,7 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Styling | Tailwind CSS plus custom CSS | v4 | Confirmed | Utilities for admin; custom CSS is allowed for the public visual system |
 | Components | shadcn/ui and Radix | Current compatible | Confirmed | Admin primitives only; do not impose the library on public pages |
 | Database | Cloudflare D1 | Current managed service | Confirmed | Relational source of truth through a Workers binding; see ADR-0009 |
-| ORM | Drizzle | Current compatible | Confirmed | Use the D1 SQLite driver and committed SQL migrations; see ADR-0009 |
+| Data access | Handwritten SQL through the D1 binding | D1 Workers API | Confirmed | Use versioned SQLite migrations and typed prepared statements; see ADR-0012 |
 | Authentication | Better Auth with email OTP | Current compatible | Confirmed | Six-digit email codes and database sessions; see ADR-0004 |
 | Object storage | Cloudflare R2 on a custom domain | Current managed service | Confirmed | Store all uploaded media behind the project domain |
 | Image pipeline | Unselected | — | Provisional | Issue #4 must validate conversion, EXIF removal, CPU use, and delivery before media implementation |
@@ -586,3 +635,7 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-09-03 | v0.10 | Confirmed vinext after the Workers preview and rollback rehearsal |
 | 2026-09-03 | v0.11 | Replaced authoritative Markdown with versioned TipTap JSON stored through Drizzle and D1 |
 | 2026-09-05 | v0.12 | Approved Workers Paid for production because server-side code highlighting exceeds the free CPU limit |
+| 2026-09-06 | v0.13 | Reconciled the platform foundation status after Issue #29 closed |
+| 2026-09-06 | v0.14 | Defined the Better Auth and durable rate-limit data required by Issue #7 |
+| 2026-09-06 | v0.15 | Adopted handwritten SQLite migrations and D1 prepared statements while preserving a future Drizzle path |
+| 2026-09-07 | v0.16 | Deferred content persistence to Issue #38 until the v1 field contract is confirmed |

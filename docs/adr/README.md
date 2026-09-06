@@ -24,6 +24,8 @@ Template: `template.md`.
 | [0006](0006-hosting-platform-spike.md) | Hosting platform validation spike | Required a dual-platform spike before product development | Superseded | 2026-08-31 |
 | [0007](0007-default-locale-urls.md) | English root with prefixed translations | Keep English unprefixed and prefix each future locale | Accepted | 2026-09-01 |
 | [0008](0008-vercel-previews-before-host-selection.md) | Vercel previews before host selection | Use Vercel previews now and reassess production hosting after representative features | Superseded by 0009 | 2026-09-03 |
-| [0009](0009-cloudflare-workers-d1-drizzle.md) | Cloudflare Workers, D1, and Drizzle | Use Workers with D1 and Drizzle; validate the Next.js adapter before implementation | Accepted | 2026-09-03 |
-| [0010](0010-tiptap-json-article-content.md) | TipTap JSON article content | Store versioned TipTap JSON in D1 as the only authoritative article body | Accepted | 2026-09-03 |
+| [0009](0009-cloudflare-workers-d1-drizzle.md) | Cloudflare Workers, D1, and Drizzle | Use Workers with D1; ADR-0012 supersedes the Drizzle decision | Accepted; Drizzle superseded by 0012 | 2026-09-03 |
+| [0010](0010-tiptap-json-article-content.md) | TipTap JSON article content | Store versioned TipTap JSON in D1 as the only authoritative article body | Accepted; Drizzle detail superseded by 0012 | 2026-09-03 |
 | [0011](0011-shiki-javascript-engine-workers-paid.md) | Shiki JavaScript engine and Workers Paid | Highlight on the server with Shiki's JavaScript regex engine and run production on Workers Paid | Accepted | 2026-09-05 |
+| [0012](0012-sql-first-d1.md) | Handwritten SQL for D1 | Use versioned SQLite migrations and typed D1 prepared statements | Accepted | 2026-09-06 |
+| [0013](0013-prettier-sql-formatting.md) | Prettier for SQLite migrations | Use a pinned SQLite parser in the existing Prettier workflow | Accepted | 2026-09-06 |

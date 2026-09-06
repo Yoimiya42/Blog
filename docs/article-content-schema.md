@@ -1,13 +1,13 @@
 # Article Content Schema
 
-> Schema v1 · 2026-09-05
+> Schema v1 · 2026-09-06
 > Decision: ADR-0010. Requirement: FR-BLOG-13.
 
 ## 1. Invariants
 
-- `Post.content` stores one TipTap JSON document in D1 `TEXT` through Drizzle JSON mode. It is the only authoritative article body.
+- `Post.content` stores one TipTap JSON document in D1 `TEXT`. It is the only authoritative article body.
 - `Post.contentSchemaVersion` identifies the project schema. Version 1 is the launch schema.
-- The server validates every write. Drizzle typing does not replace runtime validation.
+- The server validates every write. Database row typing does not replace runtime validation.
 - Shape validation is synchronous and database-free. Confirming that every `mediaId` resolves is a separate step, run only by callers that persist a document.
 - Unknown nodes, marks, attributes, and unsafe URLs are rejected.
 - Nodes store content data only. They never store HTML, JavaScript, React component names, or third-party embed code.

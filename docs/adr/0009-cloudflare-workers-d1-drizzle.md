@@ -1,6 +1,6 @@
 # 0009. Adopt Cloudflare Workers, D1, and Drizzle
 
-- **Status**: Accepted
+- **Status**: Accepted; Drizzle decision superseded by ADR-0012
 - **Date**: 2026-09-03
 - **Requirements**: NFR-CN-05 to NFR-CN-10, FR-AUTH-05, FR-ADMIN-01
 - **Supersedes**: ADR-0001 stack details, ADR-0004 Prisma adapter assumption, and ADR-0008

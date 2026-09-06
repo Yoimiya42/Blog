@@ -8,19 +8,9 @@ const featureInternalsPattern = {
   message: "Import feature modules through their public index.",
 };
 
-const prismaClientPattern = {
-  group: [
-    "@prisma/client",
-    "@prisma/client/**",
-    "@/generated/prisma",
-    "@/generated/prisma/**",
-  ],
-  message: "Import Prisma only through src/lib/db.ts.",
-};
-
 const databasePattern = {
   group: ["@/lib/db", "@/lib/db/**"],
-  message: "Only repository files may import the database client.",
+  message: "Only repository files may import database access.",
 };
 
 const editorRuntimePattern = {
@@ -45,28 +35,24 @@ const eslintConfig = defineConfig([
   },
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/lib/db.ts"],
+    ignores: ["src/lib/db/**"],
     rules: {
       "no-restricted-imports": [
         "error",
         {
-          patterns: [featureInternalsPattern, prismaClientPattern],
+          patterns: [featureInternalsPattern],
         },
       ],
     },
   },
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/lib/db.ts", "src/features/**/server/*.repository.ts"],
+    ignores: ["src/lib/db/**", "src/features/**/server/*.repository.ts"],
     rules: {
       "no-restricted-imports": [
         "error",
         {
-          patterns: [
-            featureInternalsPattern,
-            prismaClientPattern,
-            databasePattern,
-          ],
+          patterns: [featureInternalsPattern, databasePattern],
         },
       ],
     },
@@ -74,7 +60,7 @@ const eslintConfig = defineConfig([
   {
     files: ["src/**/*.{ts,tsx}"],
     ignores: [
-      "src/lib/db.ts",
+      "src/lib/db/**",
       "src/features/**/server/*.repository.ts",
       "src/features/post/content/editor/**",
     ],
@@ -84,7 +70,6 @@ const eslintConfig = defineConfig([
         {
           patterns: [
             featureInternalsPattern,
-            prismaClientPattern,
             databasePattern,
             editorRuntimePattern,
           ],
