@@ -61,7 +61,7 @@
   },
   "lint-staged": {
     "*": "prettier --check --ignore-unknown",
-    "*.{js,cjs,mjs,ts,tsx}": "eslint --max-warnings=0"
+    "*.{js,cjs,mjs,ts,tsx}": "eslint --max-warnings=0 --no-warn-ignored"
   },
   "type": "module"
 }

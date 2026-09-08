@@ -7,6 +7,7 @@ const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 30;
 const OTP_EXPIRY_SECONDS = 60 * 10;
 
 interface AuthDependencies {
+  baseURL: string;
   database: D1Database;
   mail: MailAdapter;
   ownerEmail: string;
@@ -14,14 +15,22 @@ interface AuthDependencies {
 }
 
 export function createAuth({
+  baseURL,
   database,
   mail,
   ownerEmail,
   secret,
 }: AuthDependencies) {
   return betterAuth({
+    baseURL,
     database,
     secret,
+
+    advanced: {
+      ipAddress: {
+        ipAddressHeaders: ["cf-connecting-ip"],
+      },
+    },
 
     user: {
       fields: {
