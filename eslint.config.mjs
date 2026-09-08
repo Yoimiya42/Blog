@@ -78,7 +78,14 @@ const eslintConfig = defineConfig([
     },
   },
   eslintConfigPrettier,
-  globalIgnores([".next/**", "out/**", "build/**", "dist/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "dist/**",
+    "next-env.d.ts",
+    "worker-configuration.d.ts",
+  ]),
 ]);
 
 export default eslintConfig;

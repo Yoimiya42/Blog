@@ -16,7 +16,7 @@ beforeEach(() => {
   vi.stubGlobal("navigator", { clipboard: { writeText } });
   writeText.mockReset().mockResolvedValue(undefined);
   container = document.createElement("div");
-  document.body.append(container);
+  document.body.appendChild(container);
   root = createRoot(container);
 });
 afterEach(async () => {
