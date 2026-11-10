@@ -27,7 +27,7 @@ prisma/*.db
 prisma/*.db-journal
 
 # agent workspaces
-.claude/worktrees/
+.claude/
 .aider*
 .codex/
 
@@ -42,3 +42,6 @@ Thumbs.db
 coverage/
 .vinext/
 .wrangler/
+
+# local-only reference material, never committed
+local/
