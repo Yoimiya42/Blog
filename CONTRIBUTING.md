@@ -87,8 +87,8 @@ Squash-merge and delete the branch. After merge, close the Issue, set the Projec
 
 ## 8. Automation boundary
 
-AI maintains Issues, branches, Project status, and PRs. AI stages verified changes but MUST NOT commit. At each checkpoint, it reports the Issue, branch, staged files, validation results, next checkpoint, and a runnable commit command.
+AI maintains Issues, Project status, and PRs. AI proposes branch names but MUST NOT create or switch branches. AI stages verified changes but MUST NOT commit. At each checkpoint, it reports the Issue, branch, staged files, validation results, next checkpoint, and a runnable commit command.
 
-The owner reviews the exact diff and runs the commit manually. After the commit exists, AI may push the current branch and open or update its PR. Merge always requires explicit approval.
+The owner creates each branch, reviews the exact diff, and runs the commit manually. After the commit exists, AI may push the current branch and open or update its PR. Merge always requires explicit approval.
 
 AI MUST report every Issue, branch, commit, and PR it creates or completes.
