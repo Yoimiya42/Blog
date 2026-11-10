@@ -1,11 +1,11 @@
 # Release Roadmap
 
-> v1.6 · 2026-09-07
+> v1.7 · 2026-11-10
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## v1 — Initial Launch
 
-- **Target date**: 2026-09-30
+- **Target date**: Under re-planning. The original 2026-09-30 target was missed; work paused from 2026-09-08 to 2026-11-10.
 - **Milestone**: [v1 — Initial Launch](https://github.com/Yoimiya42/Blog/milestone/1)
 - **Outcome**: Ship a credible public identity, a readable technical blog, and a phone-first owner publishing workflow on a custom domain reachable from mainland China.
 
@@ -44,7 +44,7 @@
 | 2026-09-20 to 2026-09-25 | Publishing workflow, hidden entrance, and cross-cutting gates pass |
 | 2026-09-26 to 2026-09-30 | Production deployment and UK/mainland release validation pass |
 
-The dates are sequencing targets, not permission to weaken acceptance criteria. A missed hard constraint moves the release date or removes scope through a PRD change.
+These windows are historical. New windows follow the re-plan. The dates are sequencing targets, not permission to weaken acceptance criteria. A missed hard constraint moves the release date or removes scope through a PRD change.
 
 ## Work breakdown
 
@@ -57,8 +57,8 @@ The dates are sequencing targets, not permission to weaken acceptance criteria. 
 | [#27](https://github.com/Yoimiya42/Blog/issues/27) | Establish Vercel preview deployment | P0 | S | Done | #5 |
 | [#29](https://github.com/Yoimiya42/Blog/issues/29) | Establish Cloudflare platform foundation | P0 | M | Done | #5, #27 |
 | [#4](https://github.com/Yoimiya42/Blog/issues/4) | Select the Workers image pipeline | P0 | M | Backlog | #29, representative media |
-| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement SQL-first D1 auth foundation | P0 | M | In progress | #29 |
-| [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | Backlog | #5, #7 |
+| [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement SQL-first D1 auth foundation | P0 | M | Done | #29 |
+| [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | P0 | M | In progress | #5, #7 |
 | [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement TipTap content foundation | P0 | M | Done | #5, #29 |
 | [#38](https://github.com/Yoimiya42/Blog/issues/38) | Implement content persistence and D1 operations | P0 | M | Backlog | #7, #9, owner field contract |
 | [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | P0 | L | Backlog | #9, #14, #38 |

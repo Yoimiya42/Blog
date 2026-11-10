@@ -7,7 +7,7 @@
 
 ## 1. Project
 
-Personal site: homepage, technical blog, mobile-first admin. v1 target 2026-09-30.
+Personal site: homepage, technical blog, mobile-first admin. v1 target date is under re-planning; see `docs/ROADMAP.md`.
 
 ## 2. Required reading
 
