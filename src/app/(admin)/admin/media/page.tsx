@@ -1,4 +1,8 @@
-export default function AdminMediaPage() {
+import { requireOwner } from "@/features/auth";
+
+export default async function AdminMediaPage() {
+  await requireOwner();
+
   return (
     <div>
       <h1 className="text-3xl font-semibold tracking-tight">Media</h1>

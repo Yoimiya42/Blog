@@ -1,18 +1,7 @@
-import { createAuth } from "@/lib/auth";
-import { createResendMailAdapter } from "@/lib/mail";
+import { createRequestAuth } from "@/features/auth";
 
 async function handleAuthRequest(request: Request) {
-  const { env } = await import("cloudflare:workers");
-  const auth = createAuth({
-    baseURL: new URL(request.url).origin,
-    database: env.DB,
-    mail: createResendMailAdapter({
-      apiKey: env.RESEND_API_KEY,
-      from: env.AUTH_EMAIL_FROM,
-    }),
-    ownerEmail: env.OWNER_EMAIL,
-    secret: env.BETTER_AUTH_SECRET,
-  });
+  const auth = await createRequestAuth(new URL(request.url).origin);
 
   return auth.handler(request);
 }

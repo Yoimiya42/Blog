@@ -1,4 +1,8 @@
-export default function AdminPostsPage() {
+import { requireOwner } from "@/features/auth";
+
+export default async function AdminPostsPage() {
+  await requireOwner();
+
   return (
     <div>
       <h1 className="text-3xl font-semibold tracking-tight">Posts</h1>

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { LogoutButton } from "./logout-button";
+
 const navigation = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/posts", label: "Posts" },
@@ -15,9 +17,16 @@ export function AdminShell({ children }: { children: ReactNode }) {
           Admin
         </Link>
 
-        <Link className="text-sm text-stone-600" href="/">
-          View site
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            className="flex min-h-11 items-center rounded-xl px-3 text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+            href="/"
+          >
+            View site
+          </Link>
+
+          <LogoutButton />
+        </div>
       </header>
 
       <div className="mx-auto grid max-w-6xl md:grid-cols-[12rem_1fr]">

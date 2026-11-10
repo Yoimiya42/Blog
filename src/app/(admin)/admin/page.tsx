@@ -1,6 +1,10 @@
 import Link from "next/link";
 
-export default function AdminPage() {
+import { requireOwner } from "@/features/auth";
+
+export default async function AdminPage() {
+  await requireOwner();
+
   return (
     <div>
       <h1 className="text-3xl font-semibold tracking-tight">Overview</h1>
