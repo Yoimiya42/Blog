@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.14 · 2026-09-06
+> v0.15 · 2026-11-10
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -120,7 +120,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Cloudflare R2 stores media behind the project domain.
 - Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
 - Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal, and Workers Builds now deploys `main`. OpenNext remains a fallback only for a documented blocker. Vercel serves pull request previews only since Issue #29 closed.
-- Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. Production runs on Workers Paid because first-use grammar setup exceeds the free per-request CPU limit. See ADR-0011.
+- Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. Production runs on Workers Paid once the public blog ships, because first-use grammar setup exceeds the free per-request CPU limit. See ADR-0011 and ADR-0014.
 - Image processing remains provisional under Issue #4.
 
 ---
@@ -286,3 +286,4 @@ Any failing row is an architectural defect.
 | 2026-09-06 | v0.12 | Reconciled the platform foundation status after Issues #29 and #33 closed |
 | 2026-09-06 | v0.13 | Adopted handwritten SQLite migrations and typed D1 prepared statements |
 | 2026-09-06 | v0.14 | Added parser-backed SQLite formatting to the migration workflow |
+| 2026-11-10 | v0.15 | Deferred the production Workers Paid plan to the public blog release |
