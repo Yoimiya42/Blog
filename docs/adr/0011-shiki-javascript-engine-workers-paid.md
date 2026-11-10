@@ -1,6 +1,6 @@
 # 0011. Shiki JavaScript engine and Workers Paid
 
-- **Status**: Accepted
+- **Status**: Accepted; Paid timing superseded by 0014
 - **Date**: 2026-09-05
 - **Requirements**: FR-BLOG-03, FR-BLOG-13, NFR-CN-05
 - **Supersedes**: ADR-0009's "start on Workers Free" clause

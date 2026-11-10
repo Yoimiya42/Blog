@@ -7,7 +7,7 @@
 
 ## 1. Project
 
-Personal site: homepage, technical blog, mobile-first admin. v1 target date is under re-planning; see `docs/ROADMAP.md`.
+Personal site: homepage, technical blog, mobile-first admin. Milestones are undated and ordered by exit condition; see `docs/ROADMAP.md`.
 
 ## 2. Required reading
 
