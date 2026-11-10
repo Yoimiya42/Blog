@@ -27,9 +27,11 @@
     "@prisma/client": "7.10.0",
     "aws4fetch": "1.0.20",
     "better-auth": "1.7.2",
+    "heic-to": "1.5.2",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "sharp": "0.35.4",
     "zod": "^4.5.4"
   },
   "devDependencies": {
