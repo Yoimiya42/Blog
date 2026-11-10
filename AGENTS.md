@@ -1,6 +1,6 @@
 # AGENTS.md — the single AI rule file
 
-> The only source of AI rules. Claude (Code / Chat / Cowork) and ChatGPT all read this file.
+> The only source of AI rules. Claude (Code / Chat / Cowork) and Codex all read this file.
 > `CLAUDE.md` is a pointer; put no content there. Change rules only here, and commit the change.
 
 ---
@@ -49,16 +49,20 @@ Use the ADR index to select records. Do not preload every ADR.
 
 ### 5.1 Responsibilities
 
-- **Claude Code** is the primary implementation agent.
+- **Claude Code** is the only implementation agent. It owns application code and may edit documentation.
+- **Codex** is the reviewer. It reviews code and MAY edit documentation, including notes addressed to Claude Code. It MUST NOT edit application code.
 - **Claude Chat / Cowork** may inspect code, plan, and edit `docs/`. It MUST NOT edit application code.
-- **ChatGPT** may edit documentation and application code.
+
+Application code is everything outside `docs/` and the root Markdown files.
 
 Branch names follow `CONTRIBUTING.md` and MUST NOT contain actor identity. AI MUST NOT edit `main` directly or merge without authorisation.
+
+`D:\BlogDemo` is frozen. It is read-only reference material. AI MUST NOT extend it. Nothing in it is a decision until it is recorded in `docs/PRD.md` or an ADR.
 
 ### 5.2 Serial execution
 
 1. Run `git status` before starting. Unrelated uncommitted changes: stop and notify the user.
-2. AI stages but never commits. See 5.6.
+2. AI stages but never commits, and never creates or switches branches. See 5.6.
 3. The worktree MUST be clean before handing off to another AI.
 4. No concurrent AI work sessions.
 
@@ -85,9 +89,9 @@ Naming, lifecycle, merge strategy, and commit format: `CONTRIBUTING.md`.
 
 ### 5.6 Workflow automation
 
-AI owns workflow bookkeeping and staging. The user owns commits.
+AI owns workflow bookkeeping and staging. The user owns branches and commits.
 
-At task start, AI MUST create or select the relevant Issue, create or switch to the correct branch when the worktree is clean, keep a branch the user explicitly selected, and move the Project item to `In progress` when Project access is available.
+At task start, AI MUST create or select the relevant Issue and move the Project item to `In progress` when Project access is available. When a new branch is needed, AI MUST stop and present the branch name and a runnable `git switch` command. **AI MUST NOT create or switch branches.** The user runs the command.
 
 At each atomic, verified checkpoint, AI MUST run `git add .` and stop, presenting:
 
