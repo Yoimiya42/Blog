@@ -27,13 +27,13 @@
     "@tiptap/extension-list": "3.31.3",
     "@tiptap/pm": "3.31.3",
     "@tiptap/starter-kit": "3.31.3",
-    "@vinext/cloudflare": "^1.0.0-beta.7",
+    "@vinext/cloudflare": "1.0.0-beta.7",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-server-dom-webpack": "^19.2.8",
     "shiki": "^4.4.3",
-    "vinext": "^1.0.0-beta.9",
+    "vinext": "1.0.0-beta.9",
     "zod": "^4.5.4"
   },
   "devDependencies": {

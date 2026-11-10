@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.13 · 2026-09-06
+> v0.14 · 2026-09-06
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---

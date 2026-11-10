@@ -27,7 +27,7 @@ prisma/*.db
 prisma/*.db-journal
 
 # agent workspaces
-.claude/worktrees/
+.claude/
 .aider*
 .codex/
 

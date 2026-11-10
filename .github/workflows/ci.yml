@@ -37,5 +37,9 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
-      - name: Build production application
+      - name: Build Next.js application
         run: npm run build
+
+      # Production runs the vinext output on Workers, not the Next.js build.
+      - name: Build Workers production application
+        run: npm run build:vinext

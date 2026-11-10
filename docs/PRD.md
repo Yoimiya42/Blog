@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.15 · 2026-09-06 · Draft
+> v0.17 · 2026-11-10 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -37,7 +37,9 @@ A restrained academic and career homepage, with a private interest space behind 
 
 ## 2. Scope
 
-### 2.1 v1 — launch by 2026-09-30
+### 2.1 v1 — launch date under re-planning
+
+The original 2026-09-30 target was missed. Later release windows in 2.2–2.4 are also pending re-planning.
 
 Homepage · blog (list, detail, tags) · mobile-first admin (write, upload, publish) · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance.
 
@@ -639,3 +641,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-09-06 | v0.14 | Defined the Better Auth and durable rate-limit data required by Issue #7 |
 | 2026-09-06 | v0.15 | Adopted handwritten SQLite migrations and D1 prepared statements while preserving a future Drizzle path |
 | 2026-09-07 | v0.16 | Deferred content persistence to Issue #38 until the v1 field contract is confirmed |
+| 2026-11-10 | v0.17 | Marked release dates as under re-planning after the missed v1 target. No requirements changed |
