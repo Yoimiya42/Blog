@@ -1,7 +1,7 @@
+import { HomePage, homeContent } from "@/features/home";
+
 export default function Home() {
-  return (
-    <main className="min-h-screen p-6">
-      <h1 className="text-2xl font-semibold">Application bootstrap</h1>
-    </main>
-  );
+  // Recent posts arrive with the content read path (Issue #38). Until then the
+  // Writing section stays hidden.
+  return <HomePage content={homeContent} posts={[]} />;
 }

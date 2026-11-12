@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v2.0 · 2026-11-10
+> v2.1 · 2026-11-12
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## Planning rules
@@ -62,6 +62,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 ### Scope notes
 
 - **M0**: #8 delivers the server-side `/admin` guard, logout, and the owner seed path. QQ Mail and 163 Mail delivery tests move to M1 because they need the production mail domain.
+- **Order exception, 2026-11-12**: #8 is paused on `feat/8-owner-auth` (draft PR #40) at the owner's request. #11 runs ahead of it because it has no authentication dependency. This is the only permitted second branch. M0 stays open, and #18 still requires #8.
 - **M1**: The homepage is hardcoded (FR-HOME-08) and needs no content tables. The `Writing` section stays hidden until posts exist. Production stays on Workers Free; see ADR-0014. Homepage source content in `launch-content.md` is an owner input and blocks this milestone.
 - **M2**: #38 implements Post, Tag, and PostTag only, using the field contract in PRD section 5. The editor ships without the image control. Production moves to Workers Paid before the public blog ships.
 - **M3**: #4 covers HEIC and HEIF input, server-side verification of GPS EXIF removal, and direct-to-R2 upload. #14 adds the Media table, upload, library, and the editor image control.
@@ -80,8 +81,8 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | [#7](https://github.com/Yoimiya42/Blog/issues/7) | Implement SQL-first D1 auth foundation | Foundation | P0 | M | Done | #29 |
 | [#9](https://github.com/Yoimiya42/Blog/issues/9) | Implement TipTap content foundation | Foundation | P0 | M | Done | #5, #29 |
 | [#45](https://github.com/Yoimiya42/Blog/issues/45) | Re-plan v1 as undated milestones | M0 | P0 | S | In progress | — |
-| [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | M0 | P0 | M | In progress | #5, #7 |
-| [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | M1 | P0 | L | Backlog | #6, owner content |
+| [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | M0 | P0 | M | Paused | #5, #7 |
+| [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | M1 | P0 | L | In progress | #6, owner content |
 | [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy Workers production and custom domains | M1 | P0 | M | Backlog | #8, #11 |
 | [#38](https://github.com/Yoimiya42/Blog/issues/38) | Implement content persistence and D1 operations | M2 | P0 | M | Backlog | #7, #9 |
 | [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | M2 | P0 | M | Backlog | #8, #38 |
@@ -124,4 +125,4 @@ GitHub Project states are `Backlog -> Ready -> In progress -> In review -> Done`
 
 ## History
 
-The original plan targeted 2026-09-30 with dated windows. Work paused from 2026-09-08 to 2026-11-10 and the target was missed. Version 2.0 replaced the dated plan with ordered milestones.
+The original plan targeted 2026-09-30 with dated windows. Work paused from 2026-09-08 to 2026-11-10 and the target was missed. Version 2.0 replaced the dated plan with ordered milestones. Version 2.1 recorded the #8 pause and the #11 order exception.
