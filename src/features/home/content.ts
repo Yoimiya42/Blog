@@ -2,7 +2,8 @@ import type { HomeContent } from "./types";
 
 /**
  * Owner-supplied homepage copy. Status per section: docs/launch-content.md.
- * Fill a field only with reviewed source content; placeholder copy must not ship.
+ * Fill a field only with reviewed source content. Never invent copy: an empty
+ * section listed in `placeholders` renders a labelled placeholder instead.
  */
 export const homeContent: HomeContent = {
   identity: {
@@ -16,8 +17,16 @@ export const homeContent: HomeContent = {
     linkedinUrl: "https://www.linkedin.com/in/fangming-luan",
   },
   profile: [],
-  education: [],
+  education: [
+    {
+      institution: "University College London",
+      degree: "BSc Computer Science",
+      period: null,
+      details: [],
+    },
+  ],
   experience: [],
   projects: [],
   skills: [],
+  placeholders: ["profile", "experience", "projects", "skills"],
 };

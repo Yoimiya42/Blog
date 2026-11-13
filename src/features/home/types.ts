@@ -19,8 +19,8 @@ export interface HomeLink {
 export interface EducationEntry {
   institution: string;
   degree: string;
-  /** Display string, for example "2024 – 2027". */
-  period: string;
+  /** Display string, for example "2024 – 2027". `null` hides the dates. */
+  period: string | null;
   details: readonly string[];
 }
 
@@ -47,7 +47,8 @@ export interface SkillGroup {
 
 /**
  * Hardcoded homepage source for v1 (FR-HOME-08 moves it to admin in v1.5).
- * `null` and empty arrays mean "source not ready": the section is not rendered.
+ * `null` and empty arrays mean "source not ready": the section is not rendered
+ * unless `placeholders` lists it.
  */
 export interface HomeContent {
   identity: HomeIdentity | null;
@@ -57,6 +58,11 @@ export interface HomeContent {
   experience: readonly ExperienceEntry[];
   projects: readonly ProjectEntry[];
   skills: readonly SkillGroup[];
+  /**
+   * Sections to show as a visibly labelled placeholder while they have no
+   * source content. Owner decision, PRD v0.20; remove an id to hide the section.
+   */
+  placeholders: readonly HomeSectionId[];
 }
 
 export interface HomePostSummary {

@@ -32,11 +32,22 @@ function Section({
   );
 }
 
-function EntryHead({ title, period }: { title: ReactNode; period: string }) {
+/** Stands in for a section body whose source content is not written yet. */
+function PlaceholderNote() {
+  return <p className="placeholder-note">Placeholder</p>;
+}
+
+function EntryHead({
+  title,
+  period,
+}: {
+  title: ReactNode;
+  period: string | null;
+}) {
   return (
     <div className="entry__head">
       <h3 className="entry__title">{title}</h3>
-      <span className="entry__period">{period}</span>
+      {period ? <span className="entry__period">{period}</span> : null}
     </div>
   );
 }
@@ -53,11 +64,15 @@ export function ProfileSection({
 }) {
   return (
     <Section id="profile" heading="Profile">
-      <div className="prose">
-        {paragraphs.map((paragraph) => (
-          <p key={paragraph}>{paragraph}</p>
-        ))}
-      </div>
+      {paragraphs.length > 0 ? (
+        <div className="prose">
+          {paragraphs.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </div>
+      ) : (
+        <PlaceholderNote />
+      )}
     </Section>
   );
 }
@@ -69,21 +84,25 @@ export function EducationSection({
 }) {
   return (
     <Section id="education" heading="Education">
-      <ul className="entry-list">
-        {entries.map((entry) => (
-          <li key={`${entry.institution}-${entry.degree}`} className="entry">
-            <EntryHead title={entry.institution} period={entry.period} />
-            <p className="entry__sub">{entry.degree}</p>
-            {entry.details.length > 0 ? (
-              <ul className="entry__details">
-                {entry.details.map((detail) => (
-                  <li key={detail}>{detail}</li>
-                ))}
-              </ul>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      {entries.length > 0 ? (
+        <ul className="entry-list">
+          {entries.map((entry) => (
+            <li key={`${entry.institution}-${entry.degree}`} className="entry">
+              <EntryHead title={entry.institution} period={entry.period} />
+              <p className="entry__sub">{entry.degree}</p>
+              {entry.details.length > 0 ? (
+                <ul className="entry__details">
+                  {entry.details.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <PlaceholderNote />
+      )}
     </Section>
   );
 }
@@ -95,34 +114,38 @@ export function ExperienceSection({
 }) {
   return (
     <Section id="experience" heading="Experience">
-      <ul className="entry-list">
-        {entries.map((entry) => (
-          <li
-            key={`${entry.role}-${entry.organisation}-${entry.period}`}
-            className="entry"
-          >
-            <EntryHead
-              title={
-                <>
-                  {entry.role}
-                  <span className="entry__org">
-                    {" · "}
-                    {entry.href ? (
-                      <a href={entry.href} rel="noreferrer">
-                        {entry.organisation}
-                      </a>
-                    ) : (
-                      entry.organisation
-                    )}
-                  </span>
-                </>
-              }
-              period={entry.period}
-            />
-            <p className="entry__body">{entry.outcome}</p>
-          </li>
-        ))}
-      </ul>
+      {entries.length > 0 ? (
+        <ul className="entry-list">
+          {entries.map((entry) => (
+            <li
+              key={`${entry.role}-${entry.organisation}-${entry.period}`}
+              className="entry"
+            >
+              <EntryHead
+                title={
+                  <>
+                    {entry.role}
+                    <span className="entry__org">
+                      {" · "}
+                      {entry.href ? (
+                        <a href={entry.href} rel="noreferrer">
+                          {entry.organisation}
+                        </a>
+                      ) : (
+                        entry.organisation
+                      )}
+                    </span>
+                  </>
+                }
+                period={entry.period}
+              />
+              <p className="entry__body">{entry.outcome}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <PlaceholderNote />
+      )}
     </Section>
   );
 }
@@ -134,28 +157,32 @@ export function ProjectsSection({
 }) {
   return (
     <Section id="projects" heading="Selected Projects">
-      <ul className="entry-list entry-list--pair">
-        {entries.map((entry) => (
-          <li key={entry.title} className="entry">
-            <EntryHead title={entry.title} period={entry.period} />
-            <p className="entry__body">{entry.outcome}</p>
-            {entry.stack.length > 0 ? (
-              <p className="entry__meta">{entry.stack.join(" · ")}</p>
-            ) : null}
-            {entry.links.length > 0 ? (
-              <ul className="entry__links">
-                {entry.links.map((link) => (
-                  <li key={link.href}>
-                    <a href={link.href} rel="noreferrer">
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      {entries.length > 0 ? (
+        <ul className="entry-list entry-list--pair">
+          {entries.map((entry) => (
+            <li key={entry.title} className="entry">
+              <EntryHead title={entry.title} period={entry.period} />
+              <p className="entry__body">{entry.outcome}</p>
+              {entry.stack.length > 0 ? (
+                <p className="entry__meta">{entry.stack.join(" · ")}</p>
+              ) : null}
+              {entry.links.length > 0 ? (
+                <ul className="entry__links">
+                  {entry.links.map((link) => (
+                    <li key={link.href}>
+                      <a href={link.href} rel="noreferrer">
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <PlaceholderNote />
+      )}
     </Section>
   );
 }
@@ -163,14 +190,18 @@ export function ProjectsSection({
 export function SkillsSection({ groups }: { groups: readonly SkillGroup[] }) {
   return (
     <Section id="skills" heading="Skills">
-      <dl className="facts">
-        {groups.map((group) => (
-          <div key={group.category} className="facts__row">
-            <dt>{group.category}</dt>
-            <dd>{group.items.join(", ")}</dd>
-          </div>
-        ))}
-      </dl>
+      {groups.length > 0 ? (
+        <dl className="facts">
+          {groups.map((group) => (
+            <div key={group.category} className="facts__row">
+              <dt>{group.category}</dt>
+              <dd>{group.items.join(", ")}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <PlaceholderNote />
+      )}
     </Section>
   );
 }

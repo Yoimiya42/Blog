@@ -71,12 +71,40 @@ describe("homepage sections", () => {
     expect(html).not.toContain("<footer");
   });
 
-  it("ships no placeholder copy in the committed content", () => {
-    const text = JSON.stringify(homeContent).toLowerCase();
+  it("ships no invented copy in the committed content", () => {
+    const { placeholders, ...copy } = homeContent;
+    const text = JSON.stringify(copy).toLowerCase();
 
+    expect(placeholders).not.toContain("writing");
     for (const marker of ["lorem", "placeholder", "todo", "example.com"]) {
       expect(text).not.toContain(marker);
     }
+  });
+});
+
+describe("homepage placeholders", () => {
+  const content: HomeContent = {
+    ...emptyHomeContent,
+    identity: fullHomeContent.identity,
+    education: [{ ...fullHomeContent.education[0], period: null }],
+    placeholders: ["profile", "skills"],
+  };
+
+  it("renders a labelled placeholder only for listed empty sections", () => {
+    const html = render(content);
+
+    expect(sectionIds(html)).toEqual(["profile", "education", "skills"]);
+    expect(html.split("placeholder-note").length - 1).toBe(2);
+  });
+
+  it("prefers source content over the placeholder", () => {
+    const html = render({ ...fullHomeContent, placeholders: ["profile"] });
+
+    expect(html).not.toContain("placeholder-note");
+  });
+
+  it("omits the period when an entry has no dates", () => {
+    expect(render(content)).not.toContain("entry__period");
   });
 });
 

@@ -33,7 +33,10 @@ export function recentPosts(
   return posts.slice(0, MAX_RECENT_POSTS);
 }
 
-/** Sections with source content, in display order. Empty sections stay unpublished. */
+/**
+ * Sections to render, in display order: those with source content, plus empty
+ * ones the owner listed in `placeholders`. Other empty sections stay unpublished.
+ */
 export function visibleSections(
   content: HomeContent,
   posts: readonly HomePostSummary[],
@@ -48,7 +51,9 @@ export function visibleSections(
     contact: content.contact !== null,
   };
 
-  return SECTION_ORDER.filter((id) => hasContent[id]);
+  return SECTION_ORDER.filter(
+    (id) => hasContent[id] || content.placeholders.includes(id),
+  );
 }
 
 /** Navigation never links to a section that is not rendered. */

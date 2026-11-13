@@ -50,6 +50,7 @@ export const fullHomeContent: HomeContent = {
     { category: "Languages", items: ["TypeScript", "Python", "C"] },
     { category: "Tools", items: ["Git", "Docker"] },
   ],
+  placeholders: [],
 };
 
 export const emptyHomeContent: HomeContent = {
@@ -60,6 +61,7 @@ export const emptyHomeContent: HomeContent = {
   experience: [],
   projects: [],
   skills: [],
+  placeholders: [],
 };
 
 export function makePosts(count: number): HomePostSummary[] {
