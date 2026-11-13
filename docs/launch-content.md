@@ -13,14 +13,14 @@
 
 | Section | Required source | Status |
 |---|---|---|
-| Hero | Name, identity line, location, email, GitHub, LinkedIn | Pending |
+| Hero | Name, identity line, location, email, GitHub, LinkedIn | Ready |
 | Profile | Short biography, focus, current objective | Pending |
 | Education | Institution, degree, dates, selected modules or achievements | Pending |
 | Experience | Role, organisation, dates, one-line outcome, link | Pending |
 | Selected Projects | Title, dates, stack, one-line outcome, repository or demo link | Pending |
 | Skills | Languages, frameworks, tools | Pending |
 | Writing | Published posts supplied by the blog | Pending |
-| Contact | Public email, GitHub, LinkedIn | Pending |
+| Contact | Public email, GitHub, LinkedIn | Ready |
 
 ## Initial blog slots
 
