@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.20 · 2026-11-13 · Draft
+> v0.21 · 2026-11-13 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -140,9 +140,11 @@ Serves a 30-second judgement: dense, clearly ranked, no background animation, no
 | FR-HOME-08 | Homepage content editable in admin | v1.5 | Hardcoded in v1 |
 | FR-HOME-09 | Locale navigation | v2 | Explicit navigation between available locale paths; see ADR-0007 |
 
-The v1 homepage uses this fixed order. Empty sections remain unpublished until source content is ready.
+The v1 homepage uses this fixed order.
 
-Exception, v0.20: the owner may list an empty section in `placeholders` in `src/features/home/content.ts`. It then renders its heading and one visibly labelled `Placeholder` block, never invented copy. The current list is `Profile`, `Experience`, `Selected Projects`, and `Skills`. The owner may change or remove the list. `Writing` stays hidden until posts exist.
+**Placeholder rule, v0.21.** The build phase prioritises the site over its copy. Undecided content renders one visibly labelled `Placeholder` block. It never renders invented, sample, or lorem-ipsum copy. A placeholder must be identifiable at a glance and by searching for `Placeholder`. This rule replaces the earlier rule that empty sections stay unpublished.
+
+Homepage sections use the `placeholders` list in `src/features/home/content.ts`. The current list is `Profile`, `Experience`, `Selected Projects`, and `Skills`. Removing an entry hides that section. `Writing` is data-driven and stays hidden until posts exist.
 
 | Order | Visible heading | Content |
 |---:|---|---|
@@ -663,3 +665,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-10 | v0.18 | Removed release dates in favour of ordered milestones, recorded the v1 content field contract, and deferred Workers Paid to the public blog release |
 | 2026-11-13 | v0.19 | Fixed formal-host typography to the system font stack with no webfont |
 | 2026-11-13 | v0.20 | Allowed labelled homepage placeholders for owner-listed empty sections; set Education to UCL BSc Computer Science |
+| 2026-11-13 | v0.21 | Made labelled placeholders the default for undecided content during the build phase, replacing the unpublish-when-empty rule |

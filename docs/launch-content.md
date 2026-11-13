@@ -5,8 +5,8 @@
 ## Publication rules
 
 - Write public content in English for v1.
-- Do not publish empty sections, placeholder copy, or unfinished posts.
-- Exception: owner-listed sections may show a labelled placeholder block. See PRD section 4.1.
+- Undecided content shows a labelled `Placeholder` block. Never write invented or sample copy. See PRD section 4.1.
+- Do not publish unfinished posts.
 - Add content incrementally without changing the fixed homepage section order.
 - Do not publish a CV until the source document is complete and reviewed.
 

@@ -60,7 +60,7 @@ export interface HomeContent {
   skills: readonly SkillGroup[];
   /**
    * Sections to show as a visibly labelled placeholder while they have no
-   * source content. Owner decision, PRD v0.20; remove an id to hide the section.
+   * source content. PRD section 4.1; remove an id to hide the section.
    */
   placeholders: readonly HomeSectionId[];
 }

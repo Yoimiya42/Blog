@@ -2,8 +2,8 @@ import type { HomeContent } from "./types";
 
 /**
  * Owner-supplied homepage copy. Status per section: docs/launch-content.md.
- * Fill a field only with reviewed source content. Never invent copy: an empty
- * section listed in `placeholders` renders a labelled placeholder instead.
+ * Fill a field only with decided source content. Never invent copy: undecided
+ * sections go in `placeholders` and render a labelled block (PRD section 4.1).
  */
 export const homeContent: HomeContent = {
   identity: {
