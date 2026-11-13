@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.18 · 2026-11-10 · Draft
+> v0.21 · 2026-11-13 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -140,7 +140,11 @@ Serves a 30-second judgement: dense, clearly ranked, no background animation, no
 | FR-HOME-08 | Homepage content editable in admin | v1.5 | Hardcoded in v1 |
 | FR-HOME-09 | Locale navigation | v2 | Explicit navigation between available locale paths; see ADR-0007 |
 
-The v1 homepage uses this fixed order. Empty sections remain unpublished until source content is ready.
+The v1 homepage uses this fixed order.
+
+**Placeholder rule, v0.21.** The build phase prioritises the site over its copy. Undecided content renders one visibly labelled `Placeholder` block. It never renders invented, sample, or lorem-ipsum copy. A placeholder must be identifiable at a glance and by searching for `Placeholder`. This rule replaces the earlier rule that empty sections stay unpublished.
+
+Homepage sections use the `placeholders` list in `src/features/home/content.ts`. The current list is `Profile`, `Experience`, `Selected Projects`, and `Skills`. Removing an entry hides that section. `Writing` is data-driven and stays hidden until posts exist.
 
 | Order | Visible heading | Content |
 |---:|---|---|
@@ -154,6 +158,8 @@ The v1 homepage uses this fixed order. Empty sections remain unpublished until s
 | 8 | `Contact` | Email, GitHub, and LinkedIn |
 
 Primary navigation labels are `Profile`, `Experience`, `Projects`, `Writing`, and `Contact`. Source status is tracked in `launch-content.md`.
+
+Formal-host typography uses the device system font stack and loads no webfont. Tokens live in `src/styles/formal.css`. A later webfont must be self-hosted and subsetted under NFR-CN-01.
 
 ### 4.2 Blog (FR-BLOG)
 
@@ -623,7 +629,7 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | ID | Question | Impact | Decide by |
 |---|---|---|---|
 | OQ-01 | Resolved: `fangmingluan.com` is the formal host; `life.fangmingluan.com` is reserved for personal content | Site, email, SEO | Closed 2026-09-01 |
-| OQ-02 | Partially resolved: formal pages are restrained; personal pages may use an opening sequence, expressive colour, and richer motion. Exact references, palette, type, and motion remain open | All design work | Before personal-space implementation |
+| OQ-02 | Partially resolved: formal pages are restrained; personal pages may use an opening sequence, expressive colour, and richer motion. Exact references, palette, type, and motion remain open for the personal space; formal-host type is fixed in section 4.1 | All design work | Before personal-space implementation |
 | OQ-03 | Resolved: TipTap JSON with a mobile rich-text editor and React renderer | FR-BLOG-13, FR-ADMIN-03 | Revised 2026-09-03; ADR-0010 supersedes ADR-0005 |
 | OQ-04 | Rating scale: 5 stars with halves, 10-point, or none | FR-LIFE-04 data type | Before v2 |
 | OQ-05 | Resolved: v1 is English-only and unprefixed; future locales use explicit path prefixes | FR-HOME-09, architectural | Closed 2026-09-01; ADR-0007 |
@@ -657,3 +663,6 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-09-07 | v0.16 | Deferred content persistence to Issue #38 until the v1 field contract is confirmed |
 | 2026-11-10 | v0.17 | Marked release dates as under re-planning after the missed v1 target. No requirements changed |
 | 2026-11-10 | v0.18 | Removed release dates in favour of ordered milestones, recorded the v1 content field contract, and deferred Workers Paid to the public blog release |
+| 2026-11-13 | v0.19 | Fixed formal-host typography to the system font stack with no webfont |
+| 2026-11-13 | v0.20 | Allowed labelled homepage placeholders for owner-listed empty sections; set Education to UCL BSc Computer Science |
+| 2026-11-13 | v0.21 | Made labelled placeholders the default for undecided content during the build phase, replacing the unpublish-when-empty rule |
