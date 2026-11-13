@@ -5,7 +5,8 @@
 ## Publication rules
 
 - Write public content in English for v1.
-- Do not publish empty sections, placeholder copy, or unfinished posts.
+- Undecided content shows a labelled `Placeholder` block. Never write invented or sample copy. See PRD section 4.1.
+- Do not publish unfinished posts.
 - Add content incrementally without changing the fixed homepage section order.
 - Do not publish a CV until the source document is complete and reviewed.
 
@@ -13,14 +14,14 @@
 
 | Section | Required source | Status |
 |---|---|---|
-| Hero | Name, identity line, location, email, GitHub, LinkedIn | Pending |
-| Profile | Short biography, focus, current objective | Pending |
-| Education | Institution, degree, dates, selected modules or achievements | Pending |
-| Experience | Role, organisation, dates, one-line outcome, link | Pending |
-| Selected Projects | Title, dates, stack, one-line outcome, repository or demo link | Pending |
-| Skills | Languages, frameworks, tools | Pending |
+| Hero | Name, identity line, location, email, GitHub, LinkedIn | Ready |
+| Profile | Short biography, focus, current objective | Placeholder |
+| Education | Institution, degree, dates, selected modules or achievements | Institution and degree ready; dates and details pending |
+| Experience | Role, organisation, dates, one-line outcome, link | Placeholder |
+| Selected Projects | Title, dates, stack, one-line outcome, repository or demo link | Placeholder |
+| Skills | Languages, frameworks, tools | Placeholder |
 | Writing | Published posts supplied by the blog | Pending |
-| Contact | Public email, GitHub, LinkedIn | Pending |
+| Contact | Public email, GitHub, LinkedIn | Ready |
 
 ## Initial blog slots
 

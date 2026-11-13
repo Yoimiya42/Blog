@@ -81,7 +81,7 @@ Issue #29 rehearsed this procedure on 2026-09-03 from commit `62d7131`.
 - Browser checks: homepage, hard refresh, 404, console, static assets, and Vercel visual comparison passed.
 - Rollback: the preview version served HTTP 200 at 100% traffic; the baseline was then restored to 100% and served HTTP 200.
 
-The startup measurement used version `7efa30de-e498-422d-b23d-020424221dd7`. Representative request CPU is deferred to Issue #19 because this foundation Worker has no D1, authentication, article rendering, R2, or image workload. Production uses Workers Paid under [ADR-0011](../adr/0011-shiki-javascript-engine-workers-paid.md), which supersedes the earlier Free-plan condition.
+The startup measurement used version `7efa30de-e498-422d-b23d-020424221dd7`. Representative request CPU is deferred to Issue #19 because this foundation Worker has no D1, authentication, article rendering, R2, or image workload. Production uses Workers Paid under [ADR-0011](../adr/0011-shiki-javascript-engine-workers-paid.md), which supersedes the earlier Free-plan condition. ADR-0014 defers the Paid plan until the public blog ships.
 
 The rehearsal did not include D1, authentication, R2, image processing, custom domains, or mainland China testing.
 

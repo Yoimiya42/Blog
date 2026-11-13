@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.17 · 2026-11-10 · Draft
+> v0.21 · 2026-11-13 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -37,23 +37,23 @@ A restrained academic and career homepage, with a private interest space behind 
 
 ## 2. Scope
 
-### 2.1 v1 — launch date under re-planning
+Releases ship in the order below and carry no calendar dates. Milestones and exit conditions: `ROADMAP.md`.
 
-The original 2026-09-30 target was missed. Later release windows in 2.2–2.4 are also pending re-planning.
+### 2.1 v1
 
 Homepage · blog (list, detail, tags) · mobile-first admin (write, upload, publish) · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance.
 
 Excluded: life list, gallery, moments, visitor login, comments, ratings, whispers, subscriptions, dark mode, i18n.
 
-### 2.2 v1.5 — 2026-10
+### 2.2 v1.5
 
 Moments · visitor registration and login (email code and GitHub; reuses the v1 owner authentication system) · polymorphic comments.
 
-### 2.3 v2 — 2026-11 to 2026-12
+### 2.3 v2
 
 Life list (films, books, games, places) · visitor ratings and short reviews · cover and metadata fetch.
 
-### 2.4 v2.5 — early 2027
+### 2.4 v2.5
 
 Gallery · whisper inbox · update subscriptions · dark mode · RSS · travel map.
 
@@ -140,7 +140,11 @@ Serves a 30-second judgement: dense, clearly ranked, no background animation, no
 | FR-HOME-08 | Homepage content editable in admin | v1.5 | Hardcoded in v1 |
 | FR-HOME-09 | Locale navigation | v2 | Explicit navigation between available locale paths; see ADR-0007 |
 
-The v1 homepage uses this fixed order. Empty sections remain unpublished until source content is ready.
+The v1 homepage uses this fixed order.
+
+**Placeholder rule, v0.21.** The build phase prioritises the site over its copy. Undecided content renders one visibly labelled `Placeholder` block. It never renders invented, sample, or lorem-ipsum copy. A placeholder must be identifiable at a glance and by searching for `Placeholder`. This rule replaces the earlier rule that empty sections stay unpublished.
+
+Homepage sections use the `placeholders` list in `src/features/home/content.ts`. The current list is `Profile`, `Experience`, `Selected Projects`, and `Skills`. Removing an entry hides that section. `Writing` is data-driven and stays hidden until posts exist.
 
 | Order | Visible heading | Content |
 |---:|---|---|
@@ -154,6 +158,8 @@ The v1 homepage uses this fixed order. Empty sections remain unpublished until s
 | 8 | `Contact` | Email, GitHub, and LinkedIn |
 
 Primary navigation labels are `Profile`, `Experience`, `Projects`, `Writing`, and `Contact`. Source status is tracked in `launch-content.md`.
+
+Formal-host typography uses the device system font stack and loads no webfont. Tokens live in `src/styles/formal.css`. A later webfont must be self-hosted and subsetted under NFR-CN-01.
 
 ### 4.2 Blog (FR-BLOG)
 
@@ -265,7 +271,7 @@ Core of v1. All screens designed from 375px up.
 
 ## 5. Data model (draft)
 
-The following compact notation defines the logical model, not executable SQL. Issue #38 translates the v1 content subset into versioned SQLite migrations after its field contract is confirmed. Fields are cheap to add; relations are not — review those first.
+The following compact notation defines the logical model, not executable SQL. Issue #38 translates the v1 content subset in 5.1 into versioned SQLite migrations. Fields are cheap to add; relations are not — review those first.
 
 1. All four life-list categories share one `Item` table, discriminated by `type`, category-specific fields in `meta`. See ADR-0002.
 2. Comments are polymorphic (`targetType` + `targetId`), serving posts, moments, items, photos.
@@ -504,6 +510,20 @@ model Tag {
 }
 ```
 
+### 5.1 v1 content field contract
+
+Issue #38 implements only these tables. Every other field in the logical model is deferred and added by a later migration.
+
+| Table | Fields |
+|---|---|
+| `Post` | `id`, `slug`, `title`, `summary`, `content`, `contentSchemaVersion`, `status`, `publishedAt`, `createdAt`, `updatedAt` |
+| `Tag` | `id`, `slug`, `name` |
+| `PostTag` | `postId`, `tagId` |
+
+- `status` accepts `DRAFT` and `PUBLISHED` only. `SCHEDULED` and `ARCHIVED` are deferred with FR-ADMIN-07 scheduling.
+- Deferred `Post` fields: `coverId`, `visibility`, `readingMin`, `seriesId`, `viewCount`. Reading time is derived at render.
+- `Media` is implemented by Issue #14 after Issue #4 selects the image pipeline.
+
 Open question: repeat experiences collapse into one record with a single `finishedAt`. Multiple occurrences need a separate `ItemLog` table. See OQ-06.
 
 ---
@@ -560,12 +580,12 @@ Cloudflare Workers is the selected production platform under ADR-0009. The Worke
 
 ### 6.6 Budget
 
-Target £15–70 per year. Server-side code highlighting exceeds the 10 ms per-request CPU limit on Workers Free, so the owner approved Workers Paid for production; see ADR-0011. Development and preview stay on the free plan.
+Target £15–70 per year. Server-side code highlighting exceeds the 10 ms per-request CPU limit on Workers Free, so the owner approved Workers Paid for production; see ADR-0011. Production stays on Workers Free until the public blog ships; see ADR-0014. Development and preview stay on the free plan.
 
 | Item | Choice | Cost |
 |---|---|---|
 | Domain | Cloudflare Registrar / Namecheap | £10–15 / year |
-| Hosting | Cloudflare Workers Paid from production launch | $5 / month; free plan for development and preview |
+| Hosting | Cloudflare Workers Paid from the public blog release | $5 / month; free plan before that and for development and preview |
 | Database | Cloudflare D1 Free | Free; 500MB per database and 5GB per account |
 | Image storage | Cloudflare R2 | Free under 10GB, no egress fees |
 | Email | Resend free tier | 3000 / month |
@@ -609,7 +629,7 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | ID | Question | Impact | Decide by |
 |---|---|---|---|
 | OQ-01 | Resolved: `fangmingluan.com` is the formal host; `life.fangmingluan.com` is reserved for personal content | Site, email, SEO | Closed 2026-09-01 |
-| OQ-02 | Partially resolved: formal pages are restrained; personal pages may use an opening sequence, expressive colour, and richer motion. Exact references, palette, type, and motion remain open | All design work | Before personal-space implementation |
+| OQ-02 | Partially resolved: formal pages are restrained; personal pages may use an opening sequence, expressive colour, and richer motion. Exact references, palette, type, and motion remain open for the personal space; formal-host type is fixed in section 4.1 | All design work | Before personal-space implementation |
 | OQ-03 | Resolved: TipTap JSON with a mobile rich-text editor and React renderer | FR-BLOG-13, FR-ADMIN-03 | Revised 2026-09-03; ADR-0010 supersedes ADR-0005 |
 | OQ-04 | Rating scale: 5 stars with halves, 10-point, or none | FR-LIFE-04 data type | Before v2 |
 | OQ-05 | Resolved: v1 is English-only and unprefixed; future locales use explicit path prefixes | FR-HOME-09, architectural | Closed 2026-09-01; ADR-0007 |
@@ -642,3 +662,7 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-09-06 | v0.15 | Adopted handwritten SQLite migrations and D1 prepared statements while preserving a future Drizzle path |
 | 2026-09-07 | v0.16 | Deferred content persistence to Issue #38 until the v1 field contract is confirmed |
 | 2026-11-10 | v0.17 | Marked release dates as under re-planning after the missed v1 target. No requirements changed |
+| 2026-11-10 | v0.18 | Removed release dates in favour of ordered milestones, recorded the v1 content field contract, and deferred Workers Paid to the public blog release |
+| 2026-11-13 | v0.19 | Fixed formal-host typography to the system font stack with no webfont |
+| 2026-11-13 | v0.20 | Allowed labelled homepage placeholders for owner-listed empty sections; set Education to UCL BSc Computer Science |
+| 2026-11-13 | v0.21 | Made labelled placeholders the default for undecided content during the build phase, replacing the unpublish-when-empty rule |
