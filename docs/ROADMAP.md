@@ -45,7 +45,7 @@
 - M0 is complete. M1 is in progress with #18.
 - `fangmingluan.com` serves `main` commit `fca8a3e`: the real homepage from #11.
 - Owner authentication is on `main` as `973c241` but is not deployed. GitHub returned 502 during the merge and emitted no push event, so neither the quality gates nor Workers Builds ran on that commit. `/login` returns 404 on production. The next push to `main` builds and deploys it.
-- Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold the five auth migrations and no owner. `personal-site-development` is retired once `main` deploys the new binding.
+- Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold the five auth migrations. Production holds the seeded owner and the four auth secrets. `personal-site-development` is retired once `main` deploys the new binding.
 - `www.fangmingluan.com`, `life.fangmingluan.com`, and `_dmarc.fangmingluan.com` have no DNS records.
 - Mainland China reachability is unverified.
 
