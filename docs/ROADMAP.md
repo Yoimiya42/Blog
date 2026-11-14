@@ -42,12 +42,13 @@
 
 ## Current state
 
-- M0 is complete. M1 is in progress with #18.
-- `fangmingluan.com` serves `main` commit `fca8a3e`: the real homepage from #11.
-- Owner authentication is on `main` as `973c241` but is not deployed. GitHub returned 502 during the merge and emitted no push event, so neither the quality gates nor Workers Builds ran on that commit. `/login` returns 404 on production. The next push to `main` builds and deploys it.
+- M0 and M1 are complete. M2 starts with #38.
+- `fangmingluan.com` serves the `main` Workers build: the real homepage from #11 and owner login from #8.
+- The owner signs in on production with an email code and reaches `/admin`.
 - Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold the five auth migrations. Production holds the seeded owner and the four auth secrets. `personal-site-development` was deleted on 2026-11-14.
 - `www.fangmingluan.com` redirects to the root domain with 301, plain HTTP redirects to HTTPS, and DMARC is published at `p=quarantine`. The owner signed in on production; Gmail reported SPF, DKIM, and DMARC `PASS`. `life.fangmingluan.com` has no record. See `runbooks/production-domain.md`.
 - Worker rollback and D1 Time Travel restore are rehearsed; see `runbooks/production-recovery.md`.
+- Ruleset `protect-main` requires the `check` job before any merge to `main`; see `engineering/ci-cd.md`.
 - The owner reported on 2026-11-14 that the homepage loads from a mainland China network. Network and load time were not recorded; #19 repeats the test with measurements.
 
 ## Milestones
@@ -87,7 +88,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | [#45](https://github.com/Yoimiya42/Blog/issues/45) | Re-plan v1 as undated milestones | M0 | P0 | S | Done | — |
 | [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | M0 | P0 | M | Done | #5, #7 |
 | [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | M1 | P0 | L | Done | #6, owner content |
-| [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy Workers production and custom domains | M1 | P0 | M | In progress | #8, #11 |
+| [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy Workers production and custom domains | M1 | P0 | M | Done | #8, #11 |
 | [#38](https://github.com/Yoimiya42/Blog/issues/38) | Implement content persistence and D1 operations | M2 | P0 | M | Backlog | #7, #9 |
 | [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | M2 | P0 | M | Backlog | #8, #38 |
 | [#13](https://github.com/Yoimiya42/Blog/issues/13) | Implement TipTap editor | M2 | P0 | L | Backlog | #9, #12 |
