@@ -42,10 +42,10 @@
 
 ## Current state
 
-- M0 and M1 are complete. M2 starts with #38.
+- M0 and M1 are complete. In M2, #38 is done and #12 is in progress.
 - `fangmingluan.com` serves the `main` Workers build: the real homepage from #11 and owner login from #8.
 - The owner signs in on production with an email code and reaches `/admin`.
-- Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold the five auth migrations. Production holds the seeded owner and the four auth secrets. `personal-site-development` was deleted on 2026-11-14.
+- Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold migrations `0001` to `0006`: auth, then Post, Tag, and PostTag. Production holds the seeded owner and the four auth secrets. `personal-site-development` was deleted on 2026-11-14.
 - `www.fangmingluan.com` redirects to the root domain with 301, plain HTTP redirects to HTTPS, and DMARC is published at `p=quarantine`. The owner signed in on production; Gmail reported SPF, DKIM, and DMARC `PASS`. `life.fangmingluan.com` has no record. See `runbooks/production-domain.md`.
 - Worker rollback and D1 Time Travel restore are rehearsed; see `runbooks/production-recovery.md`.
 - Ruleset `protect-main` requires the `check` job before any merge to `main`; see `engineering/ci-cd.md`.
@@ -89,8 +89,8 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | M0 | P0 | M | Done | #5, #7 |
 | [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | M1 | P0 | L | Done | #6, owner content |
 | [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy Workers production and custom domains | M1 | P0 | M | Done | #8, #11 |
-| [#38](https://github.com/Yoimiya42/Blog/issues/38) | Implement content persistence and D1 operations | M2 | P0 | M | In progress | #7, #9 |
-| [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | M2 | P0 | M | Backlog | #8, #38 |
+| [#38](https://github.com/Yoimiya42/Blog/issues/38) | Implement content persistence and D1 operations | M2 | P0 | M | Done | #7, #9 |
+| [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | M2 | P0 | M | In progress | #8, #38 |
 | [#13](https://github.com/Yoimiya42/Blog/issues/13) | Implement TipTap editor | M2 | P0 | L | Backlog | #9, #12 |
 | [#15](https://github.com/Yoimiya42/Blog/issues/15) | Implement draft and publish workflow | M2 | P0 | M | Backlog | #12, #13 |
 | [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | M2 | P0 | L | Backlog | #9, #11, #38, #15 |
