@@ -80,6 +80,12 @@ Issue #33 verified the non-production trigger on 2026-09-05 from commit `4f7c006
 - Preview alias `https://fix-33-workers-builds-deploy-personal-site.yoimiyacyy.workers.dev` returned HTTP 200.
 - The Active Deployment stayed on baseline `faa4fb30-b745-4c61-b3c3-a8699ae55bad` at 100%.
 
+Issue #18 verified the Worker Preview trigger on 2026-11-14 from commit `091a8c8`.
+
+- Build `2d39abf7-ee64-4663-ace3-f96d5f355be3` ran `wrangler preview` and reported success.
+- Preview `https://feat-18-workers-production-personal-site.yoimiyacyy.workers.dev` returned 200 for `/` and `/login`, and 404 for the unauthenticated `/admin`.
+- Isolation: two requests to `/api/auth/*` on the preview wrote two `rate_limit` rows to `blog-preview`. `blog-production` stayed at zero rows.
+
 The production trigger was verified on 2026-09-05. `main` commit `57fa62b` reported the `Workers Builds: personal-site` check as `success` at 22:54 UTC, which covers both the build and the deploy command. Build `0074ebca-b9bb-49d5-b789-413a8596d1aa`.
 
 ## Official references
