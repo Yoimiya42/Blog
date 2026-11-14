@@ -48,4 +48,6 @@ Expect one `OWNER` row.
 
 ## Evidence
 
-On 2026-11-10 the local database passed a first run, a rerun, and an owner change followed by a change back. On 2026-11-14 the owner ran the seed against `blog-production` with `--remote`. The verification query returned no rows before and one `OWNER` row after. `blog-preview` is not seeded.
+On 2026-11-10 the local database passed a first run, a rerun, and an owner change followed by a change back. On 2026-11-14 the owner ran the seed against `blog-production` with `--remote`. The verification query returned no rows before and one `OWNER` row after.
+
+On 2026-11-14 the owner seeded `blog-preview` with `--database PREVIEW_DB` and set the four secrets on the Preview base config. The verification query returned one `OWNER` row, and the secret list showed all four names.
