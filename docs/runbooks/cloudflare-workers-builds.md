@@ -10,12 +10,14 @@ Wrangler cannot read build logs. Use the Builds API described below.
 |---|---|
 | Build command | `npm run build:vinext` |
 | Deploy command | `npx wrangler deploy --config dist/server/wrangler.json` |
-| Version command | `npx wrangler versions upload --config dist/server/wrangler.json` |
+| Non-production branch deploy command | `npx wrangler preview --config dist/server/wrangler.json` |
 | Root directory | `/` |
 | Production branch | `main` |
 | Builds for non-production branches | Enabled |
 
-Two triggers exist. The production trigger matches `main` and runs the deploy command. The non-production trigger matches every other branch and runs the version command, which uploads a preview version without changing the Active Deployment.
+Two triggers exist. The production trigger matches `main` and runs the deploy command. The non-production trigger matches every other branch and creates or updates a Worker Preview, which never changes the Active Deployment.
+
+The non-production command must stay `wrangler preview`. `wrangler versions upload` copies the top-level bindings and would bind a branch build to the production database. See ADR-0015.
 
 `npm run build` runs `next build` and writes `.next/`. It never produces `dist/server/wrangler.json`. Only `npm run build:vinext` does, and every deploy command in this project reads that generated file. The build command and the deploy command must both belong to the vinext path.
 
