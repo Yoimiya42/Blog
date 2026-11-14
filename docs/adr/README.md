@@ -30,3 +30,4 @@ Template: `template.md`.
 | [0012](0012-sql-first-d1.md) | Handwritten SQL for D1 | Use versioned SQLite migrations and typed D1 prepared statements | Accepted | 2026-09-06 |
 | [0013](0013-prettier-sql-formatting.md) | Prettier for SQLite migrations | Use a pinned SQLite parser in the existing Prettier workflow | Accepted | 2026-09-06 |
 | [0014](0014-defer-workers-paid.md) | Defer Workers Paid until code highlighting ships | Keep production on Workers Free until the public blog ships | Accepted | 2026-11-10 |
+| [0015](0015-worker-previews-environment-isolation.md) | Worker Previews for preview and production isolation | Keep one Worker; bind previews to their own D1 and secrets through the `previews` block | Accepted | 2026-11-14 |

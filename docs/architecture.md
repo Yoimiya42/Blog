@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.15 · 2026-11-10
+> v0.16 · 2026-11-14
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -204,7 +204,7 @@ An in-memory bus is sufficient. Replace it with a queue behind the same interfac
 - JSON text is an escape hatch. Any field used for filtering, sorting, or aggregation MUST be a real column.
 - Model many-to-many relations with explicit join tables. Do not depend on implicit ORM relations.
 - Treat D1 as SQLite. Migration SQL and row mappings must make enum, boolean, timestamp, and JSON representations explicit.
-- Use separate local, test, preview, and production D1 databases. Never bind a preview deployment to production data.
+- Use separate local, test, preview, and production D1 databases. Never bind a preview deployment to production data. Top-level Wrangler bindings are production; the `previews` block binds previews. See ADR-0015.
 - Account for D1 storage, query, parameter, and write-concurrency limits. No connection pool is required.
 
 ### 3.7 Acceptance criteria
@@ -243,7 +243,7 @@ Any failing row is an architectural defect.
 **CI/CD.**
 - GitHub Actions runs `lint`, `typecheck`, `test`, `build` on every push and PR. Any failure blocks merge.
 - Issue #29 established versioned Workers preview URLs and rehearsed code rollback without stateful bindings. The verified procedure is in `runbooks/cloudflare-workers-preview.md`.
-- Workers Builds deploys `main` to the `workers.dev` baseline. The custom-domain production release stays with Issue #18 and starts only after environment isolation, stateful recovery, and release checks pass.
+- Workers Builds deploys `main` to production with `wrangler deploy` and every other branch to a Worker Preview with `wrangler preview`. Issue #18 owns the remaining production release work: secrets, DNS, stateful recovery, and release checks.
 - Husky and lint-staged gate commits locally.
 
 **Database operations.** Wrangler creates and applies committed SQL migrations to the selected D1 environment. A deterministic seed populates a new environment. Rehearse D1 Time Travel restore before launch; an untested backup is not a backup. Review query plans, row-read volume, and repeated query patterns after launch.
@@ -287,3 +287,4 @@ Any failing row is an architectural defect.
 | 2026-09-06 | v0.13 | Adopted handwritten SQLite migrations and typed D1 prepared statements |
 | 2026-09-06 | v0.14 | Added parser-backed SQLite formatting to the migration workflow |
 | 2026-11-10 | v0.15 | Deferred the production Workers Paid plan to the public blog release |
+| 2026-11-14 | v0.16 | Isolated previews from production through Worker Previews |

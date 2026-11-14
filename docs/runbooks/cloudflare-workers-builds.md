@@ -10,12 +10,14 @@ Wrangler cannot read build logs. Use the Builds API described below.
 |---|---|
 | Build command | `npm run build:vinext` |
 | Deploy command | `npx wrangler deploy --config dist/server/wrangler.json` |
-| Version command | `npx wrangler versions upload --config dist/server/wrangler.json` |
+| Non-production branch deploy command | `npx wrangler preview --config dist/server/wrangler.json` |
 | Root directory | `/` |
 | Production branch | `main` |
 | Builds for non-production branches | Enabled |
 
-Two triggers exist. The production trigger matches `main` and runs the deploy command. The non-production trigger matches every other branch and runs the version command, which uploads a preview version without changing the Active Deployment.
+Two triggers exist. The production trigger matches `main` and runs the deploy command. The non-production trigger matches every other branch and creates or updates a Worker Preview, which never changes the Active Deployment.
+
+The non-production command must stay `wrangler preview`. `wrangler versions upload` copies the top-level bindings and would bind a branch build to the production database. See ADR-0015.
 
 `npm run build` runs `next build` and writes `.next/`. It never produces `dist/server/wrangler.json`. Only `npm run build:vinext` does, and every deploy command in this project reads that generated file. The build command and the deploy command must both belong to the vinext path.
 
@@ -77,6 +79,12 @@ Issue #33 verified the non-production trigger on 2026-09-05 from commit `4f7c006
 - Version: `4c71bbff-fd7c-41da-af84-712be2495169`.
 - Preview alias `https://fix-33-workers-builds-deploy-personal-site.yoimiyacyy.workers.dev` returned HTTP 200.
 - The Active Deployment stayed on baseline `faa4fb30-b745-4c61-b3c3-a8699ae55bad` at 100%.
+
+Issue #18 verified the Worker Preview trigger on 2026-11-14 from commit `091a8c8`.
+
+- Build `2d39abf7-ee64-4663-ace3-f96d5f355be3` ran `wrangler preview` and reported success.
+- Preview `https://feat-18-workers-production-personal-site.yoimiyacyy.workers.dev` returned 200 for `/` and `/login`, and 404 for the unauthenticated `/admin`.
+- Isolation: two requests to `/api/auth/*` on the preview wrote two `rate_limit` rows to `blog-preview`. `blog-production` stayed at zero rows.
 
 The production trigger was verified on 2026-09-05. `main` commit `57fa62b` reported the `Workers Builds: personal-site` check as `success` at 22:54 UTC, which covers both the build and the deploy command. Build `0074ebca-b9bb-49d5-b789-413a8596d1aa`.
 

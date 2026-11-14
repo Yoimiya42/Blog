@@ -11,7 +11,7 @@ npx wrangler d1 migrations apply DB --local
 npm run seed:owner -- --email owner@example.com
 ```
 
-Add `--remote` to target the remote database. Arguments after a second `--` pass to `wrangler d1 execute`.
+Add `--remote` to target the remote database. The `DB` binding is production, `blog-production`; see ADR-0015. Arguments after a second `--` pass to `wrangler d1 execute`.
 
 Without `--email`, the script reads `OWNER_EMAIL` from the process environment.
 
@@ -34,4 +34,4 @@ Expect one `OWNER` row.
 
 ## Evidence
 
-On 2026-11-10 the local database passed a first run, a rerun, and an owner change followed by a change back. The remote database is not yet seeded; Issue #18 covers production.
+On 2026-11-10 the local database passed a first run, a rerun, and an owner change followed by a change back. On 2026-11-14 the owner ran the seed against `blog-production` with `--remote`. The verification query returned no rows before and one `OWNER` row after. `blog-preview` is not seeded.

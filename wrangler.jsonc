@@ -15,12 +15,24 @@
   "version_metadata": {
     "binding": "CF_VERSION_METADATA",
   },
+  // Top-level bindings are production. Previews never inherit them.
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "personal-site-development",
-      "database_id": "ec5b45a3-6951-4ca3-8661-7f500ce8ecd7",
+      "database_name": "blog-production",
+      "database_id": "69f102d3-efac-4af8-ba56-3b4430c3bb3f",
       "migrations_dir": "migrations",
     },
   ],
+  // Branch builds run `wrangler preview` and read only this block.
+  "previews": {
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "blog-preview",
+        "database_id": "ca1469cb-37d3-4e11-aebc-4bd358decf27",
+        "migrations_dir": "migrations",
+      },
+    ],
+  },
 }
