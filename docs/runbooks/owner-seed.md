@@ -13,6 +13,20 @@ npm run seed:owner -- --email owner@example.com
 
 Add `--remote` to target the remote database. The `DB` binding is production, `blog-production`; see ADR-0015. Arguments after a second `--` pass to `wrangler d1 execute`.
 
+`--database <binding>` selects another binding. Seed `blog-preview` through the preview migrations config:
+
+```bash
+npm run seed:owner -- --email owner@example.com --remote --database PREVIEW_DB -- --config wrangler.preview-migrations.jsonc
+```
+
+Preview login also needs `RESEND_API_KEY`, `AUTH_EMAIL_FROM`, `OWNER_EMAIL`, and `BETTER_AUTH_SECRET` on the Preview base config:
+
+```bash
+npx wrangler preview base-config secret put OWNER_EMAIL
+```
+
+Use a `BETTER_AUTH_SECRET` that differs from production.
+
 Without `--email`, the script reads `OWNER_EMAIL` from the process environment.
 
 ## Behaviour
