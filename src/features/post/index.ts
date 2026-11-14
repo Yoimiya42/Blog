@@ -2,14 +2,29 @@ export { CONTENT_SCHEMA_VERSION, CODE_LANGUAGES } from "./content/types";
 
 export {
   POST_STATUSES,
+  POST_SLUG_MAX_LENGTH,
+  POST_SUMMARY_MAX_LENGTH,
+  POST_TITLE_MAX_LENGTH,
+  PostAccessDeniedError,
   PostSlugTakenError,
   type NewPost,
   type Post,
+  type PostField,
+  type PostFieldErrors,
+  type PostInput,
+  type PostMutationResult,
   type PostPatch,
+  type PostsByStatus,
   type PostStatus,
   type PostSummary,
   type PublishedPostQuery,
 } from "./schema";
+
+export {
+  getPostService,
+  type PostActor,
+  type PostService,
+} from "./server/post.service";
 
 export type {
   ArticleDocument,
