@@ -23,7 +23,7 @@ Return to a newer version with `versions deploy`:
 npx wrangler versions deploy <version-id>@100% --name personal-site --message "<reason>" --yes
 ```
 
-A version carries its own bindings. Rolling back across a binding change also switches the database. Versions older than `af5080c7` bind `personal-site-development`; do not roll back past it once that database is deleted.
+A version carries its own bindings. Rolling back across a binding change also switches the database. Versions older than `af5080c7` bind `personal-site-development`, which was deleted on 2026-11-14. Never roll back past `af5080c7`.
 
 ## Restore a D1 database
 

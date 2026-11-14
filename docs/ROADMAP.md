@@ -45,10 +45,10 @@
 - M0 is complete. M1 is in progress with #18.
 - `fangmingluan.com` serves `main` commit `fca8a3e`: the real homepage from #11.
 - Owner authentication is on `main` as `973c241` but is not deployed. GitHub returned 502 during the merge and emitted no push event, so neither the quality gates nor Workers Builds ran on that commit. `/login` returns 404 on production. The next push to `main` builds and deploys it.
-- Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold the five auth migrations. Production holds the seeded owner and the four auth secrets. `personal-site-development` is retired once `main` deploys the new binding.
+- Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold the five auth migrations. Production holds the seeded owner and the four auth secrets. `personal-site-development` was deleted on 2026-11-14.
 - `www.fangmingluan.com` redirects to the root domain with 301, plain HTTP redirects to HTTPS, and DMARC is published at `p=quarantine`. The owner signed in on production; Gmail reported SPF, DKIM, and DMARC `PASS`. `life.fangmingluan.com` has no record. See `runbooks/production-domain.md`.
 - Worker rollback and D1 Time Travel restore are rehearsed; see `runbooks/production-recovery.md`.
-- Mainland China reachability is unverified.
+- The owner reported on 2026-11-14 that the homepage loads from a mainland China network. Network and load time were not recorded; #19 repeats the test with measurements.
 
 ## Milestones
 
