@@ -4,6 +4,7 @@
 //   node scripts/seed-owner.mjs --email owner@example.com            (local D1)
 //   node scripts/seed-owner.mjs --email owner@example.com --remote   (remote D1)
 //
+// `--database <binding>` selects another D1 binding; the default is `DB`.
 // Arguments after `--` are passed to `wrangler d1 execute`, e.g. `-- --env production`.
 
 import { spawnSync } from "node:child_process";
@@ -43,6 +44,21 @@ export function buildOwnerSeedSql(input) {
   ].join("\n");
 }
 
+const DATABASE_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
+/** Reads `--database`. A flag without a value fails instead of seeding `DB`. */
+export function resolveDatabase(argv) {
+  const index = argv.indexOf("--database");
+  if (index === -1) return "DB";
+
+  const database = argv[index + 1];
+  if (!database || !DATABASE_PATTERN.test(database)) {
+    throw new Error("Provide a D1 binding or database name after --database.");
+  }
+
+  return database;
+}
+
 function main(argv) {
   const separator = argv.indexOf("--");
   const own = separator === -1 ? argv : argv.slice(0, separator);
@@ -52,6 +68,7 @@ function main(argv) {
   const email =
     emailIndex === -1 ? process.env.OWNER_EMAIL : own[emailIndex + 1];
   const target = own.includes("--remote") ? "--remote" : "--local";
+  const database = resolveDatabase(own);
 
   const sql = buildOwnerSeedSql(email);
 
@@ -72,7 +89,16 @@ function main(argv) {
   try {
     const result = spawnSync(
       process.execPath,
-      [entry, "d1", "execute", "DB", target, "--file", file, ...passthrough],
+      [
+        entry,
+        "d1",
+        "execute",
+        database,
+        target,
+        "--file",
+        file,
+        ...passthrough,
+      ],
       { stdio: "inherit" },
     );
 

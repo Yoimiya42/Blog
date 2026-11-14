@@ -3,7 +3,28 @@ import { describe, expect, it } from "vitest";
 import {
   buildOwnerSeedSql,
   normalizeOwnerEmail,
+  resolveDatabase,
 } from "../../scripts/seed-owner.mjs";
+
+describe("resolveDatabase", () => {
+  it("defaults to the DB binding", () => {
+    expect(resolveDatabase(["--email", "owner@example.com"])).toBe("DB");
+  });
+
+  it("reads the binding after --database", () => {
+    expect(resolveDatabase(["--database", "PREVIEW_DB", "--remote"])).toBe(
+      "PREVIEW_DB",
+    );
+  });
+
+  // Falling back to DB here would seed production by mistake.
+  it.each([["--database"], ["--database", "--remote"], ["--database", "a b"]])(
+    "rejects %j",
+    (...argv) => {
+      expect(() => resolveDatabase(argv)).toThrow();
+    },
+  );
+});
 
 describe("normalizeOwnerEmail", () => {
   it("trims and lowercases a valid address", () => {

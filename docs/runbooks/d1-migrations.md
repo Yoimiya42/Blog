@@ -78,4 +78,11 @@ Local: Wrangler applied migrations `0001` to `0006` to an empty database and rep
 1. Restored to the pre-`0006` bookmark `00000004-00000000-00005123-52c76b4f381f70d80a08222336b8620e`. The three content tables were gone and `d1_migrations` held five rows.
 2. Applied migrations again. Wrangler applied only `0006`; the three tables existed and `d1_migrations` held six rows.
 
-Not rehearsed: applying `0006` to `blog-production`, and any restore on `blog-production`.
+`blog-production`, apply:
+
+1. Recorded pre-`0006` bookmark `00000009-00000000-00005123-40819e055dbf42a2886b2b3617237420`. Restore to it to undo `0006`.
+2. Wrangler applied `0006` in seven commands and reported none pending.
+3. `post`, `tag`, `post_tag`, and their three indexes existed; `d1_migrations` held six rows; `user` still held the one owner row.
+4. `https://fangmingluan.com/` and `/login` returned 200.
+
+Not rehearsed: any restore on `blog-production`.

@@ -13,6 +13,26 @@ npm run seed:owner -- --email owner@example.com
 
 Add `--remote` to target the remote database. The `DB` binding is production, `blog-production`; see ADR-0015. Arguments after a second `--` pass to `wrangler d1 execute`.
 
+`--database <binding>` selects another binding. Seed `blog-preview` through the preview migrations config:
+
+```bash
+npm run seed:owner -- --email owner@example.com --remote --database PREVIEW_DB -- --config wrangler.preview-migrations.jsonc
+```
+
+Preview login also needs `RESEND_API_KEY`, `AUTH_EMAIL_FROM`, `OWNER_EMAIL`, and `BETTER_AUTH_SECRET` on the Preview base config:
+
+```bash
+npx wrangler preview base-config secret put OWNER_EMAIL
+```
+
+Use a `BETTER_AUTH_SECRET` that differs from production.
+
+A Preview copies the base secrets once, when it is created. A Preview that already exists never receives later changes: delete it and push again, or set each secret on it with `npx wrangler preview secret put`. The login page shows the code step even when no secret is present, because Better Auth logs mail failures instead of returning them.
+
+```bash
+npx wrangler preview delete --name <branch>
+```
+
 Without `--email`, the script reads `OWNER_EMAIL` from the process environment.
 
 ## Behaviour
@@ -34,4 +54,6 @@ Expect one `OWNER` row.
 
 ## Evidence
 
-On 2026-11-10 the local database passed a first run, a rerun, and an owner change followed by a change back. On 2026-11-14 the owner ran the seed against `blog-production` with `--remote`. The verification query returned no rows before and one `OWNER` row after. `blog-preview` is not seeded.
+On 2026-11-10 the local database passed a first run, a rerun, and an owner change followed by a change back. On 2026-11-14 the owner ran the seed against `blog-production` with `--remote`. The verification query returned no rows before and one `OWNER` row after.
+
+On 2026-11-14 the owner seeded `blog-preview` with `--database PREVIEW_DB` and set the four secrets on the Preview base config. The verification query returned one `OWNER` row, and the secret list showed all four names.
