@@ -20,6 +20,10 @@ export {
   type PublishedPostQuery,
 } from "./schema";
 
+export { DeletePostButton } from "./components/delete-post-button";
+export { PostForm } from "./components/post-form";
+export { PostList } from "./components/post-list";
+
 export {
   getPostService,
   type PostActor,

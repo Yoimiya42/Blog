@@ -67,6 +67,7 @@ src/
       components/
       content/                 # * Article schema and runtime-specific registries
       server/
+        post.actions.ts       #   Server Actions: owner guard, then service (ADR-0018)
         post.service.ts       #   Business logic
         post.repository.ts    #   Only database consumer
       schema.ts               #   zod schemas and inferred types
