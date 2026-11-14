@@ -1,5 +1,16 @@
 export { CONTENT_SCHEMA_VERSION, CODE_LANGUAGES } from "./content/types";
 
+export {
+  POST_STATUSES,
+  PostSlugTakenError,
+  type NewPost,
+  type Post,
+  type PostPatch,
+  type PostStatus,
+  type PostSummary,
+  type PublishedPostQuery,
+} from "./schema";
+
 export type {
   ArticleDocument,
   BlockNode,

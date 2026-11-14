@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.16 · 2026-11-14
+> v0.17 · 2026-11-14
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -199,7 +199,7 @@ An in-memory bus is sufficient. Replace it with a queue behind the same interfac
 - Format migrations with Prettier's pinned SQLite parser before applying them. Wrangler remains the authority for D1 execution.
 - New columns are nullable or defaulted.
 - Never drop or rename a column directly. Use expand–migrate–contract: add, backfill and switch reads, drop a release or two later.
-- Application entity tables have `createdAt` and `updatedAt`. Their deletion is soft through `deletedAt`. Adapter, join, and ephemeral tables follow their owning contracts.
+- Application entity tables have `createdAt` and `updatedAt`. Their deletion is soft through `deletedAt`. Adapter, join, lookup, and ephemeral tables follow their owning contracts.
 - Add indexes in response to real queries; indexes slow writes.
 - JSON text is an escape hatch. Any field used for filtering, sorting, or aggregation MUST be a real column.
 - Model many-to-many relations with explicit join tables. Do not depend on implicit ORM relations.
@@ -237,7 +237,7 @@ Any failing row is an architectural defect.
 **Testing.**
 - Vitest for service-layer logic, utilities, zod schemas, authorisation. UI coverage is not a target.
 - Playwright for critical-path smoke tests only: homepage loads, admin login, publish a post, view it. Cap at 10.
-- Database tests run against an isolated D1-compatible test database with a deterministic owner-safe seed path.
+- Database tests run against an isolated D1-compatible test database with a deterministic owner-safe seed path. `tests/helpers/d1.ts` starts an in-memory D1 from `tests/wrangler.test.jsonc` and replays every migration.
 - v1 covers authorisation and validation only. v1.5 adds key business logic and E2E smoke. Coverage percentage is not a goal.
 
 **CI/CD.**
@@ -288,3 +288,4 @@ Any failing row is an architectural defect.
 | 2026-09-06 | v0.14 | Added parser-backed SQLite formatting to the migration workflow |
 | 2026-11-10 | v0.15 | Deferred the production Workers Paid plan to the public blog release |
 | 2026-11-14 | v0.16 | Isolated previews from production through Worker Previews |
+| 2026-11-14 | v0.17 | Exempted lookup tables from entity timestamps and soft delete; named the in-memory D1 test database |
