@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.21 · 2026-11-13 · Draft
+> v0.22 · 2026-11-14 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -612,7 +612,7 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Image pipeline | Unselected | — | Provisional | Issue #4 must validate conversion, EXIF removal, CPU use, and delivery before media implementation |
 | Content | Versioned TipTap JSON in D1 TEXT | Schema v1 | Confirmed | JSON is authoritative; HTML and Markdown are derived exports; see ADR-0010 |
 | Editor | TipTap | 3.x candidate | Confirmed | Use the schema in `article-content-schema.md`; validate the exact package release during implementation |
-| Email | Resend | Current managed service | Confirmed | Release requires successful code delivery to QQ Mail and 163 Mail |
+| Email | Resend | Current managed service | Confirmed | v1 requires verified code delivery to the owner mailbox. The release that opens login to visitors requires successful code delivery to QQ Mail and 163 Mail; see ADR-0016 |
 | Hosting | Cloudflare Workers | Current managed service | Confirmed | Use Workers for production; keep Vercel only as a temporary rollback path; see ADR-0009 |
 | Next.js runtime adapter | vinext; OpenNext fallback | Current compatible | Confirmed | vinext passed Issue #29 compatibility, preview, and rollback checks; use OpenNext only for a documented blocker |
 | Analytics | None in v1 | — | Confirmed | Reconsider cookie-free analytics in v1.5 |
@@ -666,3 +666,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-13 | v0.19 | Fixed formal-host typography to the system font stack with no webfont |
 | 2026-11-13 | v0.20 | Allowed labelled homepage placeholders for owner-listed empty sections; set Education to UCL BSc Computer Science |
 | 2026-11-13 | v0.21 | Made labelled placeholders the default for undecided content during the build phase, replacing the unpublish-when-empty rule |
+| 2026-11-14 | v0.22 | Moved the QQ Mail and 163 Mail delivery tests from v1 to the release that opens login to visitors |

@@ -8,7 +8,7 @@ Dashboard-only settings for zone `fangmingluan.com`. None of them is in version 
 |---|---|---|---|---|
 | `fangmingluan.com` | Worker | `personal-site` | Proxied | Production custom domain |
 | `www` | AAAA | `100::` | Proxied | Placeholder so the redirect rule receives traffic |
-| `_dmarc` | TXT | `v=DMARC1; p=none;` | DNS only | DMARC policy |
+| `_dmarc` | TXT | `v=DMARC1; p=quarantine;` | DNS only | DMARC policy |
 | `resend._domainkey` | TXT | Resend DKIM public key | DNS only | DKIM |
 | `send` | CNAME | `send.forge.rmta.net` | DNS only | Resend SPF and bounce handling |
 | `rsend` | CNAME | `rsend-euw1.forge.rmta.net` | DNS only | Resend tracking host |
@@ -39,8 +39,14 @@ Verified on 2026-11-14:
 - `https://www.fangmingluan.com/x?a=1` returned 301 to `https://fangmingluan.com/x?a=1` with a valid certificate.
 - `http://fangmingluan.com/` returned 301 to HTTPS. Before Always Use HTTPS it returned 200 over plain HTTP.
 - `http://www.fangmingluan.com/` reached `https://fangmingluan.com/` in two redirects.
-- `_dmarc`, `www`, and `life` lookups matched the table above.
+- `www` and `life` lookups matched the table above. `_dmarc` was published as `p=none`, then tightened to `p=quarantine` after Gmail reported DMARC `PASS`.
+
+Mail delivery, verified on 2026-11-14 after `main` commit `7f19d86` deployed:
+
+- The owner signed in on `https://fangmingluan.com/login` and reached `/admin`. `blog-production` held one session row afterwards.
+- Gmail delivered the code from `noreply@fangmingluan.com` to the inbox within one second. Gmail reported SPF `PASS`, DKIM `PASS` with domain `fangmingluan.com`, and DMARC `PASS`.
+- QQ Mail and 163 Mail are not tested. ADR-0016 moves those tests to the release that opens login to visitors.
 
 ## Open items
 
-- Tighten DMARC to `p=quarantine` after a delivered login code shows `dmarc=pass`.
+- None.
