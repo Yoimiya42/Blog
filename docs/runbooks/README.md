@@ -6,6 +6,7 @@ Use only procedures rehearsed against the live service named in each runbook.
 |---|---|
 | [Cloudflare Workers preview and rollback](cloudflare-workers-preview.md) | Primary procedure for versioned Workers previews and code rollback |
 | [Cloudflare Workers Builds](cloudflare-workers-builds.md) | GitHub-connected build pipeline configuration and log access |
+| [Production domain and DNS](production-domain.md) | DNS records, `www` redirect, HTTPS enforcement, and mail records for `fangmingluan.com` |
 | [Owner seed](owner-seed.md) | Provision the single owner account in D1; rehearsed locally and on production |
 | [Vercel Preview deployment](vercel-preview.md) | Pull request preview checks; not a production fallback since Issue #29 closed |
 
