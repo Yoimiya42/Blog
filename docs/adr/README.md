@@ -19,7 +19,7 @@ Template: `template.md`.
 | [0001](0001-fullstack-over-static.md) | Full-stack application over a static site | Use one full-stack application; later ADRs own stack details | Accepted | 2026-08-29 |
 | [0002](0002-unified-item-table.md) | One shared table for all life-list categories | Use one typed item table with display-only metadata in JSON | Accepted | 2026-08-29 |
 | [0003](0003-china-accessibility.md) | Mainland China accessibility as a hard constraint | Block release on mainland reachability and avoid blocked dependencies | Accepted | 2026-08-29 |
-| [0004](0004-better-auth-email-otp.md) | Better Auth with email OTP | Use email OTP and database sessions for the v1 owner | Accepted | 2026-08-31 |
+| [0004](0004-better-auth-email-otp.md) | Better Auth with email OTP | Use email OTP and database sessions for the v1 owner | Accepted; delivery-test timing superseded by 0016; visitor timing superseded by 0017 | 2026-08-31 |
 | [0005](0005-markdown-authoring.md) | Pure Markdown authoring | Keep Markdown authoritative and render it on the server | Superseded | 2026-08-31 |
 | [0006](0006-hosting-platform-spike.md) | Hosting platform validation spike | Required a dual-platform spike before product development | Superseded | 2026-08-31 |
 | [0007](0007-default-locale-urls.md) | English root with prefixed translations | Keep English unprefixed and prefix each future locale | Accepted | 2026-09-01 |
@@ -31,3 +31,5 @@ Template: `template.md`.
 | [0013](0013-prettier-sql-formatting.md) | Prettier for SQLite migrations | Use a pinned SQLite parser in the existing Prettier workflow | Accepted | 2026-09-06 |
 | [0014](0014-defer-workers-paid.md) | Defer Workers Paid until code highlighting ships | Keep production on Workers Free until the public blog ships | Accepted | 2026-11-10 |
 | [0015](0015-worker-previews-environment-isolation.md) | Worker Previews for preview and production isolation | Keep one Worker; bind previews to their own D1 and secrets through the `previews` block | Accepted | 2026-11-14 |
+| [0016](0016-defer-cn-mailbox-delivery-tests.md) | Defer QQ Mail and 163 Mail delivery tests to visitor login | v1 verifies owner-mailbox delivery only; the visitor-login release carries the mainland mailbox tests | Accepted | 2026-11-14 |
+| [0017](0017-defer-visitor-accounts-to-v2-5.md) | Defer visitor accounts and interaction to v2.5 | Keep v1.5 and v2 owner-only; open login and all visitor-written features in v2.5 | Accepted | 2026-11-14 |
