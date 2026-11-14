@@ -89,7 +89,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | [#8](https://github.com/Yoimiya42/Blog/issues/8) | Implement owner authentication | M0 | P0 | M | Done | #5, #7 |
 | [#11](https://github.com/Yoimiya42/Blog/issues/11) | Ship public homepage | M1 | P0 | L | Done | #6, owner content |
 | [#18](https://github.com/Yoimiya42/Blog/issues/18) | Deploy Workers production and custom domains | M1 | P0 | M | Done | #8, #11 |
-| [#38](https://github.com/Yoimiya42/Blog/issues/38) | Implement content persistence and D1 operations | M2 | P0 | M | Backlog | #7, #9 |
+| [#38](https://github.com/Yoimiya42/Blog/issues/38) | Implement content persistence and D1 operations | M2 | P0 | M | In progress | #7, #9 |
 | [#12](https://github.com/Yoimiya42/Blog/issues/12) | Implement post management | M2 | P0 | M | Backlog | #8, #38 |
 | [#13](https://github.com/Yoimiya42/Blog/issues/13) | Implement TipTap editor | M2 | P0 | L | Backlog | #9, #12 |
 | [#15](https://github.com/Yoimiya42/Blog/issues/15) | Implement draft and publish workflow | M2 | P0 | M | Backlog | #12, #13 |
