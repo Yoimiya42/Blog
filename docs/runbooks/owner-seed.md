@@ -27,6 +27,12 @@ npx wrangler preview base-config secret put OWNER_EMAIL
 
 Use a `BETTER_AUTH_SECRET` that differs from production.
 
+A Preview copies the base secrets once, when it is created. A Preview that already exists never receives later changes: delete it and push again, or set each secret on it with `npx wrangler preview secret put`. The login page shows the code step even when no secret is present, because Better Auth logs mail failures instead of returning them.
+
+```bash
+npx wrangler preview delete --name <branch>
+```
+
 Without `--email`, the script reads `OWNER_EMAIL` from the process environment.
 
 ## Behaviour
