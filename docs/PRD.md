@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.22 · 2026-11-14 · Draft
+> v0.24 · 2026-11-14 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -21,13 +21,13 @@ A restrained academic and career homepage, with a private interest space behind 
 ### 1.2 Success criteria
 
 - A P1 visitor can state who the owner is, what they do, what they built.
-- Publishing from a phone takes under 5 minutes.
+- Publishing from a phone takes under 5 minutes. Verified from v1.5; v1 verifies publishing on a desktop browser.
 - The site is still updated six months after launch.
 
 ### 1.3 Design principles
 
 1. **Two personas.** Formal outer layer, personal inner layer, visually distinct.
-2. **Mobile-first.** The admin is designed to write on. Design starts at 375px.
+2. **Mobile-first.** The admin is designed to write on. v1 accepts the admin on a desktop browser; phone optimisation is accepted in v1.5. Admin layouts stay fluid from v1: no fixed widths and no hover-only actions.
 3. **Content first.** No effect delays first paint or disrupts reading.
 4. **Low maintenance cost.** Fewer features over heavier process.
 5. **Reachable from mainland China.** See 6.1.
@@ -41,21 +41,21 @@ Releases ship in the order below and carry no calendar dates. Milestones and exi
 
 ### 2.1 v1
 
-Homepage · blog (list, detail, tags) · mobile-first admin (write, upload, publish) · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance.
+Homepage · blog (list, detail, tags) · admin (write, upload, publish) accepted on desktop browsers · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance.
 
 Excluded: life list, gallery, moments, visitor login, comments, ratings, whispers, subscriptions, dark mode, i18n.
 
 ### 2.2 v1.5
 
-Moments · visitor registration and login (email code and GitHub; reuses the v1 owner authentication system) · polymorphic comments.
+Owner publishing only. Phone-optimised admin · Moments · RSS · math · offline tolerance · installable PWA · homepage content editable in admin.
 
 ### 2.3 v2
 
-Life list (films, books, games, places) · visitor ratings and short reviews · cover and metadata fetch.
+Owner publishing only. Life list (films, books, games, places) with owner ratings and reviews · cover and metadata fetch.
 
 ### 2.4 v2.5
 
-Gallery · whisper inbox · update subscriptions · dark mode · RSS · travel map.
+Gallery · travel map · dark mode · visitor registration and login (email code, GitHub, Google; reuses the v1 owner authentication system) · polymorphic comments · visitor ratings and short reviews · anti-spam and moderation · self-service account deletion · whisper inbox · update subscriptions.
 
 ### 2.5 Out of scope, all versions
 
@@ -84,12 +84,12 @@ Gallery · whisper inbox · update subscriptions · dark mode · RSS · travel m
 | `/moments` | Moments | v1.5 | Reverse-chronological feed |
 | `/life` | Life list overview | v2 | Categories and stats |
 | `/life/movies` `/life/books` `/life/games` `/life/places` | Category lists | v2 | Cover-led card grid |
-| `/life/[type]/[id]` | Item detail | v2 | Owner review, ratings, comments |
+| `/life/[type]/[id]` | Item detail | v2 | Owner review and rating. Visitor ratings and comments arrive in v2.5 |
 | `/gallery` | Gallery | v2.5 | |
 | `/gallery/[category]` | Category gallery | v2.5 | landscape / portrait / documentary |
 | `/gallery/[id]` | Single photo | v2.5 | Large view, EXIF, story |
 | `/whisper` | Whisper form | v2.5 | |
-| `/login` | Login | v1 | Owner only in v1; opened to visitors in v1.5 |
+| `/login` | Login | v1 | Owner only until v2.5, which opens it to visitors |
 | `/api/*` | API routes | v1 | |
 | `/rss.xml` `/sitemap.xml` | Feed and index | v1.5 | |
 
@@ -175,7 +175,7 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 | FR-BLOG-08 | Math | v1.5 | KaTeX |
 | FR-BLOG-09 | Full-text search | v2 | Client-side; revisit past 100 posts |
 | FR-BLOG-10 | Post series | v2 | Previous and next within a series |
-| FR-BLOG-11 | Comments | v1.5 | See 4.6 |
+| FR-BLOG-11 | Comments | v2.5 | See 4.6 |
 | FR-BLOG-12 | RSS | v1.5 | |
 | FR-BLOG-13 | Structured article content | v1 | Store only versioned TipTap JSON; validate it against `article-content-schema.md`; treat HTML and Markdown as derived exports |
 
@@ -189,7 +189,7 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 | FR-MOMENT-04 | Optional place and mood | v1.5 | Plain text, no map API |
 | FR-MOMENT-05 | Fast publishing from a phone | v1.5 | 5 interactions or fewer |
 | FR-MOMENT-06 | Infinite scroll | v1.5 | |
-| FR-MOMENT-07 | Comments | v1.5 | |
+| FR-MOMENT-07 | Comments | v2.5 | |
 
 ### 4.4 Life list (FR-LIFE)
 
@@ -207,7 +207,7 @@ All four categories share one structure and one component set, discriminated by 
 | FR-LIFE-08 | Automatic cover and metadata fetch | v2 | Title entry populates cover, year, creator |
 | FR-LIFE-09 | Extra fields for places | v2 | Country, city, visit dates, linked photos |
 | FR-LIFE-10 | Travel map view | v2.5 | Visited places highlighted |
-| FR-LIFE-11 | Visitor ratings and short reviews | v2 | See 4.6 |
+| FR-LIFE-11 | Visitor ratings and short reviews | v2.5 | See 4.6 |
 
 Sources: TMDB (films), Google Books or Open Library (books), IGDB (games, needs a Twitch account), owner photos (places). Douban has no public API. Fetched covers MUST be stored locally, never hotlinked: external links expire and are unreliable from mainland China.
 
@@ -229,42 +229,42 @@ Sources: TMDB (films), Google Books or Open Library (books), IGDB (games, needs 
 
 | ID | Requirement | Version | Acceptance |
 |---|---|---|---|
-| FR-AUTH-01 | Email login, 6-digit code | v1 | Primary method, see 6.1. v1 serves pre-provisioned owner addresses only; unknown addresses receive the same response. Opened to visitors in v1.5 |
-| FR-AUTH-02 | GitHub login | v1.5 | Secondary method; verify mainland reachability before release |
-| FR-AUTH-03 | Google login | v2 | Secondary, labelled as needing network access |
+| FR-AUTH-01 | Email login, 6-digit code | v1 | Primary method, see 6.1. v1 serves pre-provisioned owner addresses only; unknown addresses receive the same response. Opened to visitors in v2.5; see ADR-0017 |
+| FR-AUTH-02 | GitHub login | v2.5 | Secondary method; verify mainland reachability before release |
+| FR-AUTH-03 | Google login | v2.5 | Secondary, labelled as needing network access |
 | FR-AUTH-04 | Owner account | v1 | `role = OWNER`, sole admin access |
 | FR-AUTH-05 | Session persistence and logout | v1 | 30-day database-backed session; required by FR-ADMIN-01 |
-| FR-AUTH-06 | Self-service account and data deletion | v1.5 | GDPR, see 6.5 |
-| FR-SOCIAL-01 | Comments on posts, moments, items, photos | v1.5 | One polymorphic implementation |
-| FR-SOCIAL-02 | Threaded replies | v1.5 | One level only |
-| FR-SOCIAL-03 | Owner can delete or hide any comment | v1.5 | Single admin action |
-| FR-SOCIAL-04 | New-comment notification | v1.5 | Email or admin badge |
-| FR-SOCIAL-05 | Visitor rating and short review on items | v2 | Shown separately from the owner rating |
+| FR-AUTH-06 | Self-service account and data deletion | v2.5 | GDPR, see 6.5 |
+| FR-SOCIAL-01 | Comments on posts, moments, items, photos | v2.5 | One polymorphic implementation |
+| FR-SOCIAL-02 | Threaded replies | v2.5 | One level only |
+| FR-SOCIAL-03 | Owner can delete or hide any comment | v2.5 | Single admin action |
+| FR-SOCIAL-04 | New-comment notification | v2.5 | Email or admin badge |
+| FR-SOCIAL-05 | Visitor rating and short review on items | v2.5 | Shown separately from the owner rating |
 | FR-SOCIAL-06 | Whispers: private messages to the owner | v2.5 | Anonymous allowed, with abuse protection |
 | FR-SOCIAL-07 | Email notification for new posts | v2.5 | One-click unsubscribe |
 | FR-SOCIAL-08 | Anonymous visitors read all public content | v1 | Login gates writing, never reading |
-| FR-SOCIAL-09 | Anti-spam: rate limits, word filter, moderation switch | v1.5 | See 6.4 |
+| FR-SOCIAL-09 | Anti-spam: rate limits, word filter, moderation switch | v2.5 | See 6.4 |
 
 ### 4.7 Admin (FR-ADMIN)
 
-Core of v1. All screens designed from 375px up.
+Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid down to 375px and must open and work on a phone without optimisation. Phone acceptance starts in v1.5; see Issue #50.
 
 | ID | Requirement | Version | Acceptance |
 |---|---|---|---|
 | FR-ADMIN-01 | Login and authorisation | v1 | Non-owner requests to `/admin/*` return 404 |
-| FR-ADMIN-02 | Post list grouped by state | v1 | One-handed on a phone |
-| FR-ADMIN-03 | TipTap article editor with preview | v1 | Editing area and block controls remain usable above the on-screen keyboard |
+| FR-ADMIN-02 | Post list grouped by state | v1 | Create, find, edit, and delete on a desktop browser. One-handed phone use in v1.5 |
+| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5 |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur |
-| FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record |
+| FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
 | FR-ADMIN-06 | Compression and conversion on upload | v1 | WebP or AVIF, long-edge limit, GPS EXIF stripped |
 | FR-ADMIN-07 | Publish, unpublish, schedule | v1 | Scheduling may slip to v1.5 |
 | FR-ADMIN-08 | Media library management | v1 | Browse, copy link, delete |
-| FR-ADMIN-09 | Mobile rich-text toolbar | v1 | One-tap heading, bold, link, list, image, and code-block controls |
+| FR-ADMIN-09 | Mobile rich-text toolbar | v1.5 | One-tap heading, bold, link, list, image, and code-block controls |
 | FR-ADMIN-10 | Offline tolerance | v1.5 | Content persists locally, resumes after reconnect |
 | FR-ADMIN-11 | Quick moment composer | v1.5 | Lighter than the post editor |
 | FR-ADMIN-12 | Item entry with cover fetch | v2 | |
 | FR-ADMIN-13 | Batch photo upload with EXIF extraction | v2.5 | |
-| FR-ADMIN-14 | Comment and whisper moderation | v1.5 | |
+| FR-ADMIN-14 | Comment and whisper moderation | v2.5 | |
 | FR-ADMIN-15 | Installable as a PWA | v1.5 | Add to home screen |
 
 ---
@@ -545,7 +545,7 @@ Every rule is blocking. Violating one prevents mainland visitors from loading th
 | NFR-CN-07 | Verify every third-party script is reachable before launch | Comments, analytics, maps, fonts, emoji: any one breaks the page |
 | NFR-CN-08 | First paint never depends on third-party resources | The body renders even if a third party is down |
 | NFR-CN-09 | No ICP filing; 2–5s first paint accepted | Filing needs a domestic entity, and personal filings forbid interactive features |
-| NFR-CN-10 | A mainland tester completes load, browse, register, log in, comment before launch | The only reliable verification |
+| NFR-CN-10 | A mainland tester completes load and browse before launch. Register, log in, and comment join the test in v2.5 | The only reliable verification |
 
 Cloudflare Workers is the selected production platform under ADR-0009. The Workers preview and code rollback procedure passed Issue #29 rehearsal, and Issue #29 is closed. Vercel now serves pull request previews only. Provider domains are development evidence only; production requires custom domains and real mainland China tests.
 
@@ -558,9 +558,9 @@ Cloudflare Workers is the selected production platform under ADR-0009. The Worke
 
 ### 6.3 Responsive and compatibility
 
-- Breakpoints 375 / 768 / 1024 / 1440. The admin is designed upward from 375px, not scaled down.
+- Breakpoints 375 / 768 / 1024 / 1440. Public pages are verified at every breakpoint in v1. The admin is verified at 1024 and 1440 in v1, and at 375 and 768 from v1.5.
 - Two most recent major versions of Chrome, Safari, Edge, Firefox, including iOS Safari.
-- Minimum touch target 44×44px.
+- Minimum touch target 44×44px on public pages in v1, and in the admin from v1.5.
 
 ### 6.4 Security and anti-spam
 
@@ -667,3 +667,5 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-13 | v0.20 | Allowed labelled homepage placeholders for owner-listed empty sections; set Education to UCL BSc Computer Science |
 | 2026-11-13 | v0.21 | Made labelled placeholders the default for undecided content during the build phase, replacing the unpublish-when-empty rule |
 | 2026-11-14 | v0.22 | Moved the QQ Mail and 163 Mail delivery tests from v1 to the release that opens login to visitors |
+| 2026-11-14 | v0.23 | Moved visitor accounts and every visitor-written feature to v2.5; v1.5 and v2 are owner publishing only. See ADR-0017 |
+| 2026-11-14 | v0.24 | Moved phone acceptance of the admin from v1 to v1.5. v1 accepts the admin on a desktop browser; uploads are still processed on the server |
