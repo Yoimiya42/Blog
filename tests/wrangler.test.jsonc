@@ -1,0 +1,14 @@
+// Test-only bindings. The database is local and in-memory; the id matches no
+// Cloudflare database, so tests cannot reach preview or production data.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "personal-site-test",
+  "compatibility_date": "2026-09-03",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "blog-test",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+  ],
+}

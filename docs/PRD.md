@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.24 · 2026-11-14 · Draft
+> v0.25 · 2026-11-14 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -516,11 +516,13 @@ Issue #38 implements only these tables. Every other field in the logical model i
 
 | Table | Fields |
 |---|---|
-| `Post` | `id`, `slug`, `title`, `summary`, `content`, `contentSchemaVersion`, `status`, `publishedAt`, `createdAt`, `updatedAt` |
+| `Post` | `id`, `slug`, `title`, `summary`, `content`, `contentSchemaVersion`, `status`, `publishedAt`, `createdAt`, `updatedAt`, `deletedAt` |
 | `Tag` | `id`, `slug`, `name` |
 | `PostTag` | `postId`, `tagId` |
 
 - `status` accepts `DRAFT` and `PUBLISHED` only. `SCHEDULED` and `ARCHIVED` are deferred with FR-ADMIN-07 scheduling.
+- `Post` deletion is soft through `deletedAt`. A deleted post is hidden from every read and releases its slug.
+- `Tag` is a lookup table: no timestamps and no soft delete. Deleting a tag removes it from every post.
 - Deferred `Post` fields: `coverId`, `visibility`, `readingMin`, `seriesId`, `viewCount`. Reading time is derived at render.
 - `Media` is implemented by Issue #14 after Issue #4 selects the image pipeline.
 
@@ -669,3 +671,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-14 | v0.22 | Moved the QQ Mail and 163 Mail delivery tests from v1 to the release that opens login to visitors |
 | 2026-11-14 | v0.23 | Moved visitor accounts and every visitor-written feature to v2.5; v1.5 and v2 are owner publishing only. See ADR-0017 |
 | 2026-11-14 | v0.24 | Moved phone acceptance of the admin from v1 to v1.5. v1 accepts the admin on a desktop browser; uploads are still processed on the server |
+| 2026-11-14 | v0.25 | Added `deletedAt` to the v1 `Post` contract and defined `Tag` as a lookup table without timestamps or soft delete |

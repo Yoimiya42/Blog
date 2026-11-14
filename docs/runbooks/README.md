@@ -8,6 +8,7 @@ Use only procedures rehearsed against the live service named in each runbook.
 | [Cloudflare Workers Builds](cloudflare-workers-builds.md) | GitHub-connected build pipeline configuration and log access |
 | [Production domain and DNS](production-domain.md) | DNS records, `www` redirect, HTTPS enforcement, and mail records for `fangmingluan.com` |
 | [Production recovery](production-recovery.md) | Worker rollback and D1 Time Travel restore; rollback rehearsed on production, restore on `blog-preview` |
+| [D1 migrations](d1-migrations.md) | Write, apply, verify, and undo D1 migrations; rehearsed locally and on `blog-preview` |
 | [Owner seed](owner-seed.md) | Provision the single owner account in D1; rehearsed locally and on production |
 | [Vercel Preview deployment](vercel-preview.md) | Pull request preview checks; not a production fallback since Issue #29 closed |
 

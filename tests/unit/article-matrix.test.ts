@@ -93,6 +93,8 @@ describe("schema v1 matrix completeness", () => {
         "ArticleContent",
         "CODE_LANGUAGES",
         "CONTENT_SCHEMA_VERSION",
+        "POST_STATUSES",
+        "PostSlugTakenError",
         "collectMediaReferences",
         "deriveArticleContent",
         "parseArticleDocument",

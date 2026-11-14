@@ -66,4 +66,4 @@ D1 Time Travel, on `blog-preview`:
 2. Inserted one marker row; `user` held one row.
 3. Restored to the bookmark; `user` held zero rows and `d1_migrations` still held five.
 
-Not rehearsed: a Time Travel restore on `blog-production`, and a rollback across a schema migration.
+Not rehearsed: a Time Travel restore on `blog-production`. Issue #38 rehearsed a restore across a schema migration on `blog-preview`; see `d1-migrations.md`.
