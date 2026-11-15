@@ -30,6 +30,25 @@ function readText(formData: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
+type SubmittedContent =
+  { ok: true; content: unknown | undefined } | { ok: false };
+
+/**
+ * The editor submits the document as a JSON string. An absent field keeps the
+ * stored document: the form omits it when the stored content cannot be opened.
+ * Only the syntax is checked here; the service validates the schema.
+ */
+function readContent(formData: FormData): SubmittedContent {
+  const raw = readText(formData, "content");
+  if (raw === "") return { ok: true, content: undefined };
+
+  try {
+    return { ok: true, content: JSON.parse(raw) as unknown };
+  } catch {
+    return { ok: false };
+  }
+}
+
 /**
  * Creates a post when `postId` is null, otherwise updates it. `postId` is
  * bound on the client, so it is untrusted: the service decides what exists.
@@ -48,10 +67,25 @@ export async function savePostAction(
     summary: readText(formData, "summary"),
   };
 
+  const submitted = readContent(formData);
+  if (!submitted.ok) {
+    return {
+      values,
+      fieldErrors: { content: "The article content could not be read." },
+      formError: "Fix the highlighted fields and save again.",
+    };
+  }
+
+  // The key is left out, not set to undefined, when no document was sent.
+  const input =
+    submitted.content === undefined
+      ? values
+      : { ...values, content: submitted.content };
+
   const result =
     postId === null
-      ? await service.create(session, values)
-      : await service.update(session, postId, values);
+      ? await service.create(session, input)
+      : await service.update(session, postId, input);
 
   if (!result.ok) {
     if (result.reason === "not_found") {

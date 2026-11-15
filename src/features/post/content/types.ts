@@ -112,3 +112,9 @@ export type ArticleDocument = {
   type: "doc";
   content: [BlockNode, ...BlockNode[]];
 };
+
+/** Schema v1 requires one block, so a blank draft is one empty paragraph. */
+export const EMPTY_ARTICLE_DOCUMENT: ArticleDocument = {
+  type: "doc",
+  content: [{ type: "paragraph" }],
+};

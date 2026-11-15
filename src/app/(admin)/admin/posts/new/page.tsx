@@ -1,5 +1,5 @@
 import { requireOwner } from "@/features/auth";
-import { PostForm } from "@/features/post";
+import { EMPTY_ARTICLE_DOCUMENT, PostForm } from "@/features/post";
 
 export default async function NewPostPage() {
   await requireOwner();
@@ -10,6 +10,7 @@ export default async function NewPostPage() {
 
       <div className="mt-8">
         <PostForm
+          initialDocument={EMPTY_ARTICLE_DOCUMENT}
           initialValues={{ title: "", slug: "", summary: "" }}
           postId={null}
         />

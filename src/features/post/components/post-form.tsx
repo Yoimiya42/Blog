@@ -1,8 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useActionState } from "react";
 
+import type { ArticleDocument } from "../content/types";
 import {
   POST_SLUG_MAX_LENGTH,
   POST_SUMMARY_MAX_LENGTH,
@@ -19,12 +21,34 @@ interface PostFormProps {
   /** Null creates a post. */
   postId: string | null;
   initialValues: PostFormValues;
+  /**
+   * The validated stored document. Null when the stored content is not valid
+   * schema v1: the editor stays closed and a save keeps the stored content.
+   */
+  initialDocument: ArticleDocument | null;
 }
+
+// A dynamic import keeps the TipTap runtime out of the statically imported
+// module graph, so nothing that imports the post module bundles the editor.
+// Until the chunk loads no content field exists, and a save sends none.
+const ArticleEditor = dynamic(
+  () => import("../content/editor/article-editor"),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="mt-2 text-sm text-stone-600">Loading editor…</p>
+    ),
+  },
+);
 
 const INPUT_CLASS =
   "mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none focus:border-stone-900 focus:ring-4 focus:ring-black/5 aria-invalid:border-red-700";
 
-export function PostForm({ postId, initialValues }: PostFormProps) {
+export function PostForm({
+  postId,
+  initialValues,
+  initialDocument,
+}: PostFormProps) {
   const initialState: PostFormState = {
     values: initialValues,
     fieldErrors: {},
@@ -99,14 +123,30 @@ export function PostForm({ postId, initialValues }: PostFormProps) {
         <FieldError id="post-summary-error" message={fieldErrors.summary} />
       </div>
 
+      <div>
+        <p className="block text-sm font-medium" id="post-content-label">
+          Content
+        </p>
+        {initialDocument ? (
+          <div className="mt-2">
+            <ArticleEditor
+              initialDocument={initialDocument}
+              labelledBy="post-content-label"
+              name="content"
+            />
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-red-700" role="alert">
+            The stored content is not valid schema v1 and cannot be opened.
+            Saving keeps it unchanged.
+          </p>
+        )}
+        <FieldError id="post-content-error" message={fieldErrors.content} />
+      </div>
+
       {state.formError ? (
         <p className="text-sm text-red-700" role="alert">
           {state.formError}
-        </p>
-      ) : null}
-      {fieldErrors.content ? (
-        <p className="text-sm text-red-700" role="alert">
-          {fieldErrors.content}
         </p>
       ) : null}
       {state.saved ? (

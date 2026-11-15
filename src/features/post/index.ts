@@ -1,4 +1,10 @@
-export { CONTENT_SCHEMA_VERSION, CODE_LANGUAGES } from "./content/types";
+export {
+  CONTENT_SCHEMA_VERSION,
+  CODE_LANGUAGES,
+  EMPTY_ARTICLE_DOCUMENT,
+} from "./content/types";
+
+export { ARTICLE_PROSE_CLASS } from "./content/prose";
 
 export {
   POST_STATUSES,

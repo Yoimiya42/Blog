@@ -165,6 +165,57 @@ describe("savePostAction", () => {
       summary: "",
     });
   });
+
+  it("passes the submitted document to the service as parsed JSON", async () => {
+    service.update.mockResolvedValue({
+      ok: true,
+      post: { id: "post-1", title: "Hello", slug: "hello", summary: null },
+    });
+    const document = { type: "doc", content: [{ type: "paragraph" }] };
+
+    await savePostAction(
+      "post-1",
+      PREVIOUS,
+      form({ ...VALID, content: JSON.stringify(document) }),
+    );
+
+    expect(service.update).toHaveBeenCalledWith(SESSION, "post-1", {
+      ...VALID,
+      content: document,
+    });
+  });
+
+  it("rejects content that is not JSON before the service is reached", async () => {
+    const state = await savePostAction(
+      "post-1",
+      PREVIOUS,
+      form({ ...VALID, content: "{not json" }),
+    );
+
+    expect(state).toMatchObject({
+      values: VALID,
+      fieldErrors: { content: expect.any(String) },
+    });
+    expect(service.update).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("returns a content schema error from the service", async () => {
+    service.update.mockResolvedValue({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { content: "content.0.type: unknown node" },
+    });
+
+    const state = await savePostAction(
+      "post-1",
+      PREVIOUS,
+      form({ ...VALID, content: '{"type":"doc","content":[{"type":"x"}]}' }),
+    );
+
+    expect(state.fieldErrors.content).toBe("content.0.type: unknown node");
+    expect(state.saved).toBeUndefined();
+  });
 });
 
 describe("deletePostAction", () => {

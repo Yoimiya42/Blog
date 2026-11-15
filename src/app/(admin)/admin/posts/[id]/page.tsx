@@ -1,7 +1,14 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
-import { DeletePostButton, getPostService, PostForm } from "@/features/post";
+import {
+  CONTENT_SCHEMA_VERSION,
+  DeletePostButton,
+  getPostService,
+  PostForm,
+  validateArticleDocument,
+} from "@/features/post";
 
 const STATUS_LABELS = { DRAFT: "Draft", PUBLISHED: "Published" } as const;
 
@@ -16,6 +23,14 @@ export default async function EditPostPage({
   const post = await service.getById(session, id);
   if (!post) notFound();
 
+  // The editor opens only a document that is valid for the current schema
+  // version. Anything else stays stored as it is until it is migrated.
+  const stored =
+    post.contentSchemaVersion === CONTENT_SCHEMA_VERSION
+      ? validateArticleDocument(post.content)
+      : null;
+  const initialDocument = stored?.ok ? stored.document : null;
+
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3">
@@ -23,10 +38,17 @@ export default async function EditPostPage({
         <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-medium text-stone-700">
           {STATUS_LABELS[post.status]}
         </span>
+        <Link
+          className="flex min-h-11 items-center rounded-xl px-4 text-sm font-medium text-stone-600 hover:bg-stone-200 hover:text-stone-900"
+          href={`/admin/posts/${post.id}/preview`}
+        >
+          Preview saved version
+        </Link>
       </div>
 
       <div className="mt-8">
         <PostForm
+          initialDocument={initialDocument}
           initialValues={{
             title: post.title,
             slug: post.slug,

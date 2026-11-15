@@ -1,4 +1,7 @@
-import { CONTENT_SCHEMA_VERSION, type ArticleDocument } from "../content/types";
+import {
+  CONTENT_SCHEMA_VERSION,
+  EMPTY_ARTICLE_DOCUMENT,
+} from "../content/types";
 import { validateArticleDocument } from "../content/validate";
 import {
   POST_STATUSES,
@@ -17,12 +20,6 @@ import type { PostRepository } from "./post.repository";
 
 /** The session of the caller, or nothing when the request is anonymous. */
 export type PostActor = { user: { role?: unknown } } | null | undefined;
-
-/** The article schema requires one block, so a new post starts with this. */
-const EMPTY_DOCUMENT: ArticleDocument = {
-  type: "doc",
-  content: [{ type: "paragraph" }],
-};
 
 const SLUG_TAKEN = "This slug is already used by another post.";
 
@@ -118,7 +115,7 @@ export function createPostService({
       assertOwner(actor);
 
       const parsed = parseFields(input);
-      const content = input.content ?? EMPTY_DOCUMENT;
+      const content = input.content ?? EMPTY_ARTICLE_DOCUMENT;
       const invalidContent = contentError(content);
       if (!parsed.ok || invalidContent) {
         return {

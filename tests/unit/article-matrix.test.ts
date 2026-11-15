@@ -90,10 +90,12 @@ describe("schema v1 matrix completeness", () => {
   it("exposes only the public content API", () => {
     expect(Object.keys(publicApi).sort()).toEqual(
       [
+        "ARTICLE_PROSE_CLASS",
         "ArticleContent",
         "CODE_LANGUAGES",
         "CONTENT_SCHEMA_VERSION",
         "DeletePostButton",
+        "EMPTY_ARTICLE_DOCUMENT",
         "POST_SLUG_MAX_LENGTH",
         "POST_STATUSES",
         "POST_SUMMARY_MAX_LENGTH",
