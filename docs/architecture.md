@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.18 · 2026-11-15
+> v0.19 · 2026-11-15
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -253,7 +253,7 @@ Any failing row is an architectural defect.
 
 **Database operations.** Wrangler creates and applies committed SQL migrations to the selected D1 environment. A deterministic seed populates a new environment. Rehearse D1 Time Travel restore before launch; an untested backup is not a backup. Review query plans, row-read volume, and repeated query patterns after launch.
 
-**Observability.** Structured logs cover login, publish, upload, and delete. Error and availability providers require a separate decision and mainland reachability check. Traffic analytics are deferred beyond v1.
+**Observability.** Workers Logs records an invocation log, with CPU and wall time, for every production and preview request; previews take their own `previews.observability` block. Query it through the Workers Observability API. Structured logs cover login, publish, upload, and delete. Error and availability providers require a separate decision and mainland reachability check. Traffic analytics are deferred beyond v1.
 
 **Security.** After v1.5, audit against the OWASP Top 10 and commit the report to `docs/`. Enable Dependabot.
 
@@ -295,3 +295,4 @@ Any failing row is an architectural defect.
 | 2026-11-14 | v0.16 | Isolated previews from production through Worker Previews |
 | 2026-11-14 | v0.17 | Exempted lookup tables from entity timestamps and soft delete; named the in-memory D1 test database |
 | 2026-11-15 | v0.18 | Added the public blog routes and the anonymous post read service |
+| 2026-11-15 | v0.19 | Enabled Workers Logs for production and previews |
