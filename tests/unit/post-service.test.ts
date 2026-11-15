@@ -1,5 +1,6 @@
 import {
   afterAll,
+  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -83,6 +84,13 @@ describe("authorisation", () => {
     ["create", (actor) => service.create(actor as never, input())],
     ["update", (actor) => service.update(actor as never, "post-1", input())],
     ["remove", (actor) => service.remove(actor as never, "post-1")],
+    ["publish", (actor) => service.publish(actor as never, "post-1")],
+    ["unpublish", (actor) => service.unpublish(actor as never, "post-1")],
+    [
+      "autosave",
+      (actor) =>
+        service.autosave(actor as never, "post-1", SAMPLE_DOCUMENT, CREATED),
+    ],
   ];
 
   it.each(calls)("%s rejects a missing session", async (_name, call) => {
@@ -285,6 +293,305 @@ describe("update", () => {
   });
 });
 
+describe("version token", () => {
+  it("applies an update that carries the current token", async () => {
+    const post = await createPost();
+    clock = LATER;
+
+    const result = await service.update(
+      OWNER,
+      post.id,
+      input({ title: "Renamed" }),
+      { ifUpdatedAt: post.updatedAt },
+    );
+
+    expect(result).toMatchObject({ ok: true, post: { title: "Renamed" } });
+  });
+
+  it("rejects a stale token and keeps the newer version", async () => {
+    const post = await createPost();
+    clock = LATER;
+    await service.update(OWNER, post.id, input({ title: "Newer" }));
+
+    const result = await service.update(
+      OWNER,
+      post.id,
+      input({ title: "Stale" }),
+      { ifUpdatedAt: post.updatedAt },
+    );
+
+    expect(result).toEqual({ ok: false, reason: "conflict" });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      title: "Newer",
+    });
+  });
+
+  it("issues a new token for two writes in the same millisecond", async () => {
+    const post = await createPost();
+
+    const first = await service.update(OWNER, post.id, input());
+    const second = await service.update(OWNER, post.id, input());
+    if (!first.ok || !second.ok) throw new Error("expected both to save");
+
+    expect(first.post.updatedAt.getTime()).toBeGreaterThan(
+      post.updatedAt.getTime(),
+    );
+    expect(second.post.updatedAt.getTime()).toBeGreaterThan(
+      first.post.updatedAt.getTime(),
+    );
+  });
+});
+
+describe("autosave", () => {
+  it("saves the document of a draft and returns the new token", async () => {
+    const post = await createPost();
+    clock = LATER;
+
+    const result = await service.autosave(
+      OWNER,
+      post.id,
+      SAMPLE_DOCUMENT,
+      post.updatedAt,
+    );
+
+    expect(result).toEqual({ ok: true, updatedAt: LATER });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      title: "Hello",
+      content: SAMPLE_DOCUMENT,
+      status: "DRAFT",
+    });
+  });
+
+  it("does not overwrite content saved after the token was issued", async () => {
+    const post = await createPost();
+    clock = LATER;
+    await service.update(OWNER, post.id, input({ content: SAMPLE_DOCUMENT }));
+
+    const result = await service.autosave(
+      OWNER,
+      post.id,
+      { type: "doc", content: [{ type: "paragraph" }] },
+      post.updatedAt,
+    );
+
+    expect(result).toEqual({ ok: false, reason: "conflict" });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      content: SAMPLE_DOCUMENT,
+    });
+  });
+
+  it("rejects an invalid document", async () => {
+    const post = await createPost({ content: SAMPLE_DOCUMENT });
+
+    const result = await service.autosave(
+      OWNER,
+      post.id,
+      { type: "doc", content: [{ type: "script" }] },
+      post.updatedAt,
+    );
+
+    expect(result).toMatchObject({ ok: false, reason: "invalid" });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      content: SAMPLE_DOCUMENT,
+    });
+  });
+
+  it("refuses a published post", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const post = await createPost();
+    const published = await service.publish(OWNER, post.id);
+    if (!published.ok) throw new Error("expected the post to be published");
+
+    const result = await service.autosave(
+      OWNER,
+      post.id,
+      SAMPLE_DOCUMENT,
+      published.post.updatedAt,
+    );
+
+    expect(result).toEqual({ ok: false, reason: "not_draft" });
+    vi.restoreAllMocks();
+  });
+
+  it("reports a missing post", async () => {
+    expect(
+      await service.autosave(OWNER, "missing", SAMPLE_DOCUMENT, CREATED),
+    ).toEqual({ ok: false, reason: "not_found" });
+  });
+});
+
+describe("publish and unpublish", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("publishes a draft and dates it", async () => {
+    const post = await createPost();
+    clock = LATER;
+
+    const result = await service.publish(OWNER, post.id);
+
+    expect(result).toMatchObject({
+      ok: true,
+      post: { status: "PUBLISHED", publishedAt: LATER },
+    });
+    expect(console.info).toHaveBeenCalledWith(
+      JSON.stringify({ event: "post.publish", postId: post.id }),
+    );
+    expect((await service.listByStatus(OWNER)).PUBLISHED).toHaveLength(1);
+  });
+
+  it("unpublishes and keeps the first publication date", async () => {
+    const post = await createPost();
+    await service.publish(OWNER, post.id);
+    clock = LATER;
+
+    const unpublished = await service.unpublish(OWNER, post.id);
+    expect(unpublished).toMatchObject({
+      ok: true,
+      post: { status: "DRAFT", publishedAt: CREATED },
+    });
+
+    const republished = await service.publish(OWNER, post.id);
+    expect(republished).toMatchObject({
+      ok: true,
+      post: { status: "PUBLISHED", publishedAt: CREATED },
+    });
+  });
+
+  it("does not publish over a newer version", async () => {
+    const post = await createPost();
+    clock = LATER;
+    await service.update(OWNER, post.id, input({ title: "Newer" }));
+
+    const result = await service.publish(OWNER, post.id, {
+      ifUpdatedAt: post.updatedAt,
+    });
+
+    expect(result).toEqual({ ok: false, reason: "conflict" });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      status: "DRAFT",
+      publishedAt: null,
+    });
+  });
+
+  it("does not unpublish over a newer version", async () => {
+    const post = await createPost();
+    const published = await service.publish(OWNER, post.id);
+    if (!published.ok) throw new Error("expected the post to be published");
+    clock = LATER;
+    await service.update(OWNER, post.id, input({ title: "Newer" }));
+
+    const result = await service.unpublish(OWNER, post.id, {
+      ifUpdatedAt: published.post.updatedAt,
+    });
+
+    expect(result).toEqual({ ok: false, reason: "conflict" });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      status: "PUBLISHED",
+    });
+  });
+
+  it("refuses to publish content the public renderer cannot read", async () => {
+    const post = await createPost();
+    await createPostRepository(db).update(
+      post.id,
+      { contentSchemaVersion: 99 },
+      LATER,
+    );
+
+    const result = await service.publish(OWNER, post.id);
+
+    expect(result).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { content: expect.any(String) },
+    });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      status: "DRAFT",
+    });
+  });
+
+  it("reports a missing post", async () => {
+    expect(await service.publish(OWNER, "missing")).toEqual({
+      ok: false,
+      reason: "not_found",
+    });
+    expect(await service.unpublish(OWNER, "missing")).toEqual({
+      ok: false,
+      reason: "not_found",
+    });
+  });
+});
+
+describe("slug freeze", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("rejects a slug change on a published post", async () => {
+    const post = await createPost();
+    await service.publish(OWNER, post.id);
+
+    const result = await service.update(
+      OWNER,
+      post.id,
+      input({ title: "Renamed", slug: "renamed" }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { slug: expect.any(String) },
+    });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      title: "Hello",
+      slug: "hello",
+    });
+  });
+
+  it("keeps the slug frozen after unpublishing", async () => {
+    const post = await createPost();
+    await service.publish(OWNER, post.id);
+    await service.unpublish(OWNER, post.id);
+
+    const result = await service.update(
+      OWNER,
+      post.id,
+      input({ slug: "renamed" }),
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { slug: expect.any(String) },
+    });
+  });
+
+  it("still saves other fields of a published post", async () => {
+    const post = await createPost();
+    await service.publish(OWNER, post.id);
+
+    const result = await service.update(
+      OWNER,
+      post.id,
+      input({ title: "Renamed" }),
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      post: { title: "Renamed", slug: "hello", status: "PUBLISHED" },
+    });
+  });
+});
+
 describe("remove", () => {
   it("hides the post, releases its slug, and logs the deletion", async () => {
     const log = vi.spyOn(console, "info").mockImplementation(() => {});
@@ -327,14 +634,9 @@ describe("listByStatus", () => {
     clock = LATER;
     const second = await createPost({ slug: "second" });
     const live = await createPost({ slug: "live" });
-    // Publishing belongs to Issue #15, so set the state through the repository.
-    await createPostRepository(db).update(
-      live.id,
-      { status: "PUBLISHED", publishedAt: LATER },
-      LATER,
-    );
-    const removed = await createPost({ slug: "removed" });
     vi.spyOn(console, "info").mockImplementation(() => {});
+    await service.publish(OWNER, live.id);
+    const removed = await createPost({ slug: "removed" });
     await service.remove(OWNER, removed.id);
     vi.restoreAllMocks();
 

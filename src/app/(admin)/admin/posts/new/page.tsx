@@ -13,6 +13,9 @@ export default async function NewPostPage() {
           initialDocument={EMPTY_ARTICLE_DOCUMENT}
           initialValues={{ title: "", slug: "", summary: "" }}
           postId={null}
+          slugFrozen={false}
+          status={null}
+          version={null}
         />
       </div>
     </div>

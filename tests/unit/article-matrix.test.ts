@@ -108,6 +108,7 @@ describe("schema v1 matrix completeness", () => {
         "deriveArticleContent",
         "getPostService",
         "parseArticleDocument",
+        "toPostVersion",
         "validateArticleDocument",
         "validateMediaReferences",
       ].sort(),
