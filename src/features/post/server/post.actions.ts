@@ -5,10 +5,20 @@ import { redirect } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
 
-import type { PostFieldErrors } from "../schema";
+import {
+  fromPostVersion,
+  toPostVersion,
+  type PostFieldErrors,
+  type PostMutationResult,
+} from "../schema";
 import { getPostService } from "./post.service";
 
 const POSTS_PATH = "/admin/posts";
+
+const FIX_FIELDS = "Fix the highlighted fields and save again.";
+const POST_GONE = "This post no longer exists.";
+const POST_CHANGED =
+  "This post changed in another tab or window. Reload the page before saving again.";
 
 export interface PostFormValues {
   title: string;
@@ -21,7 +31,13 @@ export interface PostFormState {
   fieldErrors: PostFieldErrors;
   formError?: string;
   saved?: boolean;
+  /** Version token of the stored post after a successful write. */
+  version?: string;
 }
+
+export type AutosaveResponse =
+  | { ok: true; version: string }
+  | { ok: false; reason: "invalid" | "not_found" | "conflict" | "not_draft" };
 
 /** A forged request can send files or repeat a field; treat those as blank. */
 function readText(formData: FormData, name: string): string {
@@ -50,8 +66,37 @@ function readContent(formData: FormData): SubmittedContent {
 }
 
 /**
+ * Public reads are refreshed through the framework cache API. An in-memory
+ * event bus would reach only the Worker isolate that handled the write. The
+ * layout scope covers the list, each post, and the tag archives under `/blog`.
+ */
+function revalidatePublicReads(): void {
+  revalidatePath("/");
+  revalidatePath("/blog", "layout");
+}
+
+type FailedMutation = Exclude<PostMutationResult, { ok: true }>;
+
+function failure(
+  values: PostFormValues,
+  result: FailedMutation,
+): PostFormState {
+  if (result.reason === "invalid") {
+    return { values, fieldErrors: result.fieldErrors, formError: FIX_FIELDS };
+  }
+
+  return {
+    values,
+    fieldErrors: {},
+    formError: result.reason === "conflict" ? POST_CHANGED : POST_GONE,
+  };
+}
+
+/**
  * Creates a post when `postId` is null, otherwise updates it. `postId` is
  * bound on the client, so it is untrusted: the service decides what exists.
+ * The `publish` intent saves first, so the published version is the one on
+ * screen.
  */
 export async function savePostAction(
   postId: string | null,
@@ -67,12 +112,26 @@ export async function savePostAction(
     summary: readText(formData, "summary"),
   };
 
+  const intent = readText(formData, "intent");
+  const condition = { ifUpdatedAt: fromPostVersion(formData.get("version")) };
+
+  // Unpublishing writes no field, so unsaved or invalid input cannot block it.
+  if (postId !== null && intent === "unpublish") {
+    const unpublished = await service.unpublish(session, postId, condition);
+    if (!unpublished.ok) return failure(values, unpublished);
+
+    revalidatePath(POSTS_PATH);
+    revalidatePublicReads();
+    // A fresh render shows the new status and carries the new token.
+    redirect(`${POSTS_PATH}/${postId}`);
+  }
+
   const submitted = readContent(formData);
   if (!submitted.ok) {
     return {
       values,
       fieldErrors: { content: "The article content could not be read." },
-      formError: "Fix the highlighted fields and save again.",
+      formError: FIX_FIELDS,
     };
   }
 
@@ -85,37 +144,87 @@ export async function savePostAction(
   const result =
     postId === null
       ? await service.create(session, input)
-      : await service.update(session, postId, input);
+      : await service.update(session, postId, input, condition);
 
-  if (!result.ok) {
-    if (result.reason === "not_found") {
-      return {
-        values,
-        fieldErrors: {},
-        formError: "This post no longer exists.",
-      };
-    }
+  if (!result.ok) return failure(values, result);
 
-    return {
-      values,
-      fieldErrors: result.fieldErrors,
-      formError: "Fix the highlighted fields and save again.",
-    };
-  }
+  const { post } = result;
+  const stored: PostFormValues = {
+    title: post.title,
+    slug: post.slug,
+    summary: post.summary ?? "",
+  };
 
   revalidatePath(POSTS_PATH);
   // redirect() throws, so it stays outside any try block.
-  if (postId === null) redirect(`${POSTS_PATH}/${result.post.id}`);
+  if (postId === null) redirect(`${POSTS_PATH}/${post.id}`);
+
+  if (intent === "publish") {
+    // The token pins the publication to the version saved above.
+    const published = await service.publish(session, post.id, {
+      ifUpdatedAt: post.updatedAt,
+    });
+    if (!published.ok) {
+      const failed = failure(stored, published);
+
+      // The save itself succeeded, so the form keeps the new token.
+      return {
+        ...failed,
+        formError: `Saved, but not published. ${failed.formError}`,
+        version: toPostVersion(post.updatedAt),
+      };
+    }
+
+    revalidatePublicReads();
+    // A fresh render shows the new status and carries the new token.
+    redirect(`${POSTS_PATH}/${post.id}`);
+  }
+
+  if (post.status === "PUBLISHED") revalidatePublicReads();
 
   return {
-    values: {
-      title: result.post.title,
-      slug: result.post.slug,
-      summary: result.post.summary ?? "",
-    },
+    values: stored,
     fieldErrors: {},
     saved: true,
+    version: toPostVersion(post.updatedAt),
   };
+}
+
+/**
+ * Saves the document of a draft in the background. Called directly from the
+ * client, so every argument is untrusted.
+ */
+export async function autosavePostAction(
+  postId: string,
+  version: string,
+  content: string,
+): Promise<AutosaveResponse> {
+  const session = await requireOwner();
+
+  const ifUpdatedAt = fromPostVersion(version);
+  if (
+    typeof postId !== "string" ||
+    typeof content !== "string" ||
+    !ifUpdatedAt
+  ) {
+    return { ok: false, reason: "invalid" };
+  }
+
+  let document: unknown;
+  try {
+    document = JSON.parse(content);
+  } catch {
+    return { ok: false, reason: "invalid" };
+  }
+
+  const service = await getPostService();
+  const result = await service.autosave(session, postId, document, ifUpdatedAt);
+
+  // No revalidation: a draft has no public read, and refreshing the admin
+  // route every few seconds would re-render the page under the editor.
+  return result.ok
+    ? { ok: true, version: toPostVersion(result.updatedAt) }
+    : { ok: false, reason: result.reason };
 }
 
 export async function deletePostAction(postId: string): Promise<void> {
@@ -126,5 +235,7 @@ export async function deletePostAction(postId: string): Promise<void> {
   await service.remove(session, postId);
 
   revalidatePath(POSTS_PATH);
+  // The post may have been public; the refresh is cheap when it was not.
+  revalidatePublicReads();
   redirect(POSTS_PATH);
 }

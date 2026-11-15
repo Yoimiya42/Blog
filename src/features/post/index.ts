@@ -13,6 +13,7 @@ export {
   POST_TITLE_MAX_LENGTH,
   PostAccessDeniedError,
   PostSlugTakenError,
+  toPostVersion,
   type NewPost,
   type Post,
   type PostField,
@@ -23,6 +24,7 @@ export {
   type PostsByStatus,
   type PostStatus,
   type PostSummary,
+  type PostWriteCondition,
   type PublishedPostQuery,
 } from "./schema";
 

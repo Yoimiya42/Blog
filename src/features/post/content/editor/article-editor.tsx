@@ -16,6 +16,13 @@ interface ArticleEditorProps {
   name: string;
   /** Id of the element that labels the editing area. */
   labelledBy: string;
+  /**
+   * Receives the serialised document after each edit. Read once, when the
+   * editor is created, so it must be stable for the life of the component.
+   */
+  onChange?: (serialized: string) => void;
+  /** Called when the editing area loses focus. Same stability rule. */
+  onBlur?: () => void;
 }
 
 // The box around the editing area. Fluid by design: no fixed widths. Prose
@@ -36,6 +43,8 @@ export default function ArticleEditor({
   initialDocument,
   name,
   labelledBy,
+  onChange,
+  onBlur,
 }: ArticleEditorProps) {
   // Controlled, not a defaultValue: React resets uncontrolled fields after a
   // form action, which would submit the stale initial document on the next
@@ -59,8 +68,11 @@ export default function ArticleEditor({
       },
     },
     onUpdate: ({ editor: current }) => {
-      setSerialized(JSON.stringify(normalizeEditorDocument(current.getJSON())));
+      const next = JSON.stringify(normalizeEditorDocument(current.getJSON()));
+      setSerialized(next);
+      onChange?.(next);
     },
+    onBlur: () => onBlur?.(),
   });
 
   return (

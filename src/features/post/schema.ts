@@ -100,7 +100,34 @@ export type PostFieldErrors = Partial<Record<PostField, string>>;
 export type PostMutationResult =
   | { ok: true; post: Post }
   | { ok: false; reason: "invalid"; fieldErrors: PostFieldErrors }
-  | { ok: false; reason: "not_found" };
+  | { ok: false; reason: "not_found" }
+  /** The post changed after the caller last read it. Nothing was written. */
+  | { ok: false; reason: "conflict" };
+
+/**
+ * Optimistic concurrency token: the `updatedAt` the caller last saw. A write
+ * that carries it applies only while the stored value still matches.
+ */
+export interface PostWriteCondition {
+  ifUpdatedAt?: Date;
+}
+
+/** Wire form of the token: epoch milliseconds as a decimal string. */
+export function toPostVersion(updatedAt: Date): string {
+  return String(updatedAt.getTime());
+}
+
+/** Undefined for anything that is not a token, such as a forged field. */
+export function fromPostVersion(raw: unknown): Date | undefined {
+  return typeof raw === "string" && /^\d{1,15}$/.test(raw)
+    ? new Date(Number(raw))
+    : undefined;
+}
+
+export type PostAutosaveResult =
+  | { ok: true; updatedAt: Date }
+  | { ok: false; reason: "invalid"; message: string }
+  | { ok: false; reason: "not_found" | "conflict" | "not_draft" };
 
 export type PostsByStatus = Record<PostStatus, PostSummary[]>;
 

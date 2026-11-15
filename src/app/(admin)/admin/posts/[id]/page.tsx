@@ -7,6 +7,7 @@ import {
   DeletePostButton,
   getPostService,
   PostForm,
+  toPostVersion,
   validateArticleDocument,
 } from "@/features/post";
 
@@ -55,6 +56,9 @@ export default async function EditPostPage({
             summary: post.summary ?? "",
           }}
           postId={post.id}
+          slugFrozen={post.publishedAt !== null}
+          status={post.status}
+          version={toPostVersion(post.updatedAt)}
         />
       </div>
 

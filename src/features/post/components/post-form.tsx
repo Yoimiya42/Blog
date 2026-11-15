@@ -2,20 +2,25 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
 
 import type { ArticleDocument } from "../content/types";
 import {
   POST_SLUG_MAX_LENGTH,
   POST_SUMMARY_MAX_LENGTH,
   POST_TITLE_MAX_LENGTH,
+  type PostStatus,
 } from "../schema";
 import {
+  autosavePostAction,
   savePostAction,
   type PostFormState,
   type PostFormValues,
 } from "../server/post.actions";
+import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
 import { SubmitButton } from "./submit-button";
+
+const AUTOSAVE_INTERVAL_MS = 10_000;
 
 interface PostFormProps {
   /** Null creates a post. */
@@ -26,6 +31,12 @@ interface PostFormProps {
    * schema v1: the editor stays closed and a save keeps the stored content.
    */
   initialDocument: ArticleDocument | null;
+  /** Null for a post that does not exist yet. */
+  status: PostStatus | null;
+  /** Version token of the stored post. Null for a new post. */
+  version: string | null;
+  /** True once the post has been published; the slug can no longer change. */
+  slugFrozen: boolean;
 }
 
 // A dynamic import keeps the TipTap runtime out of the statically imported
@@ -48,13 +59,76 @@ export function PostForm({
   postId,
   initialValues,
   initialDocument,
+  status,
+  version,
+  slugFrozen,
 }: PostFormProps) {
   const initialState: PostFormState = {
     values: initialValues,
     fieldErrors: {},
   };
+
+  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>({
+    kind: "idle",
+  });
+  // Created once: it owns the version token for the life of the form.
+  const [autosave] = useState(() =>
+    createDraftAutosave({
+      initialContent: initialDocument ? JSON.stringify(initialDocument) : "",
+      initialVersion: version ?? "",
+      save: (current, content) =>
+        autosavePostAction(postId ?? "", current, content),
+      onStatus: setAutosaveStatus,
+    }),
+  );
+
+  // Only an existing draft autosaves. A new post has no row to write to, and
+  // a published post would change the public version without a decision.
+  const autosaveEnabled =
+    postId !== null && status === "DRAFT" && initialDocument !== null;
+
+  useEffect(() => {
+    autosave.setEnabled(autosaveEnabled);
+  }, [autosave, autosaveEnabled]);
+
+  // Publishing and unpublishing end in a fresh render with a new token.
+  useEffect(() => {
+    if (version !== null) autosave.syncVersion(version);
+  }, [autosave, version]);
+
+  useEffect(() => {
+    if (!autosaveEnabled) return;
+
+    const timer = setInterval(
+      () => void autosave.flush(),
+      AUTOSAVE_INTERVAL_MS,
+    );
+
+    return () => clearInterval(timer);
+  }, [autosave, autosaveEnabled]);
+
+  const saveOnBlur = useCallback(() => void autosave.flush(), [autosave]);
+
   const [state, formAction] = useActionState(
-    savePostAction.bind(null, postId),
+    (previous: PostFormState, formData: FormData) =>
+      // Queued behind any autosave in flight, and sent with the token that
+      // save produced.
+      autosave.runExclusive(async (current) => {
+        if (current !== "") formData.set("version", current);
+
+        // A redirecting action may settle without a state; keep the last one.
+        const next = (await savePostAction(postId, previous, formData)) as
+          PostFormState | undefined;
+        if (next?.version) {
+          const content = formData.get("content");
+          autosave.markSaved(
+            next.version,
+            typeof content === "string" ? content : undefined,
+          );
+        }
+
+        return next ?? previous;
+      }),
     initialState,
   );
   const { values, fieldErrors } = state;
@@ -95,11 +169,14 @@ export function PostForm({
           id="post-slug"
           maxLength={POST_SLUG_MAX_LENGTH}
           name="slug"
+          readOnly={slugFrozen}
           spellCheck={false}
           type="text"
         />
         <p className="mt-2 text-sm text-stone-600" id="post-slug-hint">
-          The post address. Lowercase letters, numbers, and hyphens.
+          {slugFrozen
+            ? "The post address. Frozen since first publication."
+            : "The post address. Lowercase letters, numbers, and hyphens. Frozen once published."}
         </p>
         <FieldError id="post-slug-error" message={fieldErrors.slug} />
       </div>
@@ -133,6 +210,13 @@ export function PostForm({
               initialDocument={initialDocument}
               labelledBy="post-content-label"
               name="content"
+              onBlur={saveOnBlur}
+              onChange={autosave.change}
+            />
+            <AutosaveNote
+              enabled={autosaveEnabled}
+              status={autosaveStatus}
+              postStatus={status}
             />
           </div>
         ) : (
@@ -160,6 +244,22 @@ export function PostForm({
           label={postId === null ? "Create draft" : "Save"}
           pendingLabel="Saving…"
         />
+        {status === "DRAFT" ? (
+          <SubmitButton
+            intent="publish"
+            label="Save and publish"
+            pendingLabel="Publishing…"
+            tone="secondary"
+          />
+        ) : null}
+        {status === "PUBLISHED" ? (
+          <SubmitButton
+            intent="unpublish"
+            label="Unpublish"
+            pendingLabel="Unpublishing…"
+            tone="secondary"
+          />
+        ) : null}
         <Link
           className="flex min-h-11 items-center rounded-xl px-4 text-sm font-medium text-stone-600 hover:bg-stone-200 hover:text-stone-900"
           href="/admin/posts"
@@ -168,6 +268,51 @@ export function PostForm({
         </Link>
       </div>
     </form>
+  );
+}
+
+function AutosaveNote({
+  enabled,
+  status,
+  postStatus,
+}: {
+  enabled: boolean;
+  status: AutosaveStatus;
+  postStatus: PostStatus | null;
+}) {
+  if (status.kind === "stopped") {
+    return (
+      <p className="mt-2 text-sm text-red-700" role="alert">
+        {status.reason === "conflict"
+          ? "Autosave stopped: this post changed in another tab or window. Reload the page to continue."
+          : "Autosave stopped: this post no longer exists."}
+      </p>
+    );
+  }
+
+  let message: string;
+  if (!enabled) {
+    if (postStatus === "PUBLISHED") {
+      message = "Published posts are not autosaved. Save to update the post.";
+    } else if (postStatus === null) {
+      message = "Autosave starts once the draft is created.";
+    } else {
+      return null;
+    }
+  } else if (status.kind === "saving") {
+    message = "Saving draft…";
+  } else if (status.kind === "saved") {
+    message = `Draft saved at ${status.at.toLocaleTimeString()}.`;
+  } else if (status.kind === "error") {
+    message = "Autosave failed. It retries in a few seconds.";
+  } else {
+    message = "Autosaves every 10 seconds and when the editor loses focus.";
+  }
+
+  return (
+    <p className="mt-2 text-sm text-stone-600" role="status">
+      {message}
+    </p>
   );
 }
 

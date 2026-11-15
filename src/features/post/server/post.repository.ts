@@ -15,6 +15,7 @@ import {
   type PostPatch,
   type PostStatus,
   type PostSummary,
+  type PostWriteCondition,
   type PublishedPostQuery,
 } from "../schema";
 
@@ -134,11 +135,15 @@ export function createPostRepository(db: D1Database) {
       return toPost(row);
     },
 
-    /** Returns null when the post does not exist or is soft-deleted. */
+    /**
+     * Returns null when the post does not exist, is soft-deleted, or no longer
+     * has the `updated_at` named by `condition`.
+     */
     async update(
       id: string,
       patch: PostPatch,
       now: Date,
+      condition: PostWriteCondition = {},
     ): Promise<Post | null> {
       const assignments: string[] = [];
       const values: (string | number | null)[] = [];
@@ -153,17 +158,26 @@ export function createPostRepository(db: D1Database) {
         assignments.push(`${column} = ?`);
         values.push(bound);
       }
-      assignments.push("updated_at = ?");
+      // Strictly increasing, so `updated_at` works as a version token even
+      // when two writes land in the same millisecond.
+      assignments.push("updated_at = max(?, updated_at + 1)");
       values.push(toEpochMilliseconds(now));
+
+      const filters = ["id = ?", "deleted_at IS NULL"];
+      values.push(id);
+      if (condition.ifUpdatedAt !== undefined) {
+        filters.push("updated_at = ?");
+        values.push(toEpochMilliseconds(condition.ifUpdatedAt));
+      }
 
       const row = await runSlugGuarded(patch.slug, () =>
         db
           .prepare(
             `UPDATE post SET ${assignments.join(", ")}
-             WHERE id = ? AND deleted_at IS NULL
+             WHERE ${filters.join(" AND ")}
              RETURNING ${POST_COLUMNS}`,
           )
-          .bind(...values, id)
+          .bind(...values)
           .first<PostRow>(),
       );
 

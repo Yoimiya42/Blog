@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.25 · 2026-11-14 · Draft
+> v0.26 · 2026-11-15 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -254,10 +254,10 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-01 | Login and authorisation | v1 | Non-owner requests to `/admin/*` return 404 |
 | FR-ADMIN-02 | Post list grouped by state | v1 | Create, find, edit, and delete on a desktop browser. One-handed phone use in v1.5 |
 | FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5 |
-| FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur |
+| FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the article content of an existing draft only. A new post autosaves once it is created; a published post changes only through an explicit save. A save never overwrites a newer version |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
 | FR-ADMIN-06 | Compression and conversion on upload | v1 | WebP or AVIF, long-edge limit, GPS EXIF stripped |
-| FR-ADMIN-07 | Publish, unpublish, schedule | v1 | Scheduling may slip to v1.5 |
+| FR-ADMIN-07 | Publish, unpublish, schedule | v1 | Publish and unpublish ship in v1. Scheduling is deferred to v1.5 |
 | FR-ADMIN-08 | Media library management | v1 | Browse, copy link, delete |
 | FR-ADMIN-09 | Mobile rich-text toolbar | v1.5 | One-tap heading, bold, link, list, image, and code-block controls |
 | FR-ADMIN-10 | Offline tolerance | v1.5 | Content persists locally, resumes after reconnect |
@@ -521,6 +521,8 @@ Issue #38 implements only these tables. Every other field in the logical model i
 | `PostTag` | `postId`, `tagId` |
 
 - `status` accepts `DRAFT` and `PUBLISHED` only. `SCHEDULED` and `ARCHIVED` are deferred with FR-ADMIN-07 scheduling.
+- `publishedAt` is set on first publication and survives unpublishing. `slug` is immutable once `publishedAt` is set.
+- `updatedAt` is the optimistic concurrency token. It increases strictly on every write; a write that carries a stale token is rejected.
 - `Post` deletion is soft through `deletedAt`. A deleted post is hidden from every read and releases its slug.
 - `Tag` is a lookup table: no timestamps and no soft delete. Deleting a tag removes it from every post.
 - Deferred `Post` fields: `coverId`, `visibility`, `readingMin`, `seriesId`, `viewCount`. Reading time is derived at render.
@@ -672,3 +674,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-14 | v0.23 | Moved visitor accounts and every visitor-written feature to v2.5; v1.5 and v2 are owner publishing only. See ADR-0017 |
 | 2026-11-14 | v0.24 | Moved phone acceptance of the admin from v1 to v1.5. v1 accepts the admin on a desktop browser; uploads are still processed on the server |
 | 2026-11-14 | v0.25 | Added `deletedAt` to the v1 `Post` contract and defined `Tag` as a lookup table without timestamps or soft delete |
+| 2026-11-15 | v0.26 | Deferred scheduled publishing to v1.5. Scoped autosave to the content of existing drafts. Defined `publishedAt` as the first publication time that freezes the slug, and `updatedAt` as the concurrency token |
