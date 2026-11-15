@@ -700,6 +700,65 @@ describe("tags", () => {
     expect(await tagNames(post.id)).toEqual([]);
   });
 
+  it("lets a stale save change neither the post nor its tags", async () => {
+    const post = await createPost({ tags: "Go" });
+    // Another tab saved after this one loaded the post.
+    clock = LATER;
+    const newer = await service.update(
+      OWNER,
+      post.id,
+      input({ title: "Newer", tags: "SQLite" }),
+      { ifUpdatedAt: post.updatedAt },
+    );
+    if (!newer.ok) throw new Error("expected the newer save to apply");
+
+    const stale = await service.update(
+      OWNER,
+      post.id,
+      input({ title: "Stale", tags: "Rust" }),
+      { ifUpdatedAt: post.updatedAt },
+    );
+
+    expect(stale).toEqual({ ok: false, reason: "conflict" });
+    expect(await tagNames(post.id)).toEqual(["SQLite"]);
+    expect((await service.getById(OWNER, post.id))?.title).toBe("Newer");
+  });
+
+  it("rolls back the post write when a tag cannot be linked", async () => {
+    const post = await createPost({ tags: "Go" });
+    const posts = createPostRepository(db);
+
+    await expect(
+      posts.update(post.id, { title: "Broken" }, LATER, {}, ["missing-tag"]),
+    ).rejects.toThrow();
+
+    expect((await service.getById(OWNER, post.id))?.title).toBe("Hello");
+    expect(await tagNames(post.id)).toEqual(["Go"]);
+  });
+
+  it("creates no post when a tag cannot be linked", async () => {
+    const posts = createPostRepository(db);
+
+    await expect(
+      posts.insert(
+        {
+          id: "orphan",
+          slug: "orphan",
+          title: "Orphan",
+          summary: null,
+          content: SAMPLE_DOCUMENT,
+          contentSchemaVersion: 1,
+          status: "DRAFT",
+          publishedAt: null,
+        },
+        CREATED,
+        ["missing-tag"],
+      ),
+    ).rejects.toThrow();
+
+    expect(await countRows()).toBe(0);
+  });
+
   it("rejects invalid tags without writing the post", async () => {
     const result = await service.create(
       OWNER,

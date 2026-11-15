@@ -129,32 +129,87 @@ export function createPostRepository(db: D1Database) {
     return results;
   }
 
-  return {
-    async insert(post: NewPost, now: Date): Promise<Post> {
-      const timestamp = toEpochMilliseconds(now);
-      const row = await runSlugGuarded(post.slug, () =>
+  /**
+   * Statements that replace the tag set of a post when `guard` holds. The
+   * guard is an SQL condition with its bound values; the statements are
+   * no-ops when it is false. Plain VALUES rows, so an unknown tag id fails the
+   * foreign key and rolls back the surrounding batch instead of being dropped.
+   */
+  function tagReplacement(
+    postId: string,
+    tagIds: readonly string[],
+    guard: { sql: string; values: (string | number)[] } = {
+      sql: "1",
+      values: [],
+    },
+  ): D1PreparedStatement[] {
+    const unique = [...new Set(tagIds)];
+    if (unique.length * 2 + guard.values.length > MAX_BOUND_PARAMETERS) {
+      throw new RangeError(`too many tags for one post: ${unique.length}`);
+    }
+
+    const statements = [
+      db
+        .prepare(`DELETE FROM post_tag WHERE post_id = ? AND ${guard.sql}`)
+        .bind(postId, ...guard.values),
+    ];
+    if (unique.length > 0) {
+      statements.push(
         db
           .prepare(
-            `INSERT INTO post
-               (id, slug, title, summary, content, content_schema_version,
-                status, published_at, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             RETURNING ${POST_COLUMNS}`,
+            `INSERT INTO post_tag (post_id, tag_id)
+             SELECT column1, column2
+             FROM (VALUES ${unique.map(() => "(?, ?)").join(", ")})
+             WHERE ${guard.sql}`,
           )
-          .bind(
-            post.id,
-            post.slug,
-            post.title,
-            post.summary,
-            JSON.stringify(post.content),
-            post.contentSchemaVersion,
-            post.status,
-            toNullableEpoch(post.publishedAt),
-            timestamp,
-            timestamp,
-          )
-          .first<PostRow>(),
+          .bind(...unique.flatMap((tagId) => [postId, tagId]), ...guard.values),
       );
+    }
+
+    return statements;
+  }
+
+  return {
+    /**
+     * With `tagIds`, the post and its tag set are written in one batch, which
+     * D1 runs as a single transaction.
+     */
+    async insert(
+      post: NewPost,
+      now: Date,
+      tagIds?: readonly string[],
+    ): Promise<Post> {
+      const timestamp = toEpochMilliseconds(now);
+      const insert = db
+        .prepare(
+          `INSERT INTO post
+             (id, slug, title, summary, content, content_schema_version,
+              status, published_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           RETURNING ${POST_COLUMNS}`,
+        )
+        .bind(
+          post.id,
+          post.slug,
+          post.title,
+          post.summary,
+          JSON.stringify(post.content),
+          post.contentSchemaVersion,
+          post.status,
+          toNullableEpoch(post.publishedAt),
+          timestamp,
+          timestamp,
+        );
+      const row = await runSlugGuarded(post.slug, async () => {
+        if (tagIds === undefined) return insert.first<PostRow>();
+
+        const [inserted] = await db.batch<PostRow>([
+          insert,
+          ...tagReplacement(post.id, tagIds),
+        ]);
+
+        return inserted?.results[0] ?? null;
+      });
       if (!row) throw new Error("post insert returned no row");
 
       return toPost(row);
@@ -162,13 +217,16 @@ export function createPostRepository(db: D1Database) {
 
     /**
      * Returns null when the post does not exist, is soft-deleted, or no longer
-     * has the `updated_at` named by `condition`.
+     * has the `updated_at` named by `condition`. With `tagIds`, the tag set is
+     * replaced in the same transaction and under the same condition, so a
+     * write that loses the version race changes neither the post nor its tags.
      */
     async update(
       id: string,
       patch: PostPatch,
       now: Date,
       condition: PostWriteCondition = {},
+      tagIds?: readonly string[],
     ): Promise<Post | null> {
       const assignments: string[] = [];
       const values: (string | number | null)[] = [];
@@ -189,22 +247,37 @@ export function createPostRepository(db: D1Database) {
       values.push(toEpochMilliseconds(now));
 
       const filters = ["id = ?", "deleted_at IS NULL"];
-      values.push(id);
+      const filterValues: (string | number)[] = [id];
       if (condition.ifUpdatedAt !== undefined) {
         filters.push("updated_at = ?");
-        values.push(toEpochMilliseconds(condition.ifUpdatedAt));
+        filterValues.push(toEpochMilliseconds(condition.ifUpdatedAt));
       }
 
-      const row = await runSlugGuarded(patch.slug, () =>
-        db
-          .prepare(
-            `UPDATE post SET ${assignments.join(", ")}
-             WHERE ${filters.join(" AND ")}
-             RETURNING ${POST_COLUMNS}`,
-          )
-          .bind(...values)
-          .first<PostRow>(),
-      );
+      const update = db
+        .prepare(
+          `UPDATE post SET ${assignments.join(", ")}
+           WHERE ${filters.join(" AND ")}
+           RETURNING ${POST_COLUMNS}`,
+        )
+        .bind(...values, ...filterValues);
+
+      const row = await runSlugGuarded(patch.slug, async () => {
+        if (tagIds === undefined) return update.first<PostRow>();
+
+        // The tag statements run first and test the same filter as the update,
+        // against the same pre-update row. Inside one transaction both see
+        // that row, so either all three statements apply or none does.
+        const guard = {
+          sql: `EXISTS (SELECT 1 FROM post WHERE ${filters.join(" AND ")})`,
+          values: filterValues,
+        };
+        const results = await db.batch<PostRow>([
+          ...tagReplacement(id, tagIds, guard),
+          update,
+        ]);
+
+        return results.at(-1)?.results[0] ?? null;
+      });
 
       return row ? toPost(row) : null;
     },
@@ -301,27 +374,7 @@ export function createPostRepository(db: D1Database) {
       postId: string,
       tagIds: readonly string[],
     ): Promise<void> {
-      const unique = [...new Set(tagIds)];
-      const statements = [
-        db.prepare("DELETE FROM post_tag WHERE post_id = ?").bind(postId),
-      ];
-      if (unique.length > 0) {
-        // Plain VALUES rows, so an unknown tag id fails the foreign key and
-        // rolls back the batch instead of being dropped silently.
-        if (unique.length * 2 > MAX_BOUND_PARAMETERS) {
-          throw new RangeError(`too many tags for one post: ${unique.length}`);
-        }
-        statements.push(
-          db
-            .prepare(
-              `INSERT INTO post_tag (post_id, tag_id)
-               VALUES ${unique.map(() => "(?, ?)").join(", ")}`,
-            )
-            .bind(...unique.flatMap((tagId) => [postId, tagId])),
-        );
-      }
-
-      await db.batch(statements);
+      await db.batch(tagReplacement(postId, tagIds));
     },
   };
 }

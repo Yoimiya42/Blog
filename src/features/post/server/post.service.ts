@@ -148,23 +148,21 @@ export function createPostService({
   }
 
   /**
-   * Runs after the post write. The post and its tags are separate D1 calls,
-   * so a failure here leaves the saved post with its previous tags and
-   * surfaces as an error; saving again repairs it.
+   * Resolved before the post write, so the post and its tag set can be
+   * written in one transaction. A write that then fails can leave a newly
+   * created tag unused; tags are a lookup table, so that is harmless.
    */
-  async function applyTags(
-    result: PostMutationResult,
+  async function resolveTagSet(
     names: string[] | undefined,
-  ): Promise<PostMutationResult> {
-    if (!result.ok || names === undefined) return result;
+  ): Promise<Tag[] | undefined> {
+    return names === undefined ? undefined : resolveTags(names);
+  }
 
-    const resolved = await resolveTags(names);
-    await posts.replaceTags(
-      result.post.id,
-      resolved.map((tag) => tag.id),
-    );
-
-    return { ...result, tags: resolved };
+  function withTags(
+    result: PostMutationResult,
+    resolved: Tag[] | undefined,
+  ): PostMutationResult {
+    return result.ok && resolved ? { ...result, tags: resolved } : result;
   }
 
   return {
@@ -215,11 +213,14 @@ export function createPostService({
         };
       }
 
+      // Allocated before tag resolution, which may allocate tag ids.
+      const id = newId();
+      const resolved = await resolveTagSet(tagNames.names);
       const created = await guardSlug(async () => ({
         ok: true,
         post: await posts.insert(
           {
-            id: newId(),
+            id,
             ...parsed.fields,
             content,
             contentSchemaVersion: CONTENT_SCHEMA_VERSION,
@@ -227,10 +228,11 @@ export function createPostService({
             publishedAt: null,
           },
           now(),
+          resolved?.map((tag) => tag.id),
         ),
       }));
 
-      return applyTags(created, tagNames.names);
+      return withTags(created, resolved);
     },
 
     /**
@@ -282,14 +284,21 @@ export function createPostService({
         patch.contentSchemaVersion = CONTENT_SCHEMA_VERSION;
       }
 
+      const resolved = await resolveTagSet(tagNames.names);
       const updated = await guardSlug(async () => {
-        const post = await posts.update(id, patch, now(), condition);
+        const post = await posts.update(
+          id,
+          patch,
+          now(),
+          condition,
+          resolved?.map((tag) => tag.id),
+        );
         if (post) return { ok: true, post };
 
         return { ok: false, reason: missedWrite(condition) };
       });
 
-      return applyTags(updated, tagNames.names);
+      return withTags(updated, resolved);
     },
 
     /**
