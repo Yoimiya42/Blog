@@ -23,6 +23,8 @@ interface ArticleEditorProps {
 const CONTENT_CLASS = [
   "min-h-64 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none",
   "focus:border-stone-900 focus:ring-4 focus:ring-black/5",
+  // An atom such as an image has no cursor, so its selection must be visible.
+  "[&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-stone-900",
   ARTICLE_PROSE_CLASS,
 ].join(" ");
 
