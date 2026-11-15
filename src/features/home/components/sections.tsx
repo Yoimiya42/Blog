@@ -221,8 +221,9 @@ export function WritingSection({
             </h3>
             <p className="entry__meta">
               <time dateTime={post.publishedOn}>{post.publishedOn}</time>
-              {" · "}
-              {post.readingMinutes} min read
+              {post.readingMinutes === null
+                ? null
+                : ` · ${post.readingMinutes} min read`}
             </p>
           </li>
         ))}

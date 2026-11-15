@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.17 · 2026-11-14
+> v0.18 · 2026-11-15
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -56,7 +56,10 @@ src/
   app/                        # Next.js routes, assembly only
     (site)/                   # Public group
       page.tsx
-      blog/[slug]/page.tsx
+      (blog)/                 # Blog shell: index, post, tag archive
+        blog/page.tsx         #   ?page=N, 10 per page
+        blog/[slug]/page.tsx  #   Draft at this URL is the owner-only preview
+        tags/[slug]/page.tsx
       moments/page.tsx
       life/[type]/page.tsx
       gallery/page.tsx
@@ -69,6 +72,7 @@ src/
       server/
         post.actions.ts       #   Server Actions: owner guard, then service (ADR-0018)
         post.service.ts       #   Business logic
+        public-post.service.ts #  Anonymous read path; published posts only
         post.repository.ts    #   Only database consumer
       schema.ts               #   zod schemas and inferred types
       index.ts                #   Sole public export
@@ -290,3 +294,4 @@ Any failing row is an architectural defect.
 | 2026-11-10 | v0.15 | Deferred the production Workers Paid plan to the public blog release |
 | 2026-11-14 | v0.16 | Isolated previews from production through Worker Previews |
 | 2026-11-14 | v0.17 | Exempted lookup tables from entity timestamps and soft delete; named the in-memory D1 test database |
+| 2026-11-15 | v0.18 | Added the public blog routes and the anonymous post read service |

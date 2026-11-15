@@ -104,6 +104,31 @@ export function createPostRepository(db: D1Database) {
     }
   }
 
+  async function selectPublished<Row>(
+    columns: string,
+    query: PublishedPostQuery,
+  ): Promise<Row[]> {
+    const tagFilter =
+      query.tagId === undefined
+        ? ""
+        : "AND id IN (SELECT post_id FROM post_tag WHERE tag_id = ?)";
+    const bound =
+      query.tagId === undefined
+        ? [query.limit, query.offset]
+        : [query.tagId, query.limit, query.offset];
+    const { results } = await db
+      .prepare(
+        `SELECT ${columns} FROM post
+         WHERE status = 'PUBLISHED' AND deleted_at IS NULL ${tagFilter}
+         ORDER BY published_at DESC, id DESC
+         LIMIT ? OFFSET ?`,
+      )
+      .bind(...bound)
+      .all<Row>();
+
+    return results;
+  }
+
   return {
     async insert(post: NewPost, now: Date): Promise<Post> {
       const timestamp = toEpochMilliseconds(now);
@@ -210,25 +235,22 @@ export function createPostRepository(db: D1Database) {
     },
 
     async listPublished(query: PublishedPostQuery): Promise<PostSummary[]> {
-      const tagFilter =
-        query.tagId === undefined
-          ? ""
-          : "AND id IN (SELECT post_id FROM post_tag WHERE tag_id = ?)";
-      const bound =
-        query.tagId === undefined
-          ? [query.limit, query.offset]
-          : [query.tagId, query.limit, query.offset];
-      const { results } = await db
-        .prepare(
-          `SELECT ${SUMMARY_COLUMNS} FROM post
-           WHERE status = 'PUBLISHED' AND deleted_at IS NULL ${tagFilter}
-           ORDER BY published_at DESC, id DESC
-           LIMIT ? OFFSET ?`,
-        )
-        .bind(...bound)
-        .all<PostSummaryRow>();
+      const rows = await selectPublished<PostSummaryRow>(
+        SUMMARY_COLUMNS,
+        query,
+      );
 
-      return results.map(toSummary);
+      return rows.map(toSummary);
+    },
+
+    /**
+     * Like `listPublished`, with bodies. Public lists derive reading time from
+     * the document; a page holds at most ten posts.
+     */
+    async listPublishedWithContent(query: PublishedPostQuery): Promise<Post[]> {
+      const rows = await selectPublished<PostRow>(POST_COLUMNS, query);
+
+      return rows.map(toPost);
     },
 
     async countPublished(tagId?: string): Promise<number> {
