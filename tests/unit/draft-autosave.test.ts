@@ -175,6 +175,30 @@ describe("runExclusive", () => {
     expect(await running).toBe("200");
   });
 
+  it("hands over the document as it is when the task starts", async () => {
+    const first = deferred<AutosaveOutcome>();
+    save.mockReturnValueOnce(first.promise);
+    save.mockResolvedValueOnce({ ok: true, version: "300" });
+    autosave.change("v1");
+
+    // An autosave in flight, a blur flush, then a manual save queued behind.
+    const flushing = autosave.flush();
+    await vi.waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    const blurFlush = autosave.flush();
+    const manual = autosave.runExclusive(async (version, content) => ({
+      version,
+      content,
+    }));
+
+    // Edited after the manual save was queued, then autosaved ahead of it.
+    autosave.change("v2");
+    first.resolve({ ok: true, version: "200" });
+    await Promise.all([flushing, blurFlush]);
+
+    expect(save).toHaveBeenLastCalledWith("200", "v2");
+    expect(await manual).toEqual({ version: "300", content: "v2" });
+  });
+
   it("keeps the queue usable after a task throws", async () => {
     await expect(
       autosave.runExclusive(async () => {

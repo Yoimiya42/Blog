@@ -113,8 +113,12 @@ export function PostForm({
     (previous: PostFormState, formData: FormData) =>
       // Queued behind any autosave in flight, and sent with the token that
       // save produced.
-      autosave.runExclusive(async (current) => {
+      autosave.runExclusive(async (current, latestContent) => {
         if (current !== "") formData.set("version", current);
+        // The form data was captured at submit. The editor stays editable
+        // while this waits, and a queued autosave may have stored a newer
+        // document since; send that one, not the snapshot.
+        if (formData.has("content")) formData.set("content", latestContent);
 
         // A redirecting action may settle without a state; keep the last one.
         const next = (await savePostAction(postId, previous, formData)) as

@@ -97,9 +97,16 @@ export function createDraftAutosave({
       return enqueue(saveIfDirty);
     },
 
-    /** Runs another write after every queued save, never beside one. */
-    runExclusive<T>(task: (version: string) => Promise<T>): Promise<T> {
-      return enqueue(() => task(version));
+    /**
+     * Runs another write after every queued save, never beside one. The task
+     * receives the token and the document as they are when it starts: a
+     * snapshot taken when it was queued may be older than a save that ran
+     * ahead of it, and writing that snapshot would undo the save.
+     */
+    runExclusive<T>(
+      task: (version: string, latestContent: string) => Promise<T>,
+    ): Promise<T> {
+      return enqueue(() => task(version, content));
     },
 
     /** Records a write made outside autosave, such as a manual save. */
