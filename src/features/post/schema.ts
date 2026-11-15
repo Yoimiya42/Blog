@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// Type only: a runtime import would pull the tag repository into the client
+// bundle through the post form.
+import type { Tag } from "@/features/tag";
+
 export const POST_STATUSES = ["DRAFT", "PUBLISHED"] as const;
 
 export type PostStatus = (typeof POST_STATUSES)[number];
@@ -91,14 +95,17 @@ export interface PostInput {
   summary?: string | null;
   /** Omitted on update to keep the stored document. */
   content?: unknown;
+  /** Comma-separated tag names. Omitted to keep the stored tags. */
+  tags?: string;
 }
 
-export type PostField = "title" | "slug" | "summary" | "content";
+export type PostField = "title" | "slug" | "summary" | "content" | "tags";
 
 export type PostFieldErrors = Partial<Record<PostField, string>>;
 
 export type PostMutationResult =
-  | { ok: true; post: Post }
+  /** `tags` is present when the write set them. */
+  | { ok: true; post: Post; tags?: Tag[] }
   | { ok: false; reason: "invalid"; fieldErrors: PostFieldErrors }
   | { ok: false; reason: "not_found" }
   /** The post changed after the caller last read it. Nothing was written. */
@@ -110,6 +117,11 @@ export type PostMutationResult =
  */
 export interface PostWriteCondition {
   ifUpdatedAt?: Date;
+}
+
+/** Display form of a tag set, as the owner types it. */
+export function formatTagNames(tags: readonly Pick<Tag, "name">[]): string {
+  return tags.map((tag) => tag.name).join(", ");
 }
 
 /** Wire form of the token: epoch milliseconds as a decimal string. */

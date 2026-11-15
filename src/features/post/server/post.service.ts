@@ -1,4 +1,12 @@
 import {
+  parseTagNames,
+  TagSlugTakenError,
+  toTagSlug,
+  type Tag,
+  type TagRepository,
+} from "@/features/tag";
+
+import {
   CONTENT_SCHEMA_VERSION,
   EMPTY_ARTICLE_DOCUMENT,
 } from "../content/types";
@@ -36,6 +44,7 @@ function missedWrite(condition: PostWriteCondition): "conflict" | "not_found" {
 
 interface PostServiceDependencies {
   posts: PostRepository;
+  tags: TagRepository;
   /** The auth module owns the owner rule; the service only applies it. */
   isOwner: (actor: PostActor) => boolean;
   now?: () => Date;
@@ -69,8 +78,22 @@ function contentError(content: unknown): string | undefined {
   return first ? `${first.path}: ${first.message}` : "Invalid content.";
 }
 
+type ParsedTags =
+  { ok: true; names?: string[] } | { ok: false; message: string };
+
+/** Undefined names mean the input leaves the stored tags alone. */
+function parseTags(input: PostInput): ParsedTags {
+  if (input.tags === undefined) return { ok: true };
+  if (typeof input.tags !== "string") {
+    return { ok: false, message: "Tags could not be read." };
+  }
+
+  return parseTagNames(input.tags);
+}
+
 export function createPostService({
   posts,
+  tags,
   isOwner,
   now = () => new Date(),
   newId = () => crypto.randomUUID(),
@@ -100,7 +123,56 @@ export function createPostService({
     }
   }
 
+  /** Existing tags keep their stored name; unknown names create a tag. */
+  async function resolveTags(names: readonly string[]): Promise<Tag[]> {
+    const resolved: Tag[] = [];
+    for (const name of names) {
+      const slug = toTagSlug(name);
+      const existing = await tags.findBySlug(slug);
+      if (existing) {
+        resolved.push(existing);
+        continue;
+      }
+      try {
+        resolved.push(await tags.insert({ id: newId(), slug, name }));
+      } catch (error) {
+        // Another request created the same tag after the lookup.
+        if (!(error instanceof TagSlugTakenError)) throw error;
+        const created = await tags.findBySlug(slug);
+        if (!created) throw error;
+        resolved.push(created);
+      }
+    }
+
+    return resolved;
+  }
+
+  /**
+   * Resolved before the post write, so the post and its tag set can be
+   * written in one transaction. A write that then fails can leave a newly
+   * created tag unused; tags are a lookup table, so that is harmless.
+   */
+  async function resolveTagSet(
+    names: string[] | undefined,
+  ): Promise<Tag[] | undefined> {
+    return names === undefined ? undefined : resolveTags(names);
+  }
+
+  function withTags(
+    result: PostMutationResult,
+    resolved: Tag[] | undefined,
+  ): PostMutationResult {
+    return result.ok && resolved ? { ...result, tags: resolved } : result;
+  }
+
   return {
+    /** Tags of one post, for the edit form. */
+    async listTags(actor: PostActor, postId: string): Promise<Tag[]> {
+      assertOwner(actor);
+
+      return (await tags.listByPostIds([postId])).get(postId) ?? [];
+    },
+
     async listByStatus(actor: PostActor): Promise<PostsByStatus> {
       assertOwner(actor);
 
@@ -128,22 +200,27 @@ export function createPostService({
       const parsed = parseFields(input);
       const content = input.content ?? EMPTY_ARTICLE_DOCUMENT;
       const invalidContent = contentError(content);
-      if (!parsed.ok || invalidContent) {
+      const tagNames = parseTags(input);
+      if (!parsed.ok || invalidContent || !tagNames.ok) {
         return {
           ok: false,
           reason: "invalid",
           fieldErrors: {
             ...(parsed.ok ? {} : parsed.fieldErrors),
             ...(invalidContent ? { content: invalidContent } : {}),
+            ...(tagNames.ok ? {} : { tags: tagNames.message }),
           },
         };
       }
 
-      return guardSlug(async () => ({
+      // Allocated before tag resolution, which may allocate tag ids.
+      const id = newId();
+      const resolved = await resolveTagSet(tagNames.names);
+      const created = await guardSlug(async () => ({
         ok: true,
         post: await posts.insert(
           {
-            id: newId(),
+            id,
             ...parsed.fields,
             content,
             contentSchemaVersion: CONTENT_SCHEMA_VERSION,
@@ -151,8 +228,11 @@ export function createPostService({
             publishedAt: null,
           },
           now(),
+          resolved?.map((tag) => tag.id),
         ),
       }));
+
+      return withTags(created, resolved);
     },
 
     /**
@@ -185,13 +265,15 @@ export function createPostService({
 
       const invalidContent =
         input.content === undefined ? undefined : contentError(input.content);
-      if (!parsed.ok || invalidContent) {
+      const tagNames = parseTags(input);
+      if (!parsed.ok || invalidContent || !tagNames.ok) {
         return {
           ok: false,
           reason: "invalid",
           fieldErrors: {
             ...(parsed.ok ? {} : parsed.fieldErrors),
             ...(invalidContent ? { content: invalidContent } : {}),
+            ...(tagNames.ok ? {} : { tags: tagNames.message }),
           },
         };
       }
@@ -202,12 +284,21 @@ export function createPostService({
         patch.contentSchemaVersion = CONTENT_SCHEMA_VERSION;
       }
 
-      return guardSlug(async () => {
-        const post = await posts.update(id, patch, now(), condition);
+      const resolved = await resolveTagSet(tagNames.names);
+      const updated = await guardSlug(async () => {
+        const post = await posts.update(
+          id,
+          patch,
+          now(),
+          condition,
+          resolved?.map((tag) => tag.id),
+        );
         if (post) return { ok: true, post };
 
         return { ok: false, reason: missedWrite(condition) };
       });
+
+      return withTags(updated, resolved);
     },
 
     /**
@@ -331,13 +422,16 @@ export async function getPostService(): Promise<PostService> {
   // Loaded lazily: the repository and the auth module need the Workers
   // runtime, and static imports would pull it into every consumer of the
   // post module, including the public renderer.
-  const [{ getPostRepository }, { isOwnerSession }] = await Promise.all([
-    import("./post.repository"),
-    import("@/features/auth"),
-  ]);
+  const [{ getPostRepository }, { getTagRepository }, { isOwnerSession }] =
+    await Promise.all([
+      import("./post.repository"),
+      import("@/features/tag"),
+      import("@/features/auth"),
+    ]);
 
   return createPostService({
     posts: await getPostRepository(),
+    tags: await getTagRepository(),
     isOwner: isOwnerSession,
   });
 }

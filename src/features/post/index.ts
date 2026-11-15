@@ -13,6 +13,7 @@ export {
   POST_TITLE_MAX_LENGTH,
   PostAccessDeniedError,
   PostSlugTakenError,
+  formatTagNames,
   toPostVersion,
   type NewPost,
   type Post,
@@ -31,6 +32,18 @@ export {
 export { DeletePostButton } from "./components/delete-post-button";
 export { PostForm } from "./components/post-form";
 export { PostList } from "./components/post-list";
+export { PostArticle } from "./components/public/post-article";
+export { PostIndex } from "./components/public/post-index";
+export { toCalendarDate } from "./components/public/post-meta";
+
+export {
+  getPublicPostService,
+  PUBLIC_POSTS_PER_PAGE,
+  type PublicPost,
+  type PublicPostPage,
+  type PublicPostService,
+  type PublicPostSummary,
+} from "./server/public-post.service";
 
 export {
   getPostService,

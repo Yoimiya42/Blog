@@ -12,6 +12,7 @@ import {
 import { isOwnerSession } from "@/features/auth/server/owner";
 import { PostAccessDeniedError, type PostInput } from "@/features/post";
 import { createPostRepository } from "@/features/post/server/post.repository";
+import { createTagRepository } from "@/features/tag";
 import {
   createPostService,
   type PostService,
@@ -60,6 +61,7 @@ beforeAll(async () => {
   db = database.db;
   service = createPostService({
     posts: createPostRepository(db),
+    tags: createTagRepository(db),
     // The real rule, so these tests fail if the owner check changes.
     isOwner: isOwnerSession,
     now: () => clock,
@@ -645,5 +647,135 @@ describe("listByStatus", () => {
     expect(groups.DRAFT.map((post) => post.id)).toEqual([second.id, first.id]);
     expect(groups.PUBLISHED.map((post) => post.id)).toEqual([live.id]);
     expect(groups.DRAFT[0]).not.toHaveProperty("content");
+  });
+});
+
+describe("tags", () => {
+  const tagNames = async (postId: string) =>
+    (await service.listTags(OWNER, postId)).map((tag) => tag.name);
+
+  it("creates unknown tags and assigns them on create", async () => {
+    const result = await service.create(
+      OWNER,
+      input({ tags: "Go, Cloudflare Workers，数据库" }),
+    );
+    if (!result.ok) throw new Error("expected the post to be created");
+
+    expect(result.tags?.map((tag) => tag.slug)).toEqual([
+      "go",
+      "cloudflare-workers",
+      "数据库",
+    ]);
+    expect((await tagNames(result.post.id)).sort()).toEqual(
+      ["Cloudflare Workers", "Go", "数据库"].sort(),
+    );
+  });
+
+  it("reuses an existing tag by slug and keeps its stored name", async () => {
+    const first = await createPost({ tags: "Go" });
+    const second = await service.create(
+      OWNER,
+      input({ slug: "second", tags: "go" }),
+    );
+    if (!second.ok) throw new Error("expected the post to be created");
+
+    expect(second.tags?.[0]?.name).toBe("Go");
+    expect(await tagNames(first.id)).toEqual(["Go"]);
+    const row = await db
+      .prepare("SELECT count(*) AS total FROM tag")
+      .first<{ total: number }>();
+    expect(row?.total).toBe(1);
+  });
+
+  it("replaces the tag set on update and keeps it when tags are omitted", async () => {
+    const post = await createPost({ tags: "Go, SQLite" });
+
+    await service.update(OWNER, post.id, input({ tags: "SQLite" }));
+    expect(await tagNames(post.id)).toEqual(["SQLite"]);
+
+    await service.update(OWNER, post.id, input({ title: "Renamed" }));
+    expect(await tagNames(post.id)).toEqual(["SQLite"]);
+
+    await service.update(OWNER, post.id, input({ tags: "" }));
+    expect(await tagNames(post.id)).toEqual([]);
+  });
+
+  it("lets a stale save change neither the post nor its tags", async () => {
+    const post = await createPost({ tags: "Go" });
+    // Another tab saved after this one loaded the post.
+    clock = LATER;
+    const newer = await service.update(
+      OWNER,
+      post.id,
+      input({ title: "Newer", tags: "SQLite" }),
+      { ifUpdatedAt: post.updatedAt },
+    );
+    if (!newer.ok) throw new Error("expected the newer save to apply");
+
+    const stale = await service.update(
+      OWNER,
+      post.id,
+      input({ title: "Stale", tags: "Rust" }),
+      { ifUpdatedAt: post.updatedAt },
+    );
+
+    expect(stale).toEqual({ ok: false, reason: "conflict" });
+    expect(await tagNames(post.id)).toEqual(["SQLite"]);
+    expect((await service.getById(OWNER, post.id))?.title).toBe("Newer");
+  });
+
+  it("rolls back the post write when a tag cannot be linked", async () => {
+    const post = await createPost({ tags: "Go" });
+    const posts = createPostRepository(db);
+
+    await expect(
+      posts.update(post.id, { title: "Broken" }, LATER, {}, ["missing-tag"]),
+    ).rejects.toThrow();
+
+    expect((await service.getById(OWNER, post.id))?.title).toBe("Hello");
+    expect(await tagNames(post.id)).toEqual(["Go"]);
+  });
+
+  it("creates no post when a tag cannot be linked", async () => {
+    const posts = createPostRepository(db);
+
+    await expect(
+      posts.insert(
+        {
+          id: "orphan",
+          slug: "orphan",
+          title: "Orphan",
+          summary: null,
+          content: SAMPLE_DOCUMENT,
+          contentSchemaVersion: 1,
+          status: "DRAFT",
+          publishedAt: null,
+        },
+        CREATED,
+        ["missing-tag"],
+      ),
+    ).rejects.toThrow();
+
+    expect(await countRows()).toBe(0);
+  });
+
+  it("rejects invalid tags without writing the post", async () => {
+    const result = await service.create(
+      OWNER,
+      input({ tags: Array.from({ length: 11 }, (_, i) => `t${i}`).join(",") }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { tags: "Use at most 10 tags." },
+    });
+    expect(await countRows()).toBe(0);
+  });
+
+  it("requires the owner to read tags", async () => {
+    await expect(service.listTags(VISITOR, "post-1")).rejects.toBeInstanceOf(
+      PostAccessDeniedError,
+    );
   });
 });

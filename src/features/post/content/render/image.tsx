@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- Issue #14 owns the responsive image pipeline. */
 
 import type { ImageNode } from "../types";
+import { ImageZoom } from "./image-zoom";
 import type { ArticleMedia } from "./media";
 
 export type ArticleImageProps = {
@@ -23,14 +24,21 @@ export function ArticleImage({ node, media }: ArticleImageProps) {
 
   return (
     <figure data-media-id={node.attrs.mediaId}>
-      <img
+      <ImageZoom
         alt={node.attrs.alt}
-        decoding="async"
         height={media.height}
-        loading="lazy"
         src={media.url}
         width={media.width}
-      />
+      >
+        <img
+          alt={node.attrs.alt}
+          decoding="async"
+          height={media.height}
+          loading="lazy"
+          src={media.url}
+          width={media.width}
+        />
+      </ImageZoom>
       {caption ? <figcaption>{caption}</figcaption> : null}
     </figure>
   );

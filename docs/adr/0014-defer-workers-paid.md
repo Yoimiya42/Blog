@@ -1,6 +1,6 @@
 # 0014. Defer Workers Paid until code highlighting ships
 
-- **Status**: Accepted
+- **Status**: Superseded by 0019
 - **Date**: 2026-11-10
 - **Requirements**: FR-BLOG-03, PRD 6.6
 - **Supersedes**: ADR-0011's "run production on Workers Paid" timing only

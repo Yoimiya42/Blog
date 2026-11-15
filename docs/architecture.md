@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.17 · 2026-11-14
+> v0.20 · 2026-11-15
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -56,7 +56,10 @@ src/
   app/                        # Next.js routes, assembly only
     (site)/                   # Public group
       page.tsx
-      blog/[slug]/page.tsx
+      (blog)/                 # Blog shell: index, post, tag archive
+        blog/page.tsx         #   ?page=N, 10 per page
+        blog/[slug]/page.tsx  #   Draft at this URL is the owner-only preview
+        blog/tags/[slug]/page.tsx
       moments/page.tsx
       life/[type]/page.tsx
       gallery/page.tsx
@@ -69,6 +72,7 @@ src/
       server/
         post.actions.ts       #   Server Actions: owner guard, then service (ADR-0018)
         post.service.ts       #   Business logic
+        public-post.service.ts #  Anonymous read path; published posts only
         post.repository.ts    #   Only database consumer
       schema.ts               #   zod schemas and inferred types
       index.ts                #   Sole public export
@@ -121,7 +125,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Cloudflare R2 stores media behind the project domain.
 - Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
 - Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal, and Workers Builds now deploys `main`. OpenNext remains a fallback only for a documented blocker. Vercel serves pull request previews only since Issue #29 closed.
-- Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. Production runs on Workers Paid once the public blog ships, because first-use grammar setup exceeds the free per-request CPU limit. See ADR-0011 and ADR-0014.
+- Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. Production stays on Workers Free after the public blog ships although measured requests exceed the free CPU limit; an exceeded-CPU outcome or public promotion triggers Workers Paid or cached public HTML. See ADR-0011 and ADR-0019.
 - Image processing remains provisional under Issue #4.
 
 ---
@@ -249,7 +253,7 @@ Any failing row is an architectural defect.
 
 **Database operations.** Wrangler creates and applies committed SQL migrations to the selected D1 environment. A deterministic seed populates a new environment. Rehearse D1 Time Travel restore before launch; an untested backup is not a backup. Review query plans, row-read volume, and repeated query patterns after launch.
 
-**Observability.** Structured logs cover login, publish, upload, and delete. Error and availability providers require a separate decision and mainland reachability check. Traffic analytics are deferred beyond v1.
+**Observability.** Workers Logs records an invocation log, with CPU and wall time, for every production and preview request; previews take their own `previews.observability` block. Query it through the Workers Observability API. Structured logs cover login, publish, upload, and delete. Error and availability providers require a separate decision and mainland reachability check. Traffic analytics are deferred beyond v1.
 
 **Security.** After v1.5, audit against the OWASP Top 10 and commit the report to `docs/`. Enable Dependabot.
 
@@ -290,3 +294,6 @@ Any failing row is an architectural defect.
 | 2026-11-10 | v0.15 | Deferred the production Workers Paid plan to the public blog release |
 | 2026-11-14 | v0.16 | Isolated previews from production through Worker Previews |
 | 2026-11-14 | v0.17 | Exempted lookup tables from entity timestamps and soft delete; named the in-memory D1 test database |
+| 2026-11-15 | v0.18 | Added the public blog routes and the anonymous post read service |
+| 2026-11-15 | v0.19 | Enabled Workers Logs for production and previews |
+| 2026-11-15 | v0.20 | Kept production on Workers Free after the public blog release; see ADR-0019 |

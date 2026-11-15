@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requireOwner } from "@/features/auth";
 
 import {
+  formatTagNames,
   fromPostVersion,
   toPostVersion,
   type PostFieldErrors,
@@ -24,6 +25,8 @@ export interface PostFormValues {
   title: string;
   slug: string;
   summary: string;
+  /** Comma-separated tag names. */
+  tags: string;
 }
 
 export interface PostFormState {
@@ -72,6 +75,7 @@ function readContent(formData: FormData): SubmittedContent {
  */
 function revalidatePublicReads(): void {
   revalidatePath("/");
+  // Covers the list, each post, and the tag archives under /blog/tags.
   revalidatePath("/blog", "layout");
 }
 
@@ -110,6 +114,7 @@ export async function savePostAction(
     title: readText(formData, "title"),
     slug: readText(formData, "slug"),
     summary: readText(formData, "summary"),
+    tags: readText(formData, "tags"),
   };
 
   const intent = readText(formData, "intent");
@@ -136,10 +141,14 @@ export async function savePostAction(
   }
 
   // The key is left out, not set to undefined, when no document was sent.
-  const input =
-    submitted.content === undefined
-      ? values
-      : { ...values, content: submitted.content };
+  // A request without the tag field keeps the stored tags instead of
+  // clearing them.
+  const { tags, ...fields } = values;
+  const input = {
+    ...fields,
+    ...(formData.has("tags") ? { tags } : {}),
+    ...(submitted.content === undefined ? {} : { content: submitted.content }),
+  };
 
   const result =
     postId === null
@@ -153,6 +162,7 @@ export async function savePostAction(
     title: post.title,
     slug: post.slug,
     summary: post.summary ?? "",
+    tags: result.tags ? formatTagNames(result.tags) : values.tags,
   };
 
   revalidatePath(POSTS_PATH);

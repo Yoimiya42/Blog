@@ -70,7 +70,8 @@ export interface HomePostSummary {
   href: string;
   /** ISO 8601 calendar date, `YYYY-MM-DD`. */
   publishedOn: string;
-  readingMinutes: number;
+  /** Null when the post body cannot be read; the meta line omits it. */
+  readingMinutes: number | null;
 }
 
 export type HomeSectionId =

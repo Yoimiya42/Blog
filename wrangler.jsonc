@@ -15,6 +15,16 @@
   "version_metadata": {
     "binding": "CF_VERSION_METADATA",
   },
+  // Invocation logs carry CPU and wall time per request. Workers Free keeps
+  // 200,000 events a day for 3 days.
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "head_sampling_rate": 1,
+    },
+  },
   // Top-level bindings are production. Previews never inherit them.
   "d1_databases": [
     {
@@ -26,6 +36,15 @@
   ],
   // Branch builds run `wrangler preview` and read only this block.
   "previews": {
+    // Previews ignore the top-level observability block.
+    "observability": {
+      "enabled": true,
+      "logs": {
+        "enabled": true,
+        "invocation_logs": true,
+        "head_sampling_rate": 1,
+      },
+    },
     "d1_databases": [
       {
         "binding": "DB",

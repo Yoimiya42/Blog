@@ -41,7 +41,7 @@ import {
 
 const SESSION = { user: { role: "OWNER" } };
 const PREVIOUS: PostFormState = {
-  values: { title: "", slug: "", summary: "" },
+  values: { title: "", slug: "", summary: "", tags: "" },
   fieldErrors: {},
 };
 
@@ -143,7 +143,7 @@ describe("savePostAction", () => {
       NO_TOKEN,
     );
     expect(state).toEqual({
-      values: { title: "Hello", slug: "hello", summary: "" },
+      values: { title: "Hello", slug: "hello", summary: "", tags: "" },
       fieldErrors: {},
       saved: true,
       version: "2000",
@@ -246,6 +246,36 @@ describe("savePostAction", () => {
       slug: "hello",
       summary: "",
     });
+  });
+
+  it("passes the tag field and reports the stored tag names", async () => {
+    service.update.mockResolvedValue({
+      ok: true,
+      post: STORED,
+      tags: [{ id: "t1", slug: "go", name: "Go" }],
+    });
+
+    const state = await savePostAction(
+      "post-1",
+      PREVIOUS,
+      form({ ...VALID, tags: "go" }),
+    );
+
+    expect(service.update).toHaveBeenCalledWith(
+      SESSION,
+      "post-1",
+      { ...VALID, tags: "go" },
+      NO_TOKEN,
+    );
+    expect(state.values.tags).toBe("Go");
+  });
+
+  it("leaves tags out when the request has no tag field", async () => {
+    service.update.mockResolvedValue({ ok: true, post: STORED });
+
+    await savePostAction("post-1", PREVIOUS, form(VALID));
+
+    expect(service.update.mock.calls[0]?.[2]).not.toHaveProperty("tags");
   });
 
   it("passes the submitted document to the service as parsed JSON", async () => {

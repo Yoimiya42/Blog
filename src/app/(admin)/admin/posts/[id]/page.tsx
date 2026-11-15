@@ -5,6 +5,7 @@ import { requireOwner } from "@/features/auth";
 import {
   CONTENT_SCHEMA_VERSION,
   DeletePostButton,
+  formatTagNames,
   getPostService,
   PostForm,
   toPostVersion,
@@ -23,6 +24,7 @@ export default async function EditPostPage({
   const service = await getPostService();
   const post = await service.getById(session, id);
   if (!post) notFound();
+  const tags = await service.listTags(session, post.id);
 
   // The editor opens only a document that is valid for the current schema
   // version. Anything else stays stored as it is until it is migrated.
@@ -54,6 +56,7 @@ export default async function EditPostPage({
             title: post.title,
             slug: post.slug,
             summary: post.summary ?? "",
+            tags: formatTagNames(tags),
           }}
           postId={post.id}
           slugFrozen={post.publishedAt !== null}
