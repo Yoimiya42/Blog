@@ -4,6 +4,8 @@ export {
   EMPTY_ARTICLE_DOCUMENT,
 } from "./content/types";
 
+export { ARTICLE_PROSE_CLASS } from "./content/prose";
+
 export {
   POST_STATUSES,
   POST_SLUG_MAX_LENGTH,

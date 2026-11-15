@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
@@ -37,6 +38,12 @@ export default async function EditPostPage({
         <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-medium text-stone-700">
           {STATUS_LABELS[post.status]}
         </span>
+        <Link
+          className="flex min-h-11 items-center rounded-xl px-4 text-sm font-medium text-stone-600 hover:bg-stone-200 hover:text-stone-900"
+          href={`/admin/posts/${post.id}/preview`}
+        >
+          Preview saved version
+        </Link>
       </div>
 
       <div className="mt-8">
