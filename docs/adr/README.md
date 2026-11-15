@@ -29,8 +29,9 @@ Template: `template.md`.
 | [0011](0011-shiki-javascript-engine-workers-paid.md) | Shiki JavaScript engine and Workers Paid | Highlight on the server with Shiki's JavaScript regex engine and run production on Workers Paid | Accepted; Paid timing superseded by 0014 | 2026-09-05 |
 | [0012](0012-sql-first-d1.md) | Handwritten SQL for D1 | Use versioned SQLite migrations and typed D1 prepared statements | Accepted | 2026-09-06 |
 | [0013](0013-prettier-sql-formatting.md) | Prettier for SQLite migrations | Use a pinned SQLite parser in the existing Prettier workflow | Accepted | 2026-09-06 |
-| [0014](0014-defer-workers-paid.md) | Defer Workers Paid until code highlighting ships | Keep production on Workers Free until the public blog ships | Accepted | 2026-11-10 |
+| [0014](0014-defer-workers-paid.md) | Defer Workers Paid until code highlighting ships | Keep production on Workers Free until the public blog ships | Superseded by 0019 | 2026-11-10 |
 | [0015](0015-worker-previews-environment-isolation.md) | Worker Previews for preview and production isolation | Keep one Worker; bind previews to their own D1 and secrets through the `previews` block | Accepted | 2026-11-14 |
 | [0016](0016-defer-cn-mailbox-delivery-tests.md) | Defer QQ Mail and 163 Mail delivery tests to visitor login | v1 verifies owner-mailbox delivery only; the visitor-login release carries the mainland mailbox tests | Accepted | 2026-11-14 |
 | [0017](0017-defer-visitor-accounts-to-v2-5.md) | Defer visitor accounts and interaction to v2.5 | Keep v1.5 and v2 owner-only; open login and all visitor-written features in v2.5 | Accepted | 2026-11-14 |
 | [0018](0018-server-actions-for-admin-mutations.md) | Server Actions for admin mutations | Submit admin forms through owner-guarded Server Actions that call the service layer | Accepted | 2026-11-14 |
+| [0019](0019-keep-workers-free-after-blog-release.md) | Keep Workers Free after the public blog ships | Stay on Workers Free; an exceeded-CPU outcome or public promotion triggers Paid or cached HTML | Accepted | 2026-11-15 |

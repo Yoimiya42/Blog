@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.27 · 2026-11-15 · Draft
+> v0.28 · 2026-11-15 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -584,12 +584,12 @@ Cloudflare Workers is the selected production platform under ADR-0009. The Worke
 
 ### 6.6 Budget
 
-Target £15–70 per year. Server-side code highlighting exceeds the 10 ms per-request CPU limit on Workers Free, so the owner approved Workers Paid for production; see ADR-0011. Production stays on Workers Free until the public blog ships; see ADR-0014. Development and preview stay on the free plan.
+Target £15–70 per year. Server-side code highlighting exceeds the 10 ms per-request CPU limit on Workers Free, so the owner approved Workers Paid for production; see ADR-0011. Production stays on Workers Free after the public blog ships; an exceeded-CPU outcome or public promotion triggers the upgrade or cached public HTML; see ADR-0019. Development and preview stay on the free plan.
 
 | Item | Choice | Cost |
 |---|---|---|
 | Domain | Cloudflare Registrar / Namecheap | £10–15 / year |
-| Hosting | Cloudflare Workers Paid from the public blog release | $5 / month; free plan before that and for development and preview |
+| Hosting | Cloudflare Workers Free; Workers Paid when ADR-0019's trigger fires | $5 / month once on Paid; development and preview stay free |
 | Database | Cloudflare D1 Free | Free; 500MB per database and 5GB per account |
 | Image storage | Cloudflare R2 | Free under 10GB, no egress fees |
 | Email | Resend free tier | 3000 / month |
@@ -676,3 +676,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-14 | v0.25 | Added `deletedAt` to the v1 `Post` contract and defined `Tag` as a lookup table without timestamps or soft delete |
 | 2026-11-15 | v0.26 | Deferred scheduled publishing to v1.5. Scoped autosave to the content of existing drafts. Defined `publishedAt` as the first publication time that freezes the slug, and `updatedAt` as the concurrency token |
 | 2026-11-15 | v0.27 | Defined owner tag entry in the post form and the per-post tag limit for FR-BLOG-04 |
+| 2026-11-15 | v0.28 | Kept production on Workers Free after the public blog release; see ADR-0019 |
