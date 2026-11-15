@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 
 import { getPublicPostService, PostIndex } from "@/features/post";
 
-import { parsePageNumber } from "../../page-number";
+import { parsePageNumber } from "../../../page-number";
+import { decodeRouteParam } from "../../../route-param";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -11,14 +12,14 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
+  const slug = decodeRouteParam((await params).slug);
 
   return { title: `Tagged ${slug}` };
 }
 
 /** FR-BLOG-04 tag archive. Lists published posts only. */
 export default async function TagArchivePage({ params, searchParams }: Props) {
-  const { slug } = await params;
+  const slug = decodeRouteParam((await params).slug);
   const page = parsePageNumber((await searchParams).page);
   const service = await getPublicPostService();
   const result = await service.listTagPage(slug, page);
@@ -29,7 +30,7 @@ export default async function TagArchivePage({ params, searchParams }: Props) {
       <p className="blog-page__eyebrow">Tag</p>
       <h1 className="blog-page__title">{result.tag.name}</h1>
       <PostIndex
-        basePath={`/tags/${result.tag.slug}`}
+        basePath={`/blog/tags/${result.tag.slug}`}
         emptyMessage="No published posts with this tag."
         result={result}
       />

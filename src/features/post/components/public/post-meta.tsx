@@ -37,7 +37,7 @@ export function TagList({ tags }: { tags: PublicPostSummary["tags"] }) {
     <ul aria-label="Tags" className="tag-list">
       {tags.map((tag) => (
         <li key={tag.id}>
-          <Link className="tag" href={`/tags/${tag.slug}`}>
+          <Link className="tag" href={`/blog/tags/${tag.slug}`}>
             {tag.name}
           </Link>
         </li>

@@ -22,6 +22,12 @@ import { SubmitButton } from "./submit-button";
 
 const AUTOSAVE_INTERVAL_MS = 10_000;
 
+/**
+ * Mirrors `TAGS_PER_POST_MAX` in the tag module, checked by a unit test. The
+ * tag index re-exports its repository, so this client module cannot import it.
+ */
+export const TAG_LIMIT_HINT = 10;
+
 interface PostFormProps {
   /** Null creates a post. */
   postId: string | null;
@@ -202,6 +208,28 @@ export function PostForm({
           rows={3}
         />
         <FieldError id="post-summary-error" message={fieldErrors.summary} />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium" htmlFor="post-tags">
+          Tags
+        </label>
+        <input
+          aria-describedby={
+            fieldErrors.tags ? "post-tags-error" : "post-tags-hint"
+          }
+          aria-invalid={fieldErrors.tags ? true : undefined}
+          autoCapitalize="none"
+          className={INPUT_CLASS}
+          defaultValue={values.tags}
+          id="post-tags"
+          name="tags"
+          type="text"
+        />
+        <p className="mt-2 text-sm text-stone-600" id="post-tags-hint">
+          Comma-separated, up to {TAG_LIMIT_HINT}. A new name creates the tag.
+        </p>
+        <FieldError id="post-tags-error" message={fieldErrors.tags} />
       </div>
 
       <div>

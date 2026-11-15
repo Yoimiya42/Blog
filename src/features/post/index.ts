@@ -13,6 +13,7 @@ export {
   POST_TITLE_MAX_LENGTH,
   PostAccessDeniedError,
   PostSlugTakenError,
+  formatTagNames,
   toPostVersion,
   type NewPost,
   type Post,

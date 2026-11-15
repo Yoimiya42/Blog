@@ -109,6 +109,7 @@ describe("schema v1 matrix completeness", () => {
         "PostSlugTakenError",
         "collectMediaReferences",
         "deriveArticleContent",
+        "formatTagNames",
         "getPostService",
         "getPublicPostService",
         "parseArticleDocument",

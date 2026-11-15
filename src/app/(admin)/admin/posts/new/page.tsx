@@ -11,7 +11,7 @@ export default async function NewPostPage() {
       <div className="mt-8">
         <PostForm
           initialDocument={EMPTY_ARTICLE_DOCUMENT}
-          initialValues={{ title: "", slug: "", summary: "" }}
+          initialValues={{ title: "", slug: "", summary: "", tags: "" }}
           postId={null}
           slugFrozen={false}
           status={null}

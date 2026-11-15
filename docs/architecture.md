@@ -59,7 +59,7 @@ src/
       (blog)/                 # Blog shell: index, post, tag archive
         blog/page.tsx         #   ?page=N, 10 per page
         blog/[slug]/page.tsx  #   Draft at this URL is the owner-only preview
-        tags/[slug]/page.tsx
+        blog/tags/[slug]/page.tsx
       moments/page.tsx
       life/[type]/page.tsx
       gallery/page.tsx

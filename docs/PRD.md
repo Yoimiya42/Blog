@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.26 · 2026-11-15 · Draft
+> v0.27 · 2026-11-15 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -168,7 +168,7 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 | FR-BLOG-01 | Post list, reverse-chronological, paginated | v1 | 10 per page; title, summary, date, tags, reading time |
 | FR-BLOG-02 | Post detail | v1 | CJK typography at line-height 1.75+, 17–18px |
 | FR-BLOG-03 | Code highlighting | v1 | Python, TS, Java, C, Go; language label, copy button |
-| FR-BLOG-04 | Tags and tag archive | v1 | Many tags per post |
+| FR-BLOG-04 | Tags and tag archive | v1 | Many tags per post, at most 10. The owner enters comma-separated tag names in the post form; an unknown name creates the tag. Archives list published posts only |
 | FR-BLOG-05 | Table of contents | v1 | Sidebar with scroll spy; collapsed on mobile |
 | FR-BLOG-06 | Draft and published states | v1 | Drafts hidden from lists, reachable by preview link |
 | FR-BLOG-07 | Images | v1 | Lazy-loaded, explicit dimensions, click to enlarge |
@@ -675,3 +675,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-14 | v0.24 | Moved phone acceptance of the admin from v1 to v1.5. v1 accepts the admin on a desktop browser; uploads are still processed on the server |
 | 2026-11-14 | v0.25 | Added `deletedAt` to the v1 `Post` contract and defined `Tag` as a lookup table without timestamps or soft delete |
 | 2026-11-15 | v0.26 | Deferred scheduled publishing to v1.5. Scoped autosave to the content of existing drafts. Defined `publishedAt` as the first publication time that freezes the slug, and `updatedAt` as the concurrency token |
+| 2026-11-15 | v0.27 | Defined owner tag entry in the post form and the per-post tag limit for FR-BLOG-04 |
