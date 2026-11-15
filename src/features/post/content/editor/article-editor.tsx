@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { ArticleDocument } from "../types";
 import { articleEditorExtensions } from "./extensions";
 import { normalizeEditorDocument } from "./normalize";
+import { EditorToolbar } from "./toolbar";
 
 interface ArticleEditorProps {
   /** A document that already passed schema validation. */
@@ -70,6 +71,7 @@ export default function ArticleEditor({
 
   return (
     <div>
+      {editor ? <EditorToolbar editor={editor} /> : null}
       <EditorContent editor={editor} />
       <input name={name} readOnly type="hidden" value={serialized} />
     </div>
