@@ -14,6 +14,52 @@ interface AuthDependencies {
   secret: string;
 }
 
+/**
+ * Sends the sign-in code to the owner and to nobody else.
+ *
+ * A failed send is logged and not rethrown. The client must not learn that
+ * the send failed, because only the owner address can fail here and the
+ * response would then identify it (Issue #54). Better Auth would swallow the
+ * error anyway, but without a queryable log entry.
+ */
+export function createOtpSender({
+  mail,
+  ownerEmail,
+}: Pick<AuthDependencies, "mail" | "ownerEmail">) {
+  return async function sendVerificationOTP({
+    email,
+    otp,
+    type,
+  }: {
+    email: string;
+    otp: string;
+    type: string;
+  }): Promise<void> {
+    if (
+      type !== "sign-in" ||
+      email.toLowerCase() !== ownerEmail.toLowerCase()
+    ) {
+      return;
+    }
+
+    try {
+      await mail.send({
+        to: email,
+        subject: "Your sign-in code",
+        text: `${otp}\n\nExpires in ${OTP_EXPIRY_SECONDS / 60} minutes.`,
+      });
+    } catch (error) {
+      // Neither the address nor the code may reach the log.
+      console.error(
+        JSON.stringify({
+          event: "auth.otp.send_failed",
+          reason: error instanceof Error ? error.message : "unknown",
+        }),
+      );
+    }
+  };
+}
+
 export function createAuth({
   baseURL,
   database,
@@ -100,20 +146,7 @@ export function createAuth({
         disableSignUp: true,
         storeOTP: "hashed",
 
-        async sendVerificationOTP({ email, otp, type }) {
-          if (
-            type !== "sign-in" ||
-            email.toLowerCase() !== ownerEmail.toLowerCase()
-          ) {
-            return;
-          }
-
-          await mail.send({
-            to: email,
-            subject: "Your sign-in code",
-            text: `${otp}\n\nExpires in ${OTP_EXPIRY_SECONDS / 60} minutes.`,
-          });
-        },
+        sendVerificationOTP: createOtpSender({ mail, ownerEmail }),
       }),
     ],
   });
