@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.28 · 2026-11-15 · Draft
+> v0.29 · 2026-11-16 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -41,7 +41,7 @@ Releases ship in the order below and carry no calendar dates. Milestones and exi
 
 ### 2.1 v1
 
-Homepage · blog (list, detail, tags) · admin (write, upload, publish) accepted on desktop browsers · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance.
+Homepage · blog (list, detail, tags) · admin (write, upload, publish) accepted on desktop browsers · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance · one approved visual direction applied to the public pages.
 
 Excluded: life list, gallery, moments, visitor login, comments, ratings, whispers, subscriptions, dark mode, i18n.
 
@@ -633,7 +633,7 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | ID | Question | Impact | Decide by |
 |---|---|---|---|
 | OQ-01 | Resolved: `fangmingluan.com` is the formal host; `life.fangmingluan.com` is reserved for personal content | Site, email, SEO | Closed 2026-09-01 |
-| OQ-02 | Partially resolved: formal pages are restrained; personal pages may use an opening sequence, expressive colour, and richer motion. Exact references, palette, type, and motion remain open for the personal space; formal-host type is fixed in section 4.1 | All design work | Before personal-space implementation |
+| OQ-02 | Partially resolved: formal pages are restrained; personal pages may use an opening sequence, expressive colour, and richer motion. Exact references, palette, type, and motion remain open for the personal space; formal-host type is fixed in section 4.1 | All design work | Issue #66, before the v1 visual pass in Issue #68. The personal-space system is confirmed again before personal-space implementation |
 | OQ-03 | Resolved: TipTap JSON with a mobile rich-text editor and React renderer | FR-BLOG-13, FR-ADMIN-03 | Revised 2026-09-03; ADR-0010 supersedes ADR-0005 |
 | OQ-04 | Rating scale: 5 stars with halves, 10-point, or none | FR-LIFE-04 data type | Before v2 |
 | OQ-05 | Resolved: v1 is English-only and unprefixed; future locales use explicit path prefixes | FR-HOME-09, architectural | Closed 2026-09-01; ADR-0007 |
@@ -677,3 +677,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-15 | v0.26 | Deferred scheduled publishing to v1.5. Scoped autosave to the content of existing drafts. Defined `publishedAt` as the first publication time that freezes the slug, and `updatedAt` as the concurrency token |
 | 2026-11-15 | v0.27 | Defined owner tag entry in the post form and the per-post tag limit for FR-BLOG-04 |
 | 2026-11-15 | v0.28 | Kept production on Workers Free after the public blog release; see ADR-0019 |
+| 2026-11-16 | v0.29 | Added an approved visual direction and its application to the public pages to v1 scope; OQ-02 is owned by Issue #66. No functional requirement changed |
