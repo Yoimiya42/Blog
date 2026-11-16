@@ -148,6 +148,29 @@ describe("homepage writing", () => {
   });
 });
 
+describe("homepage hidden entrance", () => {
+  const footer = (html: string) =>
+    html.slice(html.indexOf("<footer"), html.indexOf("</footer>"));
+
+  it("renders one labelled footer link to the blog", () => {
+    const html = footer(render(fullHomeContent));
+
+    expect(html.split("<a ").length - 1).toBe(1);
+    expect(html).toMatch(
+      /<a aria-label="Blog" class="entrance-glyph" href="\/blog">/,
+    );
+  });
+
+  it("shows no visible text for the entrance", () => {
+    const link = footer(render(fullHomeContent)).match(
+      /<a [^>]*entrance-glyph[^>]*>(.*?)<\/a>/,
+    );
+
+    expect(link?.[1].replace(/<[^>]+>/g, "")).toBe("");
+    expect(link?.[1]).toContain('aria-hidden="true"');
+  });
+});
+
 describe("homepage identity and contact", () => {
   it("renders one h1 with the owner name before any section", () => {
     const html = render(fullHomeContent);

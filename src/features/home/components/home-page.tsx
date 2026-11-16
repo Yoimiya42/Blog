@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { EntranceGlyph } from "@/components/layout/entrance";
+
 import { navItems, recentPosts, visibleSections } from "../sections";
 import type {
   HomeContact,
@@ -127,7 +129,10 @@ export function HomePage({
 
       {identity ? (
         <footer className="site-foot">
-          <div className="site-foot__in">© {identity.name}</div>
+          <div className="site-foot__in site-foot__in--split">
+            <span>© {identity.name}</span>
+            <EntranceGlyph />
+          </div>
         </footer>
       ) : null}
     </div>
