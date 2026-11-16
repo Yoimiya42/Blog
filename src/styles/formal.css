@@ -8,6 +8,7 @@
 .formal {
   --ink: #16181d;
   --muted: #5b616e; /* 6.3:1 on --surface */
+  --faint: #8b909a; /* 3.2:1 on --surface; non-text marks only */
   --line: #dcdfe4;
   --surface: #ffffff;
   --focus: #1d4ed8;
@@ -126,6 +127,87 @@
   padding: 1.25rem var(--gutter);
   font-size: 0.8125rem;
   color: var(--muted);
+}
+
+.formal .site-foot__in--split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.25rem;
+}
+
+/* ---- hidden entrance (PRD 3.3) ---- */
+
+/* A 44px target around a 10px mark: easy to hit, easy to overlook. */
+.formal .entrance-glyph {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -1rem;
+  color: var(--faint);
+  text-decoration: none;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.formal .entrance-glyph svg {
+  width: 0.625rem;
+  height: 0.625rem;
+  fill: currentColor;
+}
+
+.formal .entrance-glyph:hover,
+.formal .entrance-glyph:active,
+.formal .entrance-glyph:focus-visible {
+  color: var(--ink);
+}
+
+.formal .entrance-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--ink);
+}
+
+/* 300ms closing + 400ms lifting = 700ms, inside the 600–900ms budget. */
+.formal .entrance-veil[data-phase="closing"] {
+  animation: entrance-veil-in 300ms ease-in both;
+}
+
+.formal .entrance-veil[data-phase="lifting"] {
+  animation: entrance-veil-in 400ms ease-out reverse both;
+}
+
+@keyframes entrance-veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced-motion users get a plain link; the script never raises the veil. */
+@media (prefers-reduced-motion: no-preference) {
+  .formal .entrance-glyph svg {
+    transition: transform 300ms ease;
+  }
+
+  .formal .entrance-glyph {
+    transition: color 300ms ease;
+  }
+
+  .formal .entrance-glyph:hover svg,
+  .formal .entrance-glyph:active svg,
+  .formal .entrance-glyph:focus-visible svg {
+    transform: rotate(45deg) scale(1.3);
+  }
 }
 
 /* ---- homepage grid: one column on a phone, sticky identity column on a laptop ---- */
