@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v2.7 · 2026-11-16
+> v2.8 · 2026-11-16
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## Planning rules
@@ -11,6 +11,9 @@
 - A blocked branch may be parked. Work then moves to an Issue whose dependencies are all met. Record each parked branch and its blocker in the scope notes.
 - Only the current milestone is planned in detail. Later milestones are re-checked when they start.
 - A missed hard constraint removes scope through a PRD change. It never weakens acceptance criteria.
+- Within a milestone, the Issue that tests the riskiest constraint runs first.
+- A feature is cut into slices that each reach production. A decision Issue fixes only what is hard to reverse.
+- Each pull request verifies its own change against the per-change gates in the PR template. The release audit confirms; it is not the first check.
 
 ## v1 — Initial Launch
 
@@ -30,6 +33,7 @@
 - Owner-only email OTP authentication.
 - Post management, TipTap editing, autosave, publishing, media upload, and media library.
 - Custom-domain application delivery on Cloudflare Workers and image delivery through the approved pipeline.
+- One approved visual direction, applied to the v1 public pages.
 - GitHub Actions, local quality gates, versioned database migrations, and release validation.
 
 ### Non-goals
@@ -42,7 +46,7 @@
 
 ## Current state
 
-- M0, M1, and M2 are complete. M3 has not started. Bug #54 is in progress ahead of #4.
+- M0, M1, and M2 are complete. Bug #54 is fixed. M3 starts with #4. #66 runs in parallel as an owner task.
 - `fangmingluan.com` serves the `main` Workers build: the real homepage from #11 and owner login from #8.
 - The owner signs in on production with an email code and reaches `/admin`.
 - Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold migrations `0001` to `0006`: auth, then Post, Tag, and PostTag. Production holds the seeded owner and the four auth secrets. `personal-site-development` was deleted on 2026-11-14.
@@ -60,8 +64,9 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | M0 — Close in-flight work | Owner authentication is merged with `/admin` protected; no other branch is in flight; the Post field contract is recorded | #45, #8 |
 | M1 — Identity live | The real homepage is live on `fangmingluan.com`; `www` redirects; a login code reaches the owner mailbox with SPF, DKIM, and DMARC passing; a mainland tester loads the homepage | #11, #18 |
 | M2 — Text blog | The owner writes and publishes a post with code blocks on a desktop browser; visitors read it on the public blog | #38, #12, #13, #15, #10, #16 |
-| M3 — Media | An accepted ADR selects the image pipeline; the owner publishes a post with a phone-taken photo uploaded from a desktop browser | #4, #14 |
-| M4 — Release gates | Every release gate below passes | #17, #19 |
+| M3 — Media | The owner publishes a post with a phone-taken photo uploaded from a desktop browser; the image loads from the project image domain on a mainland network | #4, #62, #14, #63, #64, #65 |
+| M4 — Visual identity | The owner approves a visual direction; the v1 public pages match it on production | #66, #68 |
+| M5 — Release gates | Every release gate below passes | #67, #58, #17, #19 |
 
 ### Scope notes
 
@@ -69,8 +74,9 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 - **Order exception, 2026-11-12**: #8 is paused on `feat/8-owner-auth` (draft PR #40) at the owner's request. #11 runs ahead of it because it has no authentication dependency. This follows the blocked-branch rule added in v2.2. M0 stays open, and #18 still requires #8. #8 resumed on 2026-11-13 after #11 merged.
 - **M1**: The homepage is hardcoded (FR-HOME-08) and needs no content tables. The `Writing` section stays hidden until posts exist; #10 wires real posts into it. Production stays on Workers Free; see ADR-0014. Homepage source content in `launch-content.md` is an owner input and blocks this milestone. The QQ Mail and 163 Mail delivery tests left #18 on 2026-11-14 and now block v2.5, the release that opens login to visitors; see ADR-0016 and ADR-0017.
 - **M2**: #38 implements Post, Tag, and PostTag only, using the field contract in PRD section 5. The editor ships without the image control. Production stays on Workers Free when the public blog ships; ADR-0019 sets the upgrade trigger. #15 ships publish and unpublish; scheduled publishing is deferred to v1.5. #15 revalidates `/` and `/blog` before those reads exist; #10 adds the pages. #16 targets `/blog` with a CSS-only veil and no motion dependency; the inner-layer visual language and its exit wait for the personal host (OQ-02).
-- **M3**: #4 covers HEIC and HEIF input, server-side verification of GPS EXIF removal, and direct-to-R2 upload. #14 adds the Media table, upload, library, the editor image control, and the production R2 image domain moved from #18.
-- **M4**: #19 repays TD-001.
+- **M3**: Re-sliced by #61 on 2026-11-16. #4 is a short ADR: processing location, object key and URL scheme, whether originals are kept, `Media` fields, and how GPS EXIF removal is guaranteed. Multiple sizes, AVIF, and Cloudflare Images are deferred with a reopening trigger each. #62 attaches the R2 image domain and tests it from a mainland network before any upload code exists. #14 is the walking skeleton: upload, `Media` record, editor image control, and public rendering for JPEG, PNG, and WebP. A JPEG phone photo satisfies the exit condition after #14. #63 adds the library, #64 the reading presentation, #65 HEIC input. #65 moves to v1.5 through a PRD change if its decoder proves costly.
+- **M4**: #66 closes OQ-02 and is owner work with no code; it runs in parallel with M3 and is exempt from the one-branch limit. #68 applies the result after M3, through tokens and layout shells only. The milestone precedes the release gates because they measure the final appearance. The formal host stays restrained unless #66 changes that principle through the PRD.
+- **M5**: Formerly M4. #67 moves the performance budgets into CI and may run whenever a feature branch is blocked on owner input. #58 resolves TD-002 before the site is promoted. #17 is the final audit; per-change checks moved to the PR template. #19 repays TD-001.
 - **Desktop acceptance, 2026-11-14**: v1 accepts the admin on a desktop browser. Phone acceptance left #12, #13, #14, and #19 and moved to #50 in v1.5. Admin layouts stay fluid and uploads stay server-processed, so phone support needs no rework.
 
 ## Work breakdown
@@ -95,12 +101,21 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | [#15](https://github.com/Yoimiya42/Blog/issues/15) | Implement draft and publish workflow | M2 | P0 | M | Done | #12, #13 |
 | [#10](https://github.com/Yoimiya42/Blog/issues/10) | Ship public blog | M2 | P0 | L | Done | #9, #11, #38, #15 |
 | [#16](https://github.com/Yoimiya42/Blog/issues/16) | Implement hidden entrance | M2 | P1 | S | Done | #10, #11 |
-| [#4](https://github.com/Yoimiya42/Blog/issues/4) | Select the Workers image pipeline | M3 | P0 | M | Backlog | #29, representative media |
-| [#14](https://github.com/Yoimiya42/Blog/issues/14) | Implement media upload and library | M3 | P0 | L | Backlog | #4, #13 |
-| [#17](https://github.com/Yoimiya42/Blog/issues/17) | Meet security, privacy, and accessibility gates | M4 | P0 | L | Backlog | All feature Issues |
-| [#19](https://github.com/Yoimiya42/Blog/issues/19) | Validate the v1 release | M4 | P0 | M | Backlog | #17 |
+| [#61](https://github.com/Yoimiya42/Blog/issues/61) | Re-plan v1 from M3 as slices with a visual milestone | M3 | P0 | S | In progress | — |
+| [#4](https://github.com/Yoimiya42/Blog/issues/4) | Decide the v1 image pipeline | M3 | P0 | S | Backlog | #29 |
+| [#62](https://github.com/Yoimiya42/Blog/issues/62) | Serve images from the R2 project domain | M3 | P0 | S | Backlog | #4, owner R2 access |
+| [#14](https://github.com/Yoimiya42/Blog/issues/14) | Implement image upload | M3 | P0 | M | Backlog | #4, #62, #13 |
+| [#63](https://github.com/Yoimiya42/Blog/issues/63) | Implement media library | M3 | P0 | S | Backlog | #14 |
+| [#64](https://github.com/Yoimiya42/Blog/issues/64) | Present article images for reading | M3 | P1 | S | Backlog | #14 |
+| [#65](https://github.com/Yoimiya42/Blog/issues/65) | Accept HEIC input | M3 | P1 | S | Backlog | #14 |
+| [#66](https://github.com/Yoimiya42/Blog/issues/66) | Decide the visual direction | M4 | P0 | M | Backlog | Owner decisions |
+| [#68](https://github.com/Yoimiya42/Blog/issues/68) | Apply the visual direction to public pages | M4 | P0 | L | Backlog | #66, M3 |
+| [#67](https://github.com/Yoimiya42/Blog/issues/67) | Automate performance budgets in CI | M5 | P1 | S | Backlog | — |
+| [#58](https://github.com/Yoimiya42/Blog/issues/58) | Remove the Workers Free CPU overrun dependency | M5 | P0 | M | Backlog | ADR-0019 trigger |
+| [#17](https://github.com/Yoimiya42/Blog/issues/17) | Audit security, privacy, and accessibility | M5 | P0 | M | Backlog | All feature Issues, #68 |
+| [#19](https://github.com/Yoimiya42/Blog/issues/19) | Validate the v1 release | M5 | P0 | M | Backlog | #17, #58 |
 
-Delivery path: `#45 -> #8 -> #11 -> #18 -> #38 -> #12 -> #13 -> #15 -> #10 -> #16 -> #4 -> #14 -> #17 -> #19`.
+Delivery path: `#45 -> #8 -> #11 -> #18 -> #38 -> #12 -> #13 -> #15 -> #10 -> #16 -> #61 -> #4 -> #62 -> #14 -> #63 -> #64 -> #65 -> #68 -> #67 -> #58 -> #17 -> #19`. #66 runs in parallel from M3 and must close before #68.
 
 Issue #31 is closed. Its upload requirements moved into #4; PRD section 2.5 already excludes a native application.
 
@@ -132,4 +147,4 @@ GitHub Project states are `Backlog -> Ready -> In progress -> In review -> Done`
 
 ## History
 
-The original plan targeted 2026-09-30 with dated windows. Work paused from 2026-09-08 to 2026-11-10 and the target was missed. Version 2.0 replaced the dated plan with ordered milestones. Version 2.1 recorded the #8 pause and the #11 order exception. Version 2.2 allowed a blocked branch to be parked while a dependency-free Issue proceeds. Version 2.3 recorded #8 resuming and #45 closing. Version 2.4 recorded M0 closing, #18 starting, the R2 image domain moving from #18 to #14, the QQ Mail and 163 Mail delivery tests moving out of v1, visitor accounts and interaction moving to v2.5 under #49, and phone acceptance of the admin moving to v1.5 under #50. Version 2.5 recorded #13 closing, #15 starting, and scheduled publishing moving to v1.5. Version 2.6 recorded #15 and #10 closing and #16 starting. Version 2.7 recorded #16 and M2 closing.
+The original plan targeted 2026-09-30 with dated windows. Work paused from 2026-09-08 to 2026-11-10 and the target was missed. Version 2.0 replaced the dated plan with ordered milestones. Version 2.1 recorded the #8 pause and the #11 order exception. Version 2.2 allowed a blocked branch to be parked while a dependency-free Issue proceeds. Version 2.3 recorded #8 resuming and #45 closing. Version 2.4 recorded M0 closing, #18 starting, the R2 image domain moving from #18 to #14, the QQ Mail and 163 Mail delivery tests moving out of v1, visitor accounts and interaction moving to v2.5 under #49, and phone acceptance of the admin moving to v1.5 under #50. Version 2.5 recorded #13 closing, #15 starting, and scheduled publishing moving to v1.5. Version 2.6 recorded #15 and #10 closing and #16 starting. Version 2.7 recorded #16 and M2 closing. Version 2.8 re-sliced M3 into #4, #62, #14, #63, #64, and #65, added M4 for the visual direction, renumbered the release gates to M5, and moved per-change checks out of #17.
