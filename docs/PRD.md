@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.30 · 2026-11-17 · Draft
+> v0.31 · 2026-11-17 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -62,7 +62,7 @@ Gallery · travel map · dark mode · visitor registration and login (email code
 - Multi-user publishing. Owner only.
 - Two-way messaging. Whispers run visitor to owner.
 - ICP filing and mainland hosting. Slower mainland access is accepted.
-- Visibility tiers. The `visibility` column is reserved so adding them needs no restructuring.
+- Visibility tiers. The `visibility` column is reserved so adding them needs no restructuring. Media for any non-public content follows ADR-0022: the permission check runs before any cache.
 - Native app. Responsive web only.
 
 ---
@@ -615,7 +615,7 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Data access | Handwritten SQL through the D1 binding | D1 Workers API | Confirmed | Use versioned SQLite migrations and typed prepared statements; see ADR-0012 |
 | Authentication | Better Auth with email OTP | Current compatible | Confirmed | Six-digit email codes and database sessions; see ADR-0004 |
 | Object storage | Cloudflare R2 on a custom domain | Current managed service | Confirmed | Store all uploaded media behind the project domain |
-| Image pipeline | Cloudflare Images on delivery; GPS removal in the Worker at upload | Images Free | Confirmed | ADR-0021. Issue #62 selects the binding or `cf.image` transform call |
+| Image pipeline | Cloudflare Images on delivery; GPS removal in the Worker at upload | Images Free | Confirmed | ADR-0021; `cf.image` from an Access-protected source domain per ADR-0022 |
 | Content | Versioned TipTap JSON in D1 TEXT | Schema v1 | Confirmed | JSON is authoritative; HTML and Markdown are derived exports; see ADR-0010 |
 | Editor | TipTap | 3.x candidate | Confirmed | Use the schema in `article-content-schema.md`; validate the exact package release during implementation |
 | Email | Resend | Current managed service | Confirmed | v1 requires verified code delivery to the owner mailbox. The release that opens login to visitors requires successful code delivery to QQ Mail and 163 Mail; see ADR-0016 |
@@ -681,3 +681,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-15 | v0.28 | Kept production on Workers Free after the public blog release; see ADR-0019 |
 | 2026-11-16 | v0.29 | Added an approved visual direction and its application to the public pages to v1 scope; OQ-02 is owned by Issue #66. No functional requirement changed |
 | 2026-11-17 | v0.30 | Mainland tests are recorded, not blocking (ADR-0020). Selected the v1 image pipeline: Cloudflare Images on delivery, server-side GPS removal, owner-only coordinates (ADR-0021). FR-MOMENT-04 suggests an editable place name from photo GPS |
+| 2026-11-17 | v0.31 | Fixed the image transform call and protected the image source domain; recorded the cache rule for non-public media. See ADR-0022. No functional requirement changed |

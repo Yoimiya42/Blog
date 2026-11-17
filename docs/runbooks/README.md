@@ -10,6 +10,7 @@ Use only procedures rehearsed against the live service named in each runbook.
 | [Production recovery](production-recovery.md) | Worker rollback and D1 Time Travel restore; rollback rehearsed on production, restore on `blog-preview` |
 | [D1 migrations](d1-migrations.md) | Write, apply, verify, and undo D1 migrations; rehearsed locally and on `blog-preview`; applied on production |
 | [Owner seed](owner-seed.md) | Provision the single owner account in D1; rehearsed locally, on `blog-preview`, and on production |
+| [Media delivery](media-delivery.md) | R2 buckets, Access-protected source domains, `/media` transform route, and service-token rotation |
 | [Vercel Preview deployment](vercel-preview.md) | Pull request preview checks; not a production fallback since Issue #29 closed |
 
 Add a stateful-service recovery runbook only after its restore procedure has been rehearsed against an isolated environment.

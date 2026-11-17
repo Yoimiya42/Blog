@@ -12,8 +12,10 @@ Dashboard-only settings for zone `fangmingluan.com`. None of them is in version 
 | `resend._domainkey` | TXT | Resend DKIM public key | DNS only | DKIM |
 | `send` | CNAME | `send.forge.rmta.net` | DNS only | Resend SPF and bounce handling |
 | `rsend` | CNAME | `rsend-euw1.forge.rmta.net` | DNS only | Resend tracking host |
+| `src` | R2 custom domain | `blog-media-production` | Proxied | Image source behind Access; see [media delivery](media-delivery.md) |
+| `src-preview` | R2 custom domain | `blog-media-preview` | Proxied | Preview image source behind Access |
 
-`life.fangmingluan.com` has no record. `media-spike` belongs to the Issue #4 spike and is outside this runbook.
+`life.fangmingluan.com` has no record. The Issue #4 spike bucket and its `media-spike` record were deleted on 2026-11-17.
 
 ## Redirects
 
