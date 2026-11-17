@@ -1,6 +1,6 @@
 # 0003. 将大陆可访问性作为硬约束
 
-- **状态**：已接受
+- **状态**：已接受；Release blocking and per-dependency confirmation superseded by 0020
 - **日期**：2026-08-29
 - **相关需求**：NFR-CN-01 ~ NFR-CN-10
 

@@ -25,7 +25,7 @@ Use the ADR index to select records. Do not preload every ADR.
 
 ## 3. Hard constraints
 
-**Mainland China MUST be able to reach the site.** No Google Fonts, Analytics, reCAPTCHA, or other blocked resources. Fonts are self-hosted and subsetted. Primary login is a 6-digit email code, not a magic link. Confirm mainland reachability and record an ADR before adding any third-party dependency or CDN. See ADR-0003.
+**Mainland China access is preserved by prevention, not by a release gate.** No Google Fonts, Analytics, reCAPTCHA, or other known-blocked resources. Fonts are self-hosted and subsetted. Primary login is a 6-digit email code, not a magic link. First paint never depends on a third party. Record an ADR before adding any third-party dependency or CDN; record its mainland reachability when known. Mainland tests are recorded, not required to pass. See ADR-0003 and ADR-0020.
 
 **All content written or rewritten by AI MUST use concise technical English.** Applies to documentation, rules, comments, config descriptions, and templates.
 

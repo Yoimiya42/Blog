@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.29 · 2026-11-16 · Draft
+> v0.30 · 2026-11-17 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -186,7 +186,7 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 | FR-MOMENT-01 | Reverse-chronological feed | v1.5 | Body, images, timestamp; no titles |
 | FR-MOMENT-02 | 0–9 images per entry | v1.5 | Grid, tap for fullscreen carousel |
 | FR-MOMENT-03 | Light Markdown | v1.5 | Bold, link, line break only |
-| FR-MOMENT-04 | Optional place and mood | v1.5 | Plain text, no map API |
+| FR-MOMENT-04 | Optional place and mood | v1.5 | Plain-text place label. When an attached image has GPS coordinates, suggest a place name; the owner edits it, for example to "Mount Vesuvius", before publishing. Only the label is public, never coordinates. The reverse-geocoding service needs an ADR |
 | FR-MOMENT-05 | Fast publishing from a phone | v1.5 | 5 interactions or fewer |
 | FR-MOMENT-06 | Infinite scroll | v1.5 | |
 | FR-MOMENT-07 | Comments | v2.5 | |
@@ -256,7 +256,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5 |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the article content of an existing draft only. A new post autosaves once it is created; a published post changes only through an explicit save. A save never overwrites a newer version |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
-| FR-ADMIN-06 | Compression and conversion on upload | v1 | WebP or AVIF, long-edge limit, GPS EXIF stripped |
+| FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. See ADR-0021 |
 | FR-ADMIN-07 | Publish, unpublish, schedule | v1 | Publish and unpublish ship in v1. Scheduling is deferred to v1.5 |
 | FR-ADMIN-08 | Media library management | v1 | Browse, copy link, delete |
 | FR-ADMIN-09 | Mobile rich-text toolbar | v1.5 | One-tap heading, bold, link, list, image, and code-block controls |
@@ -357,6 +357,8 @@ model Media {
   sizeBytes  Int
   blurhash   String?                   // placeholder, prevents layout shift
   alt        String?
+  gpsLatitude  Float?                  // owner-only; never rendered publicly (ADR-0021)
+  gpsLongitude Float?                  // owner-only
   exif       Json?                     // gallery only
   createdAt  DateTime @default(now())
 }
@@ -534,9 +536,9 @@ Open question: repeat experiences collapse into one record with a single `finish
 
 ## 6. Non-functional requirements
 
-### 6.1 Mainland China accessibility (hard constraint)
+### 6.1 Mainland China accessibility
 
-Every rule is blocking. Violating one prevents mainland visitors from loading the site or logging in.
+NFR-CN-01 to NFR-CN-06, NFR-CN-08, and NFR-CN-09 are preventive and blocking. NFR-CN-07 and NFR-CN-10 are recorded, not required to pass; see ADR-0020.
 
 | ID | Rule | Reason |
 |---|---|---|
@@ -546,12 +548,12 @@ Every rule is blocking. Violating one prevents mainland visitors from loading th
 | NFR-CN-04 | Primary login is a 6-digit email code, not a magic link | Chinese mail providers rewrite external links. Configure SPF, DKIM, DMARC; prompt users to check spam |
 | NFR-CN-05 | Custom domain required; never expose provider domains such as `*.vercel.app` or `*.workers.dev` | Provider domains may be unreliable in mainland China |
 | NFR-CN-06 | Image CDN uses a custom domain, not `*.r2.dev` | Same |
-| NFR-CN-07 | Verify every third-party script is reachable before launch | Comments, analytics, maps, fonts, emoji: any one breaks the page |
+| NFR-CN-07 | Record mainland reachability of every third-party script before launch; a known block rejects it | Comments, analytics, maps, fonts, emoji: any one breaks the page |
 | NFR-CN-08 | First paint never depends on third-party resources | The body renders even if a third party is down |
 | NFR-CN-09 | No ICP filing; 2–5s first paint accepted | Filing needs a domestic entity, and personal filings forbid interactive features |
-| NFR-CN-10 | A mainland tester completes load and browse before launch. Register, log in, and comment join the test in v2.5 | The only reliable verification |
+| NFR-CN-10 | A mainland load-and-browse test is recorded before launch when a tester is available. Register, log in, and comment join the test in v2.5 | The only reliable verification |
 
-Cloudflare Workers is the selected production platform under ADR-0009. The Workers preview and code rollback procedure passed Issue #29 rehearsal, and Issue #29 is closed. Vercel now serves pull request previews only. Provider domains are development evidence only; production requires custom domains and real mainland China tests.
+Cloudflare Workers is the selected production platform under ADR-0009. The Workers preview and code rollback procedure passed Issue #29 rehearsal, and Issue #29 is closed. Vercel now serves pull request previews only. Provider domains are development evidence only; production requires custom domains; mainland China tests are recorded under ADR-0020.
 
 ### 6.2 Performance
 
@@ -571,7 +573,7 @@ Cloudflare Workers is the selected production platform under ADR-0009. The Worke
 - Admin routes are authorised server-side, never by hiding UI.
 - Escape or sanitise all user-submitted content before rendering.
 - Rate-limit comments, whispers, and login-code sends (3 per minute per IP).
-- Validate real file type and size on upload; strip GPS EXIF.
+- Validate real file type and size on upload; remove GPS from the stored file and verify the removal on the server (ADR-0021).
 - CSRF protection on sensitive operations.
 - Secrets live in environment variables, never in the repository.
 
@@ -613,7 +615,7 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Data access | Handwritten SQL through the D1 binding | D1 Workers API | Confirmed | Use versioned SQLite migrations and typed prepared statements; see ADR-0012 |
 | Authentication | Better Auth with email OTP | Current compatible | Confirmed | Six-digit email codes and database sessions; see ADR-0004 |
 | Object storage | Cloudflare R2 on a custom domain | Current managed service | Confirmed | Store all uploaded media behind the project domain |
-| Image pipeline | Unselected | — | Provisional | Issue #4 must validate conversion, EXIF removal, CPU use, and delivery before media implementation |
+| Image pipeline | Cloudflare Images on delivery; GPS removal in the Worker at upload | Images Free | Confirmed | ADR-0021. Issue #62 selects the binding or `cf.image` transform call |
 | Content | Versioned TipTap JSON in D1 TEXT | Schema v1 | Confirmed | JSON is authoritative; HTML and Markdown are derived exports; see ADR-0010 |
 | Editor | TipTap | 3.x candidate | Confirmed | Use the schema in `article-content-schema.md`; validate the exact package release during implementation |
 | Email | Resend | Current managed service | Confirmed | v1 requires verified code delivery to the owner mailbox. The release that opens login to visitors requires successful code delivery to QQ Mail and 163 Mail; see ADR-0016 |
@@ -678,3 +680,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-15 | v0.27 | Defined owner tag entry in the post form and the per-post tag limit for FR-BLOG-04 |
 | 2026-11-15 | v0.28 | Kept production on Workers Free after the public blog release; see ADR-0019 |
 | 2026-11-16 | v0.29 | Added an approved visual direction and its application to the public pages to v1 scope; OQ-02 is owned by Issue #66. No functional requirement changed |
+| 2026-11-17 | v0.30 | Mainland tests are recorded, not blocking (ADR-0020). Selected the v1 image pipeline: Cloudflare Images on delivery, server-side GPS removal, owner-only coordinates (ADR-0021). FR-MOMENT-04 suggests an editable place name from photo GPS |
