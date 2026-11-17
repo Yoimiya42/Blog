@@ -1,6 +1,6 @@
 # 0021. v1 image pipeline: GPS-clean originals in R2, Cloudflare Images on delivery
 
-- **Status**: Accepted
+- **Status**: Accepted; transform call decided by 0022
 - **Date**: 2026-11-17
 - **Requirements**: FR-ADMIN-05, FR-ADMIN-06, FR-BLOG-07, FR-MOMENT-04, NFR-CN-06, PRD 6.2, PRD 6.4
 

@@ -3,7 +3,7 @@
   "name": "personal-site",
   "compatibility_date": "2026-09-03",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "vinext/server/fetch-handler",
+  "main": "./worker/index.ts",
   "assets": {
     "directory": "dist/client",
     "not_found_handling": "none",
@@ -34,6 +34,17 @@
       "migrations_dir": "migrations",
     },
   ],
+  // Uploads write originals here; delivery reads them through the
+  // Access-protected source domain (ADR-0022).
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "blog-media-production",
+    },
+  ],
+  "vars": {
+    "MEDIA_SOURCE_ORIGIN": "https://src.fangmingluan.com",
+  },
   // Branch builds run `wrangler preview` and read only this block.
   "previews": {
     // Previews ignore the top-level observability block.
@@ -53,5 +64,14 @@
         "migrations_dir": "migrations",
       },
     ],
+    "r2_buckets": [
+      {
+        "binding": "MEDIA",
+        "bucket_name": "blog-media-preview",
+      },
+    ],
+    "vars": {
+      "MEDIA_SOURCE_ORIGIN": "https://src-preview.fangmingluan.com",
+    },
   },
 }
