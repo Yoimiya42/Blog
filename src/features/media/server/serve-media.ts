@@ -57,7 +57,10 @@ export async function serveMedia(request: Request, fileName: string) {
     });
   }
 
-  const response = new Response(upstream.body, upstream);
+  const response = new Response(
+    request.method === "HEAD" ? null : upstream.body,
+    upstream,
+  );
   response.headers.set("Cache-Control", MEDIA_CACHE_CONTROL);
   response.headers.delete("Set-Cookie");
 
