@@ -52,3 +52,5 @@ Existing Previews keep the old secret. Delete and recreate them, or set the secr
 
 - 2026-11-17: both source domains returned `403` without the token.
 - 2026-11-17, Worker Preview `feat-62-r2-image-delivery`, commit `f4614e6` (vinext route handler): both fixtures returned `200` at all four widths. Outputs measured 480×320 and 960×640 AVIF, 1600×1066 and 2400×1600 WebP, with no EXIF, XMP, or ICC data. A cold transform of a 28.6 MB or 37.9 MB source took 4 to 16 s from a UK network through a local proxy; edge hits returned `CF-Cache-Status: HIT`. `w=1000`, a missing `w`, and an extra parameter returned `400`; an unknown id returned `404`. Browsers received `max-age=0, must-revalidate` and the edge never returned 304, which led to ADR-0023.
+- 2026-11-17, same Preview, commit `a0257e6` (custom Worker entry): `/`, `/blog`, and `/login` returned `200`. All four widths returned `200` with `Cache-Control: public, max-age=31536000, immutable` and `CF-Cache-Status: HIT`; `HEAD` returned headers only; `w=1000` returned `400`; an unknown id returned `404`.
+- Mainland China: not tested; recorded, not blocking (ADR-0020).
