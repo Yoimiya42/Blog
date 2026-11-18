@@ -164,6 +164,15 @@ describe("media references", () => {
 
     await db.prepare("UPDATE media SET deleted_at = 1").run();
 
+    // Saving still works, so deletion never blocks editing (ADR-0025).
+    expect(
+      await service.update(
+        OWNER,
+        post.id,
+        input({ content: withImage("storedmedia000000001") }),
+      ),
+    ).toMatchObject({ ok: true });
+
     expect(await service.publish(OWNER, post.id)).toMatchObject({
       ok: false,
       reason: "invalid",

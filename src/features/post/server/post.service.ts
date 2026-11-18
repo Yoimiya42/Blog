@@ -14,6 +14,7 @@ import {
   validateArticleDocument,
   validateMediaReferences,
   type MediaReferenceResolver,
+  type MediaReferenceRule,
 } from "../content/validate";
 import {
   POST_STATUSES,
@@ -81,11 +82,12 @@ function parseFields(input: PostInput): ParsedInput {
 async function contentError(
   content: unknown,
   media: MediaReferenceResolver | undefined,
+  rule: MediaReferenceRule,
 ): Promise<string | undefined> {
   const shape = validateArticleDocument(content);
   const result =
     shape.ok && media
-      ? await validateMediaReferences(shape.document, media)
+      ? await validateMediaReferences(shape.document, media, rule)
       : shape;
   if (result.ok) return undefined;
 
@@ -115,7 +117,11 @@ export function createPostService({
   now = () => new Date(),
   newId = () => crypto.randomUUID(),
 }: PostServiceDependencies) {
-  const checkContent = (content: unknown) => contentError(content, media);
+  // Saves accept deleted media; publishing needs live media (ADR-0025).
+  const checkContent = (content: unknown) =>
+    contentError(content, media, "known");
+  const checkPublishable = (content: unknown) =>
+    contentError(content, media, "live");
 
   /**
    * Checked in every method, not only at the route: a service call from a new
@@ -376,7 +382,7 @@ export function createPostService({
       // The public renderer accepts only the current schema version.
       const invalidContent =
         current.contentSchemaVersion === CONTENT_SCHEMA_VERSION
-          ? await checkContent(current.content)
+          ? await checkPublishable(current.content)
           : "The stored content is not valid schema v1.";
       if (invalidContent) {
         return {

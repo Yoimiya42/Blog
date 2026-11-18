@@ -250,6 +250,7 @@ describe("media references", () => {
   it("accepts a document whose references all resolve", async () => {
     const resolver = {
       findExisting: async (ids: string[]) => new Set(ids),
+      findKnown: async (ids: string[]) => new Set(ids),
     };
 
     await expect(
@@ -260,6 +261,7 @@ describe("media references", () => {
   it("reports every reference the resolver does not know", async () => {
     const resolver = {
       findExisting: async () => new Set(["med_01"]),
+      findKnown: async () => new Set(["med_01", "med_02"]),
     };
 
     const result = await validateMediaReferences(parsed, resolver);
@@ -269,6 +271,10 @@ describe("media references", () => {
     expect(result.issues).toEqual([
       { path: "content", message: "unknown media reference: med_02" },
     ]);
+    // A deleted item is still known, so saving accepts it (ADR-0025).
+    expect((await validateMediaReferences(parsed, resolver, "known")).ok).toBe(
+      true,
+    );
   });
 
   it("does not call the resolver when there is nothing to resolve", async () => {
@@ -278,6 +284,7 @@ describe("media references", () => {
         calls += 1;
         return new Set(ids);
       },
+      findKnown: async (ids: string[]) => new Set(ids),
     };
 
     await validateMediaReferences(

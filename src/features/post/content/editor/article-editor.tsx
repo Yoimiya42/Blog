@@ -3,6 +3,7 @@
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { useEffect, useRef, useState } from "react";
 
+import type { LibraryImage } from "../image-upload";
 import { ARTICLE_PROSE_CLASS } from "../prose";
 import type { ArticleDocument } from "../types";
 import { createArticleEditorExtensions } from "./extensions";
@@ -160,6 +161,34 @@ export default function ArticleEditor({
     };
   });
 
+  async function openLibrary() {
+    const load = imageUpload?.loadLibrary;
+    if (!load) return;
+    setImageStatus({ kind: "library", items: null });
+    try {
+      const items = await load();
+      // The owner may have gone back or closed the panel meanwhile.
+      setImageStatus((current) =>
+        current.kind === "library" ? { kind: "library", items } : current,
+      );
+    } catch {
+      setImageStatus({
+        kind: "error",
+        message: "The library could not be loaded. Try again.",
+      });
+    }
+  }
+
+  function insertLibraryImage(current: Editor, image: LibraryImage) {
+    registerMediaUrl(image.id, image.url);
+    current
+      .chain()
+      .focus()
+      .insertArticleImage({ mediaId: image.id, alt: image.alt })
+      .run();
+    setImageStatus({ kind: "inserted", mediaId: image.id, alt: image.alt });
+  }
+
   function closeImagePanel() {
     setImagePanelOpen(false);
     // A finished upload starts fresh next time; an upload in flight keeps
@@ -190,7 +219,16 @@ export default function ArticleEditor({
                         );
                         setImageStatus({ ...imageStatus, alt });
                       }}
+                      onBackToUpload={() => setImageStatus({ kind: "idle" })}
                       onChooseFile={(file) => uploadRef.current(file)}
+                      onOpenLibrary={
+                        imageUpload.loadLibrary
+                          ? () => void openLibrary()
+                          : undefined
+                      }
+                      onPickLibraryImage={(image) =>
+                        insertLibraryImage(editor, image)
+                      }
                       onClose={() => {
                         closeImagePanel();
                         editor.commands.focus();

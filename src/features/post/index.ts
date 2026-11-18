@@ -37,6 +37,11 @@ export { PostIndex } from "./components/public/post-index";
 export { toCalendarDate } from "./components/public/post-meta";
 
 export {
+  getMediaReferenceFinder,
+  type MediaReferencingPost,
+} from "./server/media-references";
+
+export {
   getPublicPostService,
   PUBLIC_POSTS_PER_PAGE,
   type PublicPost,
@@ -99,4 +104,4 @@ export {
 
 export type { ArticleMedia, ArticleMediaMap } from "./content/render/media";
 
-export type { ImageUploadConfig } from "./content/image-upload";
+export type { ImageUploadConfig, LibraryImage } from "./content/image-upload";

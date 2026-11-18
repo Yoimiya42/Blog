@@ -18,9 +18,16 @@ export {
 export {
   getMediaService,
   type MediaActor,
+  type MediaLibraryItem,
+  type MediaRemoval,
   type MediaService,
   type ResolvedMedia,
 } from "./server/media.service";
+export {
+  listMediaForPickerAction,
+  type MediaPickerItem,
+} from "./server/media.actions";
+export { MediaLibrary } from "./components/media-library";
 export { MAX_UPLOAD_BYTES } from "./upload/process";
 export { MediaRejectedError, type MediaRejection } from "./upload/errors";
 export type { Media, MediaDisplay } from "./schema";

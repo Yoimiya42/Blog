@@ -2,13 +2,16 @@
 
 import { useId } from "react";
 
+import type { LibraryImage } from "../image-upload";
 import { ACCEPTED_IMAGE_TYPES } from "./upload-image";
 
 export type ImageUploadStatus =
   | { kind: "idle" }
   | { kind: "uploading"; fileName: string }
   | { kind: "inserted"; mediaId: string; alt: string }
-  | { kind: "error"; message: string };
+  | { kind: "error"; message: string }
+  /** `items` is null while the library loads. */
+  | { kind: "library"; items: LibraryImage[] | null };
 
 const FIELD_CLASS =
   "min-h-11 min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-3 text-sm outline-none focus:border-stone-900";
@@ -21,6 +24,10 @@ interface ImagePanelProps {
   onChooseFile: (file: File) => void;
   onAltChange: (alt: string) => void;
   onClose: () => void;
+  /** Absent hides the library button. */
+  onOpenLibrary?: () => void;
+  onPickLibraryImage: (image: LibraryImage) => void;
+  onBackToUpload: () => void;
 }
 
 /**
@@ -32,8 +39,21 @@ export function ImagePanel({
   onChooseFile,
   onAltChange,
   onClose,
+  onOpenLibrary,
+  onPickLibraryImage,
+  onBackToUpload,
 }: ImagePanelProps) {
   const fieldId = useId();
+
+  if (status.kind === "library") {
+    return (
+      <LibraryPicker
+        items={status.items}
+        onBack={onBackToUpload}
+        onPick={onPickLibraryImage}
+      />
+    );
+  }
 
   if (status.kind === "inserted") {
     return (
@@ -107,14 +127,75 @@ export function ImagePanel({
           {status.message}
         </p>
       ) : null}
-      <button
-        className={ACTION_CLASS}
-        disabled={uploading}
-        onClick={onClose}
-        type="button"
-      >
-        Close
+      <div className="flex flex-wrap gap-2">
+        {onOpenLibrary ? (
+          <button
+            className={ACTION_CLASS}
+            disabled={uploading}
+            onClick={onOpenLibrary}
+            type="button"
+          >
+            Choose from library
+          </button>
+        ) : null}
+        <button
+          className={ACTION_CLASS}
+          disabled={uploading}
+          onClick={onClose}
+          type="button"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+interface LibraryPickerProps {
+  items: LibraryImage[] | null;
+  onPick: (image: LibraryImage) => void;
+  onBack: () => void;
+}
+
+/* eslint-disable @next/next/no-img-element -- Cloudflare Images serves fixed widths (ADR-0021). */
+function LibraryPicker({ items, onPick, onBack }: LibraryPickerProps) {
+  return (
+    <div className="mt-1 space-y-2 border-t border-stone-200 p-2">
+      <p className="text-sm font-medium">Insert an image from the library</p>
+      {items === null ? (
+        <p className="text-sm text-stone-700" role="status">
+          Loading images…
+        </p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-stone-600">No images uploaded yet.</p>
+      ) : (
+        <ul className="grid max-h-80 grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2 overflow-y-auto">
+          {items.map((image) => (
+            <li key={image.id}>
+              <button
+                aria-label={`Insert ${image.alt || "image without alt text"}`}
+                className="block w-full rounded-lg border border-stone-200 p-1 hover:border-stone-900 focus-visible:border-stone-900"
+                onClick={() => onPick(image)}
+                type="button"
+              >
+                <img
+                  alt=""
+                  className="aspect-square w-full rounded object-cover"
+                  decoding="async"
+                  height={image.height}
+                  loading="lazy"
+                  src={image.thumbnailUrl}
+                  width={image.width}
+                />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button className={ACTION_CLASS} onClick={onBack} type="button">
+        Back
       </button>
     </div>
   );
 }
+/* eslint-enable @next/next/no-img-element */

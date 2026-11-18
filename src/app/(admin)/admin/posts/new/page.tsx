@@ -1,5 +1,8 @@
 import { requireOwner } from "@/features/auth";
-import { MEDIA_UPLOAD_CONFIG } from "@/features/media";
+import {
+  listMediaForPickerAction,
+  MEDIA_UPLOAD_CONFIG,
+} from "@/features/media";
 import { EMPTY_ARTICLE_DOCUMENT, PostForm } from "@/features/post";
 
 export default async function NewPostPage() {
@@ -11,7 +14,10 @@ export default async function NewPostPage() {
 
       <div className="mt-8">
         <PostForm
-          imageUpload={MEDIA_UPLOAD_CONFIG}
+          imageUpload={{
+            ...MEDIA_UPLOAD_CONFIG,
+            loadLibrary: listMediaForPickerAction,
+          }}
           initialDocument={EMPTY_ARTICLE_DOCUMENT}
           initialValues={{ title: "", slug: "", summary: "", tags: "" }}
           postId={null}
