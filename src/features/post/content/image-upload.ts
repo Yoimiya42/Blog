@@ -10,4 +10,20 @@ export interface ImageUploadConfig {
   altHeader: string;
   /** Mirror of the server limit, for an early message only. */
   maxBytes: number;
+  /**
+   * Lists the owner's stored images, newest first. A Server Action from the
+   * media module; absent hides the library picker.
+   */
+  loadLibrary?: () => Promise<LibraryImage[]>;
+}
+
+/** One stored image offered by the editor's library picker. */
+export interface LibraryImage {
+  id: string;
+  /** Article-width URL the inserted node displays. */
+  url: string;
+  thumbnailUrl: string;
+  alt: string;
+  width: number;
+  height: number;
 }

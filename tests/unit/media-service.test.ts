@@ -83,6 +83,7 @@ function service(
       media: repository,
       storage,
       isOwner: (actor) => actor?.user.role === "OWNER",
+      findReferences: async () => [],
       now: () => NOW,
       newId: () => `testmedia${String((sequence += 1)).padStart(11, "0")}`,
       ...overrides,
@@ -208,11 +209,106 @@ describe("media resolution", () => {
 
     expect(await media.resolveForArticle([created.id])).toEqual({});
     expect(await repository.findById(created.id)).toBeNull();
+    // Still known, so a post that shows it stays saveable (ADR-0025).
+    expect(await media.findExisting([created.id])).toEqual(new Set());
+    expect(await media.findKnown([created.id])).toEqual(new Set([created.id]));
   });
 
   it("reads more ids than one statement may bind", async () => {
     const ids = Array.from({ length: 150 }, (_, index) => `id${index}`);
-    expect(await repository.findExisting(ids)).toEqual(new Set());
+    expect(await repository.findKnown(ids)).toEqual(new Set());
+  });
+});
+
+describe("media library", () => {
+  const LATER = new Date("2026-11-18T09:00:00.000Z");
+
+  it("lists live media newest first without coordinates", async () => {
+    const first = service();
+    const older = await first.media.upload(
+      OWNER,
+      buildJpeg({ exif: { gps: LONDON } }),
+    );
+    const second = service({ now: () => LATER });
+    const newer = await second.media.upload(OWNER, buildJpeg(), "Harbour");
+
+    const items = await second.media.list(OWNER);
+
+    expect(items.map((item) => item.id)).toEqual([newer.id, older.id]);
+    expect(items[0]).toMatchObject({
+      url: `/media/${newer.id}.jpg?w=1600`,
+      thumbnailUrl: `/media/${newer.id}.jpg?w=480`,
+      alt: "Harbour",
+      hadLocation: false,
+      createdAt: LATER,
+    });
+    expect(items[1]?.hadLocation).toBe(true);
+    expect(JSON.stringify(items)).not.toContain("51.5");
+  });
+
+  it("rejects non-owners", async () => {
+    const { media } = service();
+    await expect(media.list(VISITOR)).rejects.toThrow(MediaAccessDeniedError);
+    await expect(media.remove(null, "x")).rejects.toThrow(
+      MediaAccessDeniedError,
+    );
+  });
+
+  it("deletes an unreferenced item, its object, and its coordinates", async () => {
+    const { media, objects } = service();
+    const created = await media.upload(
+      OWNER,
+      buildJpeg({ exif: { gps: LONDON } }),
+    );
+
+    expect(await media.remove(OWNER, created.id)).toEqual({ kind: "deleted" });
+
+    expect(objects.has(created.storageKey)).toBe(false);
+    expect(await media.list(OWNER)).toEqual([]);
+    const row = await db
+      .prepare(
+        "SELECT deleted_at, gps_latitude, gps_longitude FROM media WHERE id = ?",
+      )
+      .bind(created.id)
+      .first();
+    expect(row).toEqual({
+      deleted_at: NOW.getTime(),
+      gps_latitude: null,
+      gps_longitude: null,
+    });
+    expect(await media.remove(OWNER, created.id)).toEqual({
+      kind: "not_found",
+    });
+  });
+
+  it("asks for confirmation before deleting a referenced item", async () => {
+    const posts = [{ id: "p1", title: "Harbour walk" }];
+    const { media, objects } = service({ findReferences: async () => posts });
+    const created = await media.upload(OWNER, buildJpeg());
+
+    expect(await media.remove(OWNER, created.id)).toEqual({
+      kind: "referenced",
+      posts,
+    });
+    expect(objects.has(created.storageKey)).toBe(true);
+    expect(await media.list(OWNER)).toHaveLength(1);
+
+    expect(
+      await media.remove(OWNER, created.id, { confirmReferenced: true }),
+    ).toEqual({ kind: "deleted" });
+    expect(objects.has(created.storageKey)).toBe(false);
+  });
+
+  it("keeps the row deleted when the object delete fails", async () => {
+    const { media, storage } = service();
+    const created = await media.upload(OWNER, buildJpeg());
+    vi.mocked(storage.delete).mockRejectedValueOnce(new Error("r2 down"));
+
+    expect(await media.remove(OWNER, created.id)).toEqual({ kind: "deleted" });
+    expect(await media.list(OWNER)).toEqual([]);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining("media.orphan"),
+    );
   });
 });
 

@@ -2,7 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
-import { getMediaService, MEDIA_UPLOAD_CONFIG } from "@/features/media";
+import {
+  getMediaService,
+  listMediaForPickerAction,
+  MEDIA_UPLOAD_CONFIG,
+} from "@/features/media";
 import {
   collectMediaReferences,
   CONTENT_SCHEMA_VERSION,
@@ -38,13 +42,19 @@ export default async function EditPostPage({
   const mediaIds = initialDocument
     ? collectMediaReferences(initialDocument)
     : [];
-  const resolved =
-    mediaIds.length > 0
-      ? await (await getMediaService()).resolveForArticle(mediaIds)
-      : {};
+  const mediaService = mediaIds.length > 0 ? await getMediaService() : null;
+  const resolved = mediaService
+    ? await mediaService.resolveForArticle(mediaIds)
+    : {};
   const initialMediaUrls = Object.fromEntries(
     Object.entries(resolved).map(([id, media]) => [id, media.url]),
   );
+  // Known but not live: deleted from the library after the post used it.
+  const unresolved = mediaIds.filter((id) => !Object.hasOwn(resolved, id));
+  const deletedMediaIds =
+    mediaService && unresolved.length > 0
+      ? [...(await mediaService.findKnown(unresolved))]
+      : [];
 
   return (
     <div>
@@ -63,8 +73,12 @@ export default async function EditPostPage({
 
       <div className="mt-8">
         <PostForm
-          imageUpload={MEDIA_UPLOAD_CONFIG}
+          imageUpload={{
+            ...MEDIA_UPLOAD_CONFIG,
+            loadLibrary: listMediaForPickerAction,
+          }}
           initialDocument={initialDocument}
+          deletedMediaIds={deletedMediaIds}
           initialMediaUrls={initialMediaUrls}
           initialValues={{
             title: post.title,

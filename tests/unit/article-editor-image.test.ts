@@ -57,6 +57,21 @@ describe("image node in the editor", () => {
     expect(figure.querySelector("figcaption")?.textContent).toBe("Asleep.");
   });
 
+  it("marks an image deleted from the library", () => {
+    const figure = open(
+      STORED,
+      createArticleEditorExtensions({}, ["med_01"]),
+    ).view.dom.querySelector("figure")!;
+
+    const placeholder = figure.querySelector("[data-image-placeholder]");
+    expect(placeholder?.getAttribute("data-image-placeholder")).toBe("deleted");
+    expect(placeholder?.textContent).toBe(
+      "Deleted image: A cat. Remove it before publishing.",
+    );
+    // Display only: the stored node is unchanged.
+    expect(saved()).toEqual(STORED);
+  });
+
   it("labels a decorative image by its media id and omits the caption", () => {
     const figure = open({
       type: "doc",

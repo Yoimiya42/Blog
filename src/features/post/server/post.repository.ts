@@ -355,6 +355,28 @@ export function createPostRepository(db: D1Database) {
       return results.map(toSummary);
     },
 
+    /**
+     * Title and raw content of every non-deleted post, drafts included. Used
+     * by the media reference scan (ADR-0025); content is not validated.
+     */
+    async listContentSources(): Promise<
+      { id: string; title: string; content: unknown }[]
+    > {
+      const { results } = await db
+        .prepare(
+          `SELECT id, title, content FROM post
+           WHERE deleted_at IS NULL
+           ORDER BY updated_at DESC, id DESC`,
+        )
+        .all<{ id: string; title: string; content: string }>();
+
+      return results.map((row) => ({
+        id: row.id,
+        title: row.title,
+        content: JSON.parse(row.content) as unknown,
+      }));
+    },
+
     /** Returns false when the post does not exist or is already deleted. */
     async softDelete(id: string, now: Date): Promise<boolean> {
       const timestamp = toEpochMilliseconds(now);

@@ -35,6 +35,50 @@ export function newMediaId(): string {
   return id;
 }
 
+/** The library grid loads the smallest variant. */
+export const THUMBNAIL_WIDTH: MediaWidth = 480;
+
+/** One row of the owner's media library. Coordinates are reduced to a flag. */
+export interface MediaLibraryItem {
+  id: string;
+  /** Root-relative article-width URL; the one inserted and copied. */
+  url: string;
+  thumbnailUrl: string;
+  width: number;
+  height: number;
+  sizeBytes: number;
+  mimeType: Media["mimeType"];
+  alt: string;
+  hadLocation: boolean;
+  createdAt: Date;
+}
+
+export interface MediaReference {
+  id: string;
+  title: string;
+}
+
+export type MediaRemoval =
+  | { kind: "deleted" }
+  | { kind: "not_found" }
+  /** Nothing was deleted; the owner must confirm with `confirmReferenced`. */
+  | { kind: "referenced"; posts: MediaReference[] };
+
+function toLibraryItem(item: Media): MediaLibraryItem {
+  return {
+    id: item.id,
+    url: mediaUrl(item.storageKey, ARTICLE_IMAGE_WIDTH),
+    thumbnailUrl: mediaUrl(item.storageKey, THUMBNAIL_WIDTH),
+    width: item.width,
+    height: item.height,
+    sizeBytes: item.sizeBytes,
+    mimeType: item.mimeType,
+    alt: item.alt,
+    hadLocation: item.gpsLatitude !== null,
+    createdAt: item.createdAt,
+  };
+}
+
 /** What an article renderer needs for one image. */
 export interface ResolvedMedia {
   url: string;
@@ -46,6 +90,8 @@ interface MediaServiceDependencies {
   media: MediaRepository;
   storage: StorageAdapter;
   isOwner: (actor: MediaActor) => boolean;
+  /** Posts whose content shows a media id (ADR-0025). */
+  findReferences: (mediaId: string) => Promise<MediaReference[]>;
   now?: () => Date;
   newId?: () => string;
 }
@@ -54,6 +100,7 @@ export function createMediaService({
   media,
   storage,
   isOwner,
+  findReferences,
   now = () => new Date(),
   newId = newMediaId,
 }: MediaServiceDependencies) {
@@ -149,9 +196,66 @@ export function createMediaService({
       );
     },
 
-    /** For article validation: which ids name live media. */
+    /** For publishing: which ids name live media. */
     findExisting(ids: string[]): Promise<Set<string>> {
       return media.findExisting(ids);
+    },
+
+    /** For saving: which ids were ever stored, deleted ones included. */
+    findKnown(ids: string[]): Promise<Set<string>> {
+      return media.findKnown(ids);
+    },
+
+    /** The owner's library, newest first. */
+    async list(actor: MediaActor): Promise<MediaLibraryItem[]> {
+      if (!isOwner(actor)) throw new MediaAccessDeniedError();
+
+      return (await media.listAll()).map(toLibraryItem);
+    },
+
+    /**
+     * Deletes an item unless a post shows it and the owner has not confirmed.
+     * The row is marked first, so a failed object delete leaves an orphan
+     * object, never a live row without its object.
+     */
+    async remove(
+      actor: MediaActor,
+      id: string,
+      { confirmReferenced = false } = {},
+    ): Promise<MediaRemoval> {
+      if (!isOwner(actor)) throw new MediaAccessDeniedError();
+
+      if (!(await media.findById(id))) return { kind: "not_found" };
+
+      const posts = await findReferences(id);
+      if (posts.length > 0 && !confirmReferenced) {
+        return { kind: "referenced", posts };
+      }
+
+      const storageKey = await media.markDeleted(id, now());
+      if (storageKey === null) return { kind: "not_found" };
+
+      try {
+        await storage.delete(storageKey);
+      } catch (error) {
+        console.error(
+          JSON.stringify({
+            event: "media.orphan",
+            storageKey,
+            error: String(error),
+          }),
+        );
+      }
+
+      console.info(
+        JSON.stringify({
+          event: "media.delete",
+          mediaId: id,
+          referencedBy: posts.length,
+        }),
+      );
+
+      return { kind: "deleted" };
     },
   };
 }
@@ -172,5 +276,11 @@ export async function getMediaService(): Promise<MediaService> {
     media: await getMediaRepository(),
     storage: await getMediaStorage(),
     isOwner: isOwnerSession,
+    // Loaded only on delete: the post module owns article content, and the
+    // upload path in the Worker entry must not pull in its components.
+    findReferences: async (mediaId) => {
+      const { getMediaReferenceFinder } = await import("@/features/post");
+      return (await getMediaReferenceFinder())(mediaId);
+    },
   });
 }

@@ -138,6 +138,57 @@ export function createMediaRepository(db: D1Database) {
     async findExisting(ids: readonly string[]): Promise<Set<string>> {
       return new Set((await displayByIds(ids)).map((media) => media.id));
     },
+
+    /**
+     * Ids among `ids` that were ever stored, deleted ones included: a post
+     * that still shows a deleted image must stay saveable (ADR-0025).
+     */
+    async findKnown(ids: readonly string[]): Promise<Set<string>> {
+      const known = new Set<string>();
+      for (const batch of chunks([...new Set(ids)])) {
+        const { results } = await db
+          .prepare(
+            `SELECT id FROM media WHERE id IN (${placeholders(batch.length)})`,
+          )
+          .bind(...batch)
+          .all<{ id: string }>();
+        for (const row of results) known.add(row.id);
+      }
+      return known;
+    },
+
+    /** Live media, newest first. */
+    async listAll(): Promise<Media[]> {
+      const { results } = await db
+        .prepare(
+          `SELECT ${MEDIA_COLUMNS} FROM media
+           WHERE deleted_at IS NULL
+           ORDER BY created_at DESC, id DESC`,
+        )
+        .all<MediaRow>();
+
+      return results.map(toMedia);
+    },
+
+    /**
+     * Marks the row deleted and clears its coordinates. Returns the storage
+     * key, or null when the item is missing or already deleted.
+     */
+    async markDeleted(id: string, now: Date): Promise<string | null> {
+      const timestamp = toEpochMilliseconds(now);
+      const row = await db
+        .prepare(
+          `UPDATE media
+           SET deleted_at = ?, updated_at = ?,
+             gps_latitude = NULL, gps_longitude = NULL
+           WHERE id = ? AND deleted_at IS NULL
+           RETURNING storage_key`,
+        )
+        .bind(timestamp, timestamp, id)
+        .first<{ storage_key: string }>();
+
+      return row?.storage_key ?? null;
+    },
   };
 }
 

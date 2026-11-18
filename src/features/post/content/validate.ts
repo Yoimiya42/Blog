@@ -49,10 +49,18 @@ export function collectMediaReferences(document: ArticleDocument): string[] {
   return [...new Set(collectMediaIds(document))];
 }
 
-/** Implemented by the media module once Issue #14 owns the Media table. */
+/** Implemented by the media module (Issue #14, ADR-0025). */
 export type MediaReferenceResolver = {
+  /** Live media only. Publishing requires these. */
   findExisting(mediaIds: string[]): Promise<Set<string>>;
+  /**
+   * Media ever stored, deleted included. Saving requires only these, so
+   * deleting an image never blocks editing the post that shows it.
+   */
+  findKnown(mediaIds: string[]): Promise<Set<string>>;
 };
+
+export type MediaReferenceRule = "live" | "known";
 
 /**
  * Separate from validateArticleDocument so shape validation stays synchronous
@@ -62,19 +70,30 @@ export type MediaReferenceResolver = {
 export async function validateMediaReferences(
   document: ArticleDocument,
   resolver: MediaReferenceResolver,
+  rule: MediaReferenceRule = "live",
 ): Promise<ValidationResult> {
   const referenced = collectMediaReferences(document);
   if (referenced.length === 0) return { ok: true, document };
 
-  const existing = await resolver.findExisting(referenced);
+  const existing =
+    rule === "live"
+      ? await resolver.findExisting(referenced)
+      : await resolver.findKnown(referenced);
   const missing = referenced.filter((mediaId) => !existing.has(mediaId));
   if (missing.length === 0) return { ok: true, document };
+
+  // Only the publish rule can miss a deleted item; name it so the owner
+  // knows to remove the image rather than suspect a broken upload.
+  const deleted =
+    rule === "live" ? await resolver.findKnown(missing) : new Set<string>();
 
   return {
     ok: false,
     issues: missing.map((mediaId) => ({
       path: "content",
-      message: `unknown media reference: ${mediaId}`,
+      message: deleted.has(mediaId)
+        ? `image ${mediaId} was deleted from the media library. Remove it before publishing.`
+        : `unknown media reference: ${mediaId}`,
     })),
   };
 }

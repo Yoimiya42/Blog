@@ -1,12 +1,16 @@
 import { requireOwner } from "@/features/auth";
+import { getMediaService, MediaLibrary } from "@/features/media";
 
 export default async function AdminMediaPage() {
-  await requireOwner();
+  const session = await requireOwner();
+  const items = await (await getMediaService()).list(session);
 
   return (
     <div>
       <h1 className="text-3xl font-semibold tracking-tight">Media</h1>
-      <p className="mt-8 text-sm text-stone-600">No media.</p>
+      <div className="mt-8">
+        <MediaLibrary items={items} />
+      </div>
     </div>
   );
 }

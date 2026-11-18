@@ -27,10 +27,14 @@ export interface ArticleImageOptions {
    * the media id alone.
    */
   mediaUrl: (mediaId: string) => string | undefined;
+  /** True for an id deleted from the media library (ADR-0025). */
+  isDeleted: (mediaId: string) => boolean;
 }
 
 const IMAGE_PLACEHOLDER_CLASS =
   "rounded-lg border border-dashed border-stone-400 bg-stone-50 p-4 text-sm text-stone-600";
+const IMAGE_DELETED_CLASS =
+  "rounded-lg border border-dashed border-red-700 bg-red-50 p-4 text-sm text-red-800";
 const IMAGE_PREVIEW_CLASS = "rounded-lg";
 
 /**
@@ -45,7 +49,7 @@ export const ArticleImage = Node.create<ArticleImageOptions>({
   draggable: true,
 
   addOptions() {
-    return { mediaUrl: () => undefined };
+    return { mediaUrl: () => undefined, isDeleted: () => false };
   },
 
   addAttributes() {
@@ -83,11 +87,15 @@ export const ArticleImage = Node.create<ArticleImageOptions>({
     const alt: unknown = node.attrs.alt;
     const caption: unknown = node.attrs.caption;
     const altText = typeof alt === "string" ? alt : "";
-    const url = this.options.mediaUrl(String(node.attrs.mediaId));
-    const label =
-      altText.trim() !== ""
+    const mediaId = String(node.attrs.mediaId);
+    const url = this.options.mediaUrl(mediaId);
+    const deleted = !url && this.options.isDeleted(mediaId);
+    const name = altText.trim() !== "" ? altText : mediaId;
+    const label = deleted
+      ? `Deleted image: ${name}. Remove it before publishing.`
+      : altText.trim() !== ""
         ? `Image: ${altText}`
-        : `Image ${String(node.attrs.mediaId)}`;
+        : `Image ${mediaId}`;
     const captionNode =
       typeof caption === "string" && caption.trim() !== ""
         ? [["figcaption", {}, caption] as const]
@@ -112,8 +120,11 @@ export const ArticleImage = Node.create<ArticleImageOptions>({
 
     return [
       "figure",
-      { ...HTMLAttributes, class: IMAGE_PLACEHOLDER_CLASS },
-      ["div", { "data-image-placeholder": "" }, label],
+      {
+        ...HTMLAttributes,
+        class: deleted ? IMAGE_DELETED_CLASS : IMAGE_PLACEHOLDER_CLASS,
+      },
+      ["div", { "data-image-placeholder": deleted ? "deleted" : "" }, label],
       ...captionNode,
     ];
   },

@@ -42,12 +42,16 @@ const baseExtensions = [
  */
 export function createArticleEditorExtensions(
   mediaUrls: Readonly<Record<string, string>> = {},
+  deletedMediaIds: readonly string[] = [],
 ) {
+  const deleted = new Set(deletedMediaIds);
+
   return [
     ...baseExtensions,
     ArticleImage.configure({
       mediaUrl: (mediaId) =>
         Object.hasOwn(mediaUrls, mediaId) ? mediaUrls[mediaId] : undefined,
+      isDeleted: (mediaId) => deleted.has(mediaId),
     }),
   ];
 }
