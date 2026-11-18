@@ -268,8 +268,13 @@ describe("media references", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
+    // med_02 is known but not live: deleted, so the message says so.
     expect(result.issues).toEqual([
-      { path: "content", message: "unknown media reference: med_02" },
+      {
+        path: "content",
+        message:
+          "image med_02 was deleted from the media library. Remove it before publishing.",
+      },
     ]);
     // A deleted item is still known, so saving accepts it (ADR-0025).
     expect((await validateMediaReferences(parsed, resolver, "known")).ok).toBe(

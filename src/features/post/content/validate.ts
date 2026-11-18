@@ -82,11 +82,18 @@ export async function validateMediaReferences(
   const missing = referenced.filter((mediaId) => !existing.has(mediaId));
   if (missing.length === 0) return { ok: true, document };
 
+  // Only the publish rule can miss a deleted item; name it so the owner
+  // knows to remove the image rather than suspect a broken upload.
+  const deleted =
+    rule === "live" ? await resolver.findKnown(missing) : new Set<string>();
+
   return {
     ok: false,
     issues: missing.map((mediaId) => ({
       path: "content",
-      message: `unknown media reference: ${mediaId}`,
+      message: deleted.has(mediaId)
+        ? `image ${mediaId} was deleted from the media library. Remove it before publishing.`
+        : `unknown media reference: ${mediaId}`,
     })),
   };
 }

@@ -34,6 +34,8 @@ interface ArticleEditorProps {
   imageUpload?: ImageUploadConfig;
   /** Display URLs of the images in `initialDocument`, by media id. */
   initialMediaUrls?: Readonly<Record<string, string>>;
+  /** Media ids in `initialDocument` that were deleted from the library. */
+  deletedMediaIds?: readonly string[];
 }
 
 // The box around the editing area. Fluid by design: no fixed widths. Prose
@@ -58,6 +60,7 @@ export default function ArticleEditor({
   onBlur,
   imageUpload,
   initialMediaUrls,
+  deletedMediaIds,
 }: ArticleEditorProps) {
   // The image node reads display URLs from this registry when it renders. An
   // upload registers its URL before the node is inserted, so the new node
@@ -65,7 +68,7 @@ export default function ArticleEditor({
   const [{ extensions, registerMediaUrl }] = useState(() => {
     const urls: Record<string, string> = { ...initialMediaUrls };
     return {
-      extensions: createArticleEditorExtensions(urls),
+      extensions: createArticleEditorExtensions(urls, deletedMediaIds),
       registerMediaUrl: (mediaId: string, url: string) => {
         urls[mediaId] = url;
       },

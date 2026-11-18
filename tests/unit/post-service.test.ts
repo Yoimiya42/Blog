@@ -176,6 +176,10 @@ describe("media references", () => {
     expect(await service.publish(OWNER, post.id)).toMatchObject({
       ok: false,
       reason: "invalid",
+      fieldErrors: {
+        content:
+          "content: image storedmedia000000001 was deleted from the media library. Remove it before publishing.",
+      },
     });
   });
 });

@@ -48,6 +48,8 @@ interface PostFormProps {
   imageUpload?: ImageUploadConfig;
   /** Display URLs of the images in `initialDocument`, by media id. */
   initialMediaUrls?: Readonly<Record<string, string>>;
+  /** Media ids in `initialDocument` that were deleted from the library. */
+  deletedMediaIds?: readonly string[];
 }
 
 // A dynamic import keeps the TipTap runtime out of the statically imported
@@ -75,6 +77,7 @@ export function PostForm({
   slugFrozen,
   imageUpload,
   initialMediaUrls,
+  deletedMediaIds,
 }: PostFormProps) {
   const initialState: PostFormState = {
     values: initialValues,
@@ -248,6 +251,7 @@ export function PostForm({
             <ArticleEditor
               imageUpload={imageUpload}
               initialDocument={initialDocument}
+              deletedMediaIds={deletedMediaIds}
               initialMediaUrls={initialMediaUrls}
               labelledBy="post-content-label"
               name="content"
