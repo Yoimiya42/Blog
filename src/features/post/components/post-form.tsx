@@ -46,6 +46,8 @@ interface PostFormProps {
   slugFrozen: boolean;
   /** Image upload endpoint, from the media module through the page. */
   imageUpload?: ImageUploadConfig;
+  /** Display URLs of the images in `initialDocument`, by media id. */
+  initialMediaUrls?: Readonly<Record<string, string>>;
 }
 
 // A dynamic import keeps the TipTap runtime out of the statically imported
@@ -72,6 +74,7 @@ export function PostForm({
   version,
   slugFrozen,
   imageUpload,
+  initialMediaUrls,
 }: PostFormProps) {
   const initialState: PostFormState = {
     values: initialValues,
@@ -245,6 +248,7 @@ export function PostForm({
             <ArticleEditor
               imageUpload={imageUpload}
               initialDocument={initialDocument}
+              initialMediaUrls={initialMediaUrls}
               labelledBy="post-content-label"
               name="content"
               onBlur={saveOnBlur}

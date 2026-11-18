@@ -5,7 +5,16 @@ export type { ImageUploadConfig };
 export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export type ImageUploadResult =
-  { ok: true; mediaId: string; alt: string } | { ok: false; message: string };
+  | { ok: true; mediaId: string; alt: string; url: string }
+  | { ok: false; message: string };
+
+/** The first accepted image file in a paste or drop, if any. */
+export function firstImageFile(files: FileList | undefined | null) {
+  for (const file of Array.from(files ?? [])) {
+    if (ACCEPTED_IMAGE_TYPES.includes(file.type)) return file;
+  }
+  return null;
+}
 
 function errorMessage(body: unknown): string | null {
   if (typeof body === "object" && body !== null && "error" in body) {
@@ -54,18 +63,15 @@ export async function uploadImage(
     };
   }
 
-  if (
-    typeof body !== "object" ||
-    body === null ||
-    typeof (body as { id?: unknown }).id !== "string"
-  ) {
+  const reply = (body ?? {}) as { id?: unknown; url?: unknown; alt?: unknown };
+  if (typeof reply.id !== "string" || typeof reply.url !== "string") {
     return { ok: false, message: "The server returned an unexpected reply." };
   }
-  const { id, alt: storedAlt } = body as { id: string; alt?: unknown };
 
   return {
     ok: true,
-    mediaId: id,
-    alt: typeof storedAlt === "string" ? storedAlt : alt,
+    mediaId: reply.id,
+    url: reply.url,
+    alt: typeof reply.alt === "string" ? reply.alt : alt,
   };
 }

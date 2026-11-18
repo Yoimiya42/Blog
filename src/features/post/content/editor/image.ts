@@ -13,23 +13,40 @@ declare module "@tiptap/core" {
     articleImage: {
       /** Inserts an image node that references stored media. */
       insertArticleImage: (attributes: ArticleImageAttributes) => ReturnType;
+      /** Sets the alt text of every image node that shows `mediaId`. */
+      setArticleImageAlt: (mediaId: string, alt: string) => ReturnType;
     };
   }
 }
 
+export interface ArticleImageOptions {
+  /**
+   * Display URL for a media id, or undefined to show a placeholder. A
+   * function, not a record: `configure` deep-copies plain objects, so later
+   * uploads would not reach a record. Display only; the stored node keeps
+   * the media id alone.
+   */
+  mediaUrl: (mediaId: string) => string | undefined;
+}
+
 const IMAGE_PLACEHOLDER_CLASS =
   "rounded-lg border border-dashed border-stone-400 bg-stone-50 p-4 text-sm text-stone-600";
+const IMAGE_PREVIEW_CLASS = "rounded-lg";
 
 /**
  * Project-owned image node. Only a media reference is stored, so changing the
  * image host or regenerating derivatives never rewrites article JSON. The
  * default URL-based Image extension is deliberately not registered.
  */
-export const ArticleImage = Node.create({
+export const ArticleImage = Node.create<ArticleImageOptions>({
   name: "image",
   group: "block",
   atom: true,
   draggable: true,
+
+  addOptions() {
+    return { mediaUrl: () => undefined };
+  },
 
   addAttributes() {
     return {
@@ -60,23 +77,44 @@ export const ArticleImage = Node.create({
   },
 
   // The node is an atom, so the children below are display only: nothing in
-  // them is parsed back or persisted. Until Issue #14 adds the Media table
-  // there is no URL to load, so the editor shows a labelled placeholder.
+  // them is parsed back or persisted. An image with a known URL is shown; any
+  // other falls back to a labelled placeholder.
   renderHTML({ node, HTMLAttributes }) {
     const alt: unknown = node.attrs.alt;
     const caption: unknown = node.attrs.caption;
+    const altText = typeof alt === "string" ? alt : "";
+    const url = this.options.mediaUrl(String(node.attrs.mediaId));
     const label =
-      typeof alt === "string" && alt.trim() !== ""
-        ? `Image: ${alt}`
+      altText.trim() !== ""
+        ? `Image: ${altText}`
         : `Image ${String(node.attrs.mediaId)}`;
+    const captionNode =
+      typeof caption === "string" && caption.trim() !== ""
+        ? [["figcaption", {}, caption] as const]
+        : [];
+
+    if (url) {
+      return [
+        "figure",
+        HTMLAttributes,
+        [
+          "img",
+          {
+            src: url,
+            alt: altText,
+            class: IMAGE_PREVIEW_CLASS,
+            "data-image-preview": "",
+          },
+        ],
+        ...captionNode,
+      ];
+    }
 
     return [
       "figure",
       { ...HTMLAttributes, class: IMAGE_PLACEHOLDER_CLASS },
       ["div", { "data-image-placeholder": "" }, label],
-      ...(typeof caption === "string" && caption.trim() !== ""
-        ? [["figcaption", {}, caption] as const]
-        : []),
+      ...captionNode,
     ];
   },
 
@@ -97,6 +135,23 @@ export const ArticleImage = Node.create({
               caption: attributes.caption ?? null,
             },
           });
+        },
+
+      setArticleImageAlt:
+        (mediaId, alt) =>
+        ({ tr, state, dispatch }) => {
+          let found = false;
+          state.doc.descendants((node, position) => {
+            if (node.type.name !== this.name) return;
+            if (node.attrs.mediaId !== mediaId) return;
+            found = true;
+            // The command manager dispatches `tr`; a dry run leaves it alone.
+            if (dispatch) {
+              tr.setNodeMarkup(position, undefined, { ...node.attrs, alt });
+            }
+          });
+
+          return found;
         },
     };
   },

@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
-import { MEDIA_UPLOAD_CONFIG } from "@/features/media";
+import { getMediaService, MEDIA_UPLOAD_CONFIG } from "@/features/media";
 import {
+  collectMediaReferences,
   CONTENT_SCHEMA_VERSION,
   DeletePostButton,
   formatTagNames,
@@ -34,6 +35,16 @@ export default async function EditPostPage({
       ? validateArticleDocument(post.content)
       : null;
   const initialDocument = stored?.ok ? stored.document : null;
+  const mediaIds = initialDocument
+    ? collectMediaReferences(initialDocument)
+    : [];
+  const resolved =
+    mediaIds.length > 0
+      ? await (await getMediaService()).resolveForArticle(mediaIds)
+      : {};
+  const initialMediaUrls = Object.fromEntries(
+    Object.entries(resolved).map(([id, media]) => [id, media.url]),
+  );
 
   return (
     <div>
@@ -54,6 +65,7 @@ export default async function EditPostPage({
         <PostForm
           imageUpload={MEDIA_UPLOAD_CONFIG}
           initialDocument={initialDocument}
+          initialMediaUrls={initialMediaUrls}
           initialValues={{
             title: post.title,
             slug: post.slug,
