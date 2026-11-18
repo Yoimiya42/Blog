@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
+import { MEDIA_UPLOAD_CONFIG } from "@/features/media";
 import {
   CONTENT_SCHEMA_VERSION,
   DeletePostButton,
@@ -51,6 +52,7 @@ export default async function EditPostPage({
 
       <div className="mt-8">
         <PostForm
+          imageUpload={MEDIA_UPLOAD_CONFIG}
           initialDocument={initialDocument}
           initialValues={{
             title: post.title,

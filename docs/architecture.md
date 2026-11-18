@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.20 · 2026-11-15
+> v0.21 · 2026-11-17
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -126,7 +126,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
 - Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal, and Workers Builds now deploys `main`. OpenNext remains a fallback only for a documented blocker. Vercel serves pull request previews only since Issue #29 closed.
 - Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. Production stays on Workers Free after the public blog ships although measured requests exceed the free CPU limit; an exceeded-CPU outcome or public promotion triggers Workers Paid or cached public HTML. See ADR-0011 and ADR-0019.
-- Image processing remains provisional under Issue #4.
+- Images: the Worker entry accepts owner uploads at `POST /api/media`, strips GPS in place, and stores GPS-clean originals in R2; Cloudflare Images resizes on delivery at `/media`. See ADR-0021, ADR-0022, ADR-0023, and ADR-0024.
 
 ---
 
@@ -167,14 +167,15 @@ Adding a persisted node requires a PRD version, a content schema version, determ
 ```ts
 // lib/storage/types.ts
 export interface StorageAdapter {
-  upload(file: Buffer, key: string, mime: string): Promise<{ url: string }>
+  upload(input: { body: Uint8Array; key: string; contentType: string }): Promise<void>
   delete(key: string): Promise<void>
-  getSignedUrl(key: string, ttl: number): Promise<string>
 }
 
-// lib/storage/r2.ts      -> class R2Storage implements StorageAdapter
-// lib/storage/index.ts   -> export const storage: StorageAdapter = new R2Storage()
+// lib/storage/r2.ts      -> createR2Storage(bucket): StorageAdapter
+// lib/storage/index.ts   -> getMediaStorage() binds the environment's bucket
 ```
+
+The storage adapter returns no URL: delivery derives public URLs and reads originals through the protected source domain (ADR-0022).
 
 Swapping a provider changes one line in `index.ts`. Mail and metadata follow the same shape: a `SpotifyProvider` enables albums without touching other code.
 
@@ -297,3 +298,4 @@ Any failing row is an architectural defect.
 | 2026-11-15 | v0.18 | Added the public blog routes and the anonymous post read service |
 | 2026-11-15 | v0.19 | Enabled Workers Logs for production and previews |
 | 2026-11-15 | v0.20 | Kept production on Workers Free after the public blog release; see ADR-0019 |
+| 2026-11-17 | v0.21 | Narrowed the storage adapter to upload and delete; recorded the image upload and delivery paths; see ADR-0024 |

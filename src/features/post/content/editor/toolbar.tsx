@@ -5,6 +5,8 @@ import { useId, useState, type MouseEvent, type ReactNode } from "react";
 
 import { isSafeHref } from "../schema";
 import { CODE_LANGUAGES, type HeadingLevel } from "../types";
+import { ImagePanel } from "./image-panel";
+import type { ImageUploadConfig } from "./upload-image";
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [2, 3, 4];
 
@@ -62,7 +64,23 @@ function ToolbarButton({
   );
 }
 
-export function EditorToolbar({ editor }: { editor: Editor }) {
+/** Image upload state, owned by the editor so a paste can open the panel. */
+export interface ToolbarImageUpload {
+  config: ImageUploadConfig;
+  open: boolean;
+  file: File | null;
+  onOpenChange: (open: boolean) => void;
+  onFileChange: (file: File | null) => void;
+}
+
+export function EditorToolbar({
+  editor,
+  image,
+}: {
+  editor: Editor;
+  /** Omitted when uploads are unavailable; the image control is hidden. */
+  image?: ToolbarImageUpload;
+}) {
   const linkFieldId = useId();
   // Null while the link field is closed.
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
@@ -176,6 +194,15 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
         >
           Code
         </ToolbarButton>
+        {image ? (
+          <ToolbarButton
+            label="Insert image"
+            onPress={() => image.onOpenChange(!image.open)}
+            pressed={image.open}
+          >
+            Image
+          </ToolbarButton>
+        ) : null}
         {state.codeBlock ? (
           <select
             aria-label="Code language"
@@ -262,6 +289,16 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
             </p>
           ) : null}
         </div>
+      ) : null}
+
+      {image?.open ? (
+        <ImagePanel
+          config={image.config}
+          editor={editor}
+          file={image.file}
+          onClose={() => image.onOpenChange(false)}
+          onFileChange={image.onFileChange}
+        />
       ) : null}
     </div>
   );

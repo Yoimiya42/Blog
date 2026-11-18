@@ -1,4 +1,5 @@
 import { requireOwner } from "@/features/auth";
+import { MEDIA_UPLOAD_CONFIG } from "@/features/media";
 import { EMPTY_ARTICLE_DOCUMENT, PostForm } from "@/features/post";
 
 export default async function NewPostPage() {
@@ -10,6 +11,7 @@ export default async function NewPostPage() {
 
       <div className="mt-8">
         <PostForm
+          imageUpload={MEDIA_UPLOAD_CONFIG}
           initialDocument={EMPTY_ARTICLE_DOCUMENT}
           initialValues={{ title: "", slug: "", summary: "", tags: "" }}
           postId={null}
