@@ -3,7 +3,10 @@ import { Editor } from "@tiptap/core";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { validateArticleDocument, type ArticleDocument } from "@/features/post";
-import { articleEditorExtensions } from "@/features/post/content/editor/extensions";
+import {
+  articleEditorExtensions,
+  createArticleEditorExtensions,
+} from "@/features/post/content/editor/extensions";
 import { normalizeEditorDocument } from "@/features/post/content/editor/normalize";
 
 const STORED: ArticleDocument = {
@@ -22,10 +25,10 @@ const STORED: ArticleDocument = {
 
 let editor: Editor;
 
-function open(content: ArticleDocument) {
+function open(content: ArticleDocument, extensions = articleEditorExtensions) {
   editor = new Editor({
     element: document.createElement("div"),
-    extensions: articleEditorExtensions,
+    extensions,
     content,
   });
 
@@ -130,5 +133,56 @@ describe("image node in the editor", () => {
     // schema v1 has no image inside a list item.
     const list = saved().content[0];
     expect(JSON.stringify(list)).not.toContain("med_04");
+  });
+
+  it("shows the image itself when its display URL is known", () => {
+    const urls: Record<string, string> = {
+      med_01: "/media/med_01.jpg?w=1600",
+    };
+    const figure = open(
+      STORED,
+      createArticleEditorExtensions(urls),
+    ).view.dom.querySelector("figure")!;
+    const img = figure.querySelector("img")!;
+
+    expect(img.getAttribute("src")).toBe("/media/med_01.jpg?w=1600");
+    expect(img.getAttribute("alt")).toBe("A cat");
+    expect(figure.querySelector("[data-image-placeholder]")).toBeNull();
+    expect(figure.querySelector("figcaption")?.textContent).toBe("Asleep.");
+    expect(saved()).toEqual(STORED);
+  });
+
+  it("shows an image inserted after its URL was registered", () => {
+    const urls: Record<string, string> = {};
+    open(STORED, createArticleEditorExtensions(urls));
+
+    urls.med_05 = "/media/med_05.png?w=1600";
+    editor
+      .chain()
+      .setTextSelection(8)
+      .insertArticleImage({ mediaId: "med_05", alt: "" })
+      .run();
+
+    const img = editor.view.dom.querySelector('[data-media-id="med_05"] img');
+    expect(img?.getAttribute("src")).toBe("/media/med_05.png?w=1600");
+  });
+
+  it("sets the alt text of an inserted image", () => {
+    open(STORED);
+
+    expect(editor.commands.setArticleImageAlt("med_01", "A sleeping cat")).toBe(
+      true,
+    );
+    expect(saved().content[1]).toEqual({
+      type: "image",
+      attrs: { mediaId: "med_01", alt: "A sleeping cat", caption: "Asleep." },
+    });
+  });
+
+  it("reports a missing image when setting alt text", () => {
+    open(STORED);
+
+    expect(editor.commands.setArticleImageAlt("med_99", "x")).toBe(false);
+    expect(saved()).toEqual(STORED);
   });
 });

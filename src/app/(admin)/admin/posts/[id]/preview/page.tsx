@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
+import { getMediaService } from "@/features/media";
 import {
   ARTICLE_PROSE_CLASS,
   ArticleContent,
+  collectMediaReferences,
   CONTENT_SCHEMA_VERSION,
   getPostService,
   validateArticleDocument,
@@ -29,6 +31,11 @@ export default async function PreviewPostPage({
     post.contentSchemaVersion === CONTENT_SCHEMA_VERSION
       ? validateArticleDocument(post.content)
       : null;
+  const mediaIds = stored?.ok ? collectMediaReferences(stored.document) : [];
+  const mediaById =
+    mediaIds.length > 0
+      ? await (await getMediaService()).resolveForArticle(mediaIds)
+      : {};
 
   return (
     <div className="max-w-2xl">
@@ -51,9 +58,7 @@ export default async function PreviewPostPage({
 
       <div className={`mt-8 ${ARTICLE_PROSE_CLASS}`}>
         {stored?.ok ? (
-          // Media resolution arrives with the Media table in Issue #14; until
-          // then an image node renders the renderer's unavailable fallback.
-          <ArticleContent document={stored.document} mediaById={{}} />
+          <ArticleContent document={stored.document} mediaById={mediaById} />
         ) : (
           <p className="text-sm text-red-700" role="alert">
             The stored content is not valid schema v1 and cannot be previewed.

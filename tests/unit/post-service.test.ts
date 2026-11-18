@@ -11,6 +11,7 @@ import {
 
 import { isOwnerSession } from "@/features/auth/server/owner";
 import { PostAccessDeniedError, type PostInput } from "@/features/post";
+import { createMediaRepository } from "@/features/media/server/media.repository";
 import { createPostRepository } from "@/features/post/server/post.repository";
 import { createTagRepository } from "@/features/tag";
 import {
@@ -64,6 +65,7 @@ beforeAll(async () => {
     tags: createTagRepository(db),
     // The real rule, so these tests fail if the owner check changes.
     isOwner: isOwnerSession,
+    media: createMediaRepository(db),
     now: () => clock,
     newId: () => `post-${++nextId}`,
   });
@@ -119,6 +121,52 @@ describe("authorisation", () => {
     expect(await countRows()).toBe(1);
     expect(await service.getById(OWNER, post.id)).toMatchObject({
       title: "Hello",
+    });
+  });
+});
+
+describe("media references", () => {
+  const withImage = (mediaId: string) => ({
+    type: "doc",
+    content: [{ type: "image", attrs: { mediaId, alt: "" } }],
+  });
+
+  async function insertMedia(id: string) {
+    await db
+      .prepare(
+        `INSERT INTO media (id, storage_key, mime_type, width, height, size_bytes)
+         VALUES (?, ?, 'image/jpeg', 10, 10, 100)`,
+      )
+      .bind(id, `media/${id}.jpg`)
+      .run();
+  }
+
+  it("rejects an image node that names no stored media", async () => {
+    const result = await service.create(
+      OWNER,
+      input({ content: withImage("missingmedia00000001") }),
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: {
+        content: "content: unknown media reference: missingmedia00000001",
+      },
+    });
+    expect(await countRows()).toBe(0);
+  });
+
+  it("accepts stored media and refuses to publish once it is deleted", async () => {
+    await insertMedia("storedmedia000000001");
+    const post = await createPost({
+      content: withImage("storedmedia000000001"),
+    });
+
+    await db.prepare("UPDATE media SET deleted_at = 1").run();
+
+    expect(await service.publish(OWNER, post.id)).toMatchObject({
+      ok: false,
+      reason: "invalid",
     });
   });
 });

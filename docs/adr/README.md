@@ -39,3 +39,4 @@ Template: `template.md`.
 | [0021](0021-v1-image-pipeline.md) | v1 image pipeline | Strip GPS on the server into GPS-clean R2 originals; resize with Cloudflare Images on delivery at fixed widths | Accepted; transform call decided by 0022 | 2026-11-17 |
 | [0022](0022-image-source-access-and-transform-path.md) | Image transform path and source access | Transform through `cf.image` from an Access-protected source domain; check permissions before any cache for non-public media | Accepted | 2026-11-17 |
 | [0023](0023-worker-entry-serves-media.md) | A custom Worker entry serves `/media` before vinext | `worker/index.ts` answers `/media` with year-long browser caching and delegates everything else to vinext | Accepted | 2026-11-17 |
+| [0024](0024-image-upload-endpoint.md) | Image upload through the Worker entry | `POST /api/media` checks origin and owner before reading a raw body, then strips GPS in place | Accepted | 2026-11-17 |

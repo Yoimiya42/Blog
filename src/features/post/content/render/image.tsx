@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element -- Issue #14 owns the responsive image pipeline. */
+/* eslint-disable @next/next/no-img-element -- Cloudflare Images serves fixed widths (ADR-0021); Issue #64 adds responsive sources. */
 
 import type { ImageNode } from "../types";
 import { ImageZoom } from "./image-zoom";

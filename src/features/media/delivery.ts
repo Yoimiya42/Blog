@@ -48,6 +48,14 @@ function isMediaWidth(value: number): value is MediaWidth {
   return (MEDIA_WIDTHS as readonly number[]).includes(value);
 }
 
+/**
+ * Root-relative public URL of one variant. `storageKey` is `media/<file>`, so
+ * the public path mirrors the object key.
+ */
+export function mediaUrl(storageKey: string, width: MediaWidth): string {
+  return `/${storageKey}?w=${width}`;
+}
+
 export function mediaSourceUrl(sourceOrigin: string, key: string) {
   return new URL(`/${key}`, sourceOrigin).toString();
 }

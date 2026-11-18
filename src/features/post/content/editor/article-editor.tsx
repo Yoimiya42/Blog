@@ -1,13 +1,19 @@
 "use client";
 
-import { EditorContent, useEditor } from "@tiptap/react";
-import { useState } from "react";
+import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import { useEffect, useRef, useState } from "react";
 
 import { ARTICLE_PROSE_CLASS } from "../prose";
 import type { ArticleDocument } from "../types";
-import { articleEditorExtensions } from "./extensions";
+import { createArticleEditorExtensions } from "./extensions";
+import { ImagePanel, type ImageUploadStatus } from "./image-panel";
 import { normalizeEditorDocument } from "./normalize";
 import { EditorToolbar } from "./toolbar";
+import {
+  firstImageFile,
+  uploadImage,
+  type ImageUploadConfig,
+} from "./upload-image";
 
 interface ArticleEditorProps {
   /** A document that already passed schema validation. */
@@ -23,6 +29,10 @@ interface ArticleEditorProps {
   onChange?: (serialized: string) => void;
   /** Called when the editing area loses focus. Same stability rule. */
   onBlur?: () => void;
+  /** Enables the image control, paste, and drop. Same stability rule. */
+  imageUpload?: ImageUploadConfig;
+  /** Display URLs of the images in `initialDocument`, by media id. */
+  initialMediaUrls?: Readonly<Record<string, string>>;
 }
 
 // The box around the editing area. Fluid by design: no fixed widths. Prose
@@ -45,7 +55,25 @@ export default function ArticleEditor({
   labelledBy,
   onChange,
   onBlur,
+  imageUpload,
+  initialMediaUrls,
 }: ArticleEditorProps) {
+  // The image node reads display URLs from this registry when it renders. An
+  // upload registers its URL before the node is inserted, so the new node
+  // shows the image instead of a placeholder.
+  const [{ extensions, registerMediaUrl }] = useState(() => {
+    const urls: Record<string, string> = { ...initialMediaUrls };
+    return {
+      extensions: createArticleEditorExtensions(urls),
+      registerMediaUrl: (mediaId: string, url: string) => {
+        urls[mediaId] = url;
+      },
+    };
+  });
+  const [imagePanelOpen, setImagePanelOpen] = useState(false);
+  const [imageStatus, setImageStatus] = useState<ImageUploadStatus>({
+    kind: "idle",
+  });
   // Controlled, not a defaultValue: React resets uncontrolled fields after a
   // form action, which would submit the stale initial document on the next
   // save.
@@ -53,8 +81,13 @@ export default function ArticleEditor({
     JSON.stringify(initialDocument),
   );
 
+  // Paste and drop handlers are fixed when the editor is created; they reach
+  // the current upload function through this ref.
+  const uploadRef = useRef<(file: File) => void>(() => {});
+  const uploading = useRef(false);
+
   const editor = useEditor({
-    extensions: articleEditorExtensions,
+    extensions,
     content: initialDocument,
     // The component is client-only, but TipTap still requires an explicit
     // opt-out to avoid a hydration mismatch warning under React 19.
@@ -66,6 +99,25 @@ export default function ArticleEditor({
         "aria-multiline": "true",
         "aria-labelledby": labelledBy,
       },
+      // The schema accepts only stored media, so a pasted or dropped image is
+      // uploaded first and inserted as a media reference.
+      handlePaste: (_view, event) => {
+        const file = imageUpload && firstImageFile(event.clipboardData?.files);
+        if (!file) return false;
+
+        uploadRef.current(file);
+        return true;
+      },
+      handleDrop: (_view, event, _slice, moved) => {
+        // `moved` is a drag inside the editor, such as reordering an image.
+        if (moved) return false;
+        const file = imageUpload && firstImageFile(event.dataTransfer?.files);
+        if (!file) return false;
+
+        event.preventDefault();
+        uploadRef.current(file);
+        return true;
+      },
     },
     onUpdate: ({ editor: current }) => {
       const next = JSON.stringify(normalizeEditorDocument(current.getJSON()));
@@ -75,9 +127,82 @@ export default function ArticleEditor({
     onBlur: () => onBlur?.(),
   });
 
+  async function uploadAndInsert(current: Editor, file: File) {
+    if (!imageUpload || uploading.current) return;
+    uploading.current = true;
+    setImagePanelOpen(true);
+    setImageStatus({ kind: "uploading", fileName: file.name || "image" });
+
+    const result = await uploadImage(imageUpload, file, "");
+    uploading.current = false;
+    if (!result.ok) {
+      setImageStatus({ kind: "error", message: result.message });
+      return;
+    }
+
+    registerMediaUrl(result.mediaId, result.url);
+    current
+      .chain()
+      .focus()
+      .insertArticleImage({ mediaId: result.mediaId, alt: result.alt })
+      .run();
+    setImageStatus({
+      kind: "inserted",
+      mediaId: result.mediaId,
+      alt: result.alt,
+    });
+  }
+
+  // Refreshed after each render: refs must not change during render.
+  useEffect(() => {
+    uploadRef.current = (file) => {
+      if (editor) void uploadAndInsert(editor, file);
+    };
+  });
+
+  function closeImagePanel() {
+    setImagePanelOpen(false);
+    // A finished upload starts fresh next time; an upload in flight keeps
+    // reporting when the panel reopens.
+    if (!uploading.current) setImageStatus({ kind: "idle" });
+  }
+
   return (
     <div>
-      {editor ? <EditorToolbar editor={editor} /> : null}
+      {editor ? (
+        <EditorToolbar
+          editor={editor}
+          image={
+            imageUpload
+              ? {
+                  open: imagePanelOpen,
+                  onToggle: () =>
+                    imagePanelOpen
+                      ? closeImagePanel()
+                      : setImagePanelOpen(true),
+                  panel: (
+                    <ImagePanel
+                      onAltChange={(alt) => {
+                        if (imageStatus.kind !== "inserted") return;
+                        editor.commands.setArticleImageAlt(
+                          imageStatus.mediaId,
+                          alt,
+                        );
+                        setImageStatus({ ...imageStatus, alt });
+                      }}
+                      onChooseFile={(file) => uploadRef.current(file)}
+                      onClose={() => {
+                        closeImagePanel();
+                        editor.commands.focus();
+                      }}
+                      status={imageStatus}
+                    />
+                  ),
+                }
+              : undefined
+          }
+        />
+      ) : null}
       <EditorContent editor={editor} />
       <input name={name} readOnly type="hidden" value={serialized} />
     </div>

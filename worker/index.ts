@@ -1,5 +1,9 @@
 import vinextHandler from "vinext/server/fetch-handler";
-import { serveMedia } from "../src/features/media";
+import {
+  MEDIA_UPLOAD_PATH,
+  serveMedia,
+  uploadMedia,
+} from "../src/features/media";
 
 interface FetchHandler {
   fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response>;
@@ -15,10 +19,17 @@ const MEDIA_PATH = /^\/media\/([^/]+)$/;
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    const match = MEDIA_PATH.exec(new URL(request.url).pathname);
+    const { pathname } = new URL(request.url);
+    const match = MEDIA_PATH.exec(pathname);
 
     if (match && (request.method === "GET" || request.method === "HEAD")) {
       return serveMedia(request, match[1]);
+    }
+
+    // Uploads bypass vinext so the owner check runs before the body is read
+    // (ADR-0024).
+    if (pathname === MEDIA_UPLOAD_PATH && request.method === "POST") {
+      return uploadMedia(request);
     }
 
     return (vinextHandler as FetchHandler).fetch(request, env, ctx);

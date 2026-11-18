@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.31 · 2026-11-17 · Draft
+> v0.32 · 2026-11-17 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -521,6 +521,7 @@ Issue #38 implements only these tables. Every other field in the logical model i
 | `Post` | `id`, `slug`, `title`, `summary`, `content`, `contentSchemaVersion`, `status`, `publishedAt`, `createdAt`, `updatedAt`, `deletedAt` |
 | `Tag` | `id`, `slug`, `name` |
 | `PostTag` | `postId`, `tagId` |
+| `Media` | `id`, `storageKey`, `mimeType`, `width`, `height`, `sizeBytes`, `alt`, `gpsLatitude`, `gpsLongitude`, `createdAt`, `updatedAt`, `deletedAt` |
 
 - `status` accepts `DRAFT` and `PUBLISHED` only. `SCHEDULED` and `ARCHIVED` are deferred with FR-ADMIN-07 scheduling.
 - `publishedAt` is set on first publication and survives unpublishing. `slug` is immutable once `publishedAt` is set.
@@ -528,7 +529,8 @@ Issue #38 implements only these tables. Every other field in the logical model i
 - `Post` deletion is soft through `deletedAt`. A deleted post is hidden from every read and releases its slug.
 - `Tag` is a lookup table: no timestamps and no soft delete. Deleting a tag removes it from every post.
 - Deferred `Post` fields: `coverId`, `visibility`, `readingMin`, `seriesId`, `viewCount`. Reading time is derived at render.
-- `Media` is implemented by Issue #14 after Issue #4 selects the image pipeline.
+- `Media.width` and `height` are the displayed dimensions after EXIF orientation. `alt` is empty for a decorative image. Coordinates are owner-only. Deletion is soft through `deletedAt`; a deleted image no longer resolves and blocks publishing a post that references it.
+- Deferred `Media` fields: `blurhash`, `exif`. `url` is derived from `storageKey`, not stored.
 
 Open question: repeat experiences collapse into one record with a single `finishedAt`. Multiple occurrences need a separate `ItemLog` table. See OQ-06.
 
@@ -682,3 +684,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-16 | v0.29 | Added an approved visual direction and its application to the public pages to v1 scope; OQ-02 is owned by Issue #66. No functional requirement changed |
 | 2026-11-17 | v0.30 | Mainland tests are recorded, not blocking (ADR-0020). Selected the v1 image pipeline: Cloudflare Images on delivery, server-side GPS removal, owner-only coordinates (ADR-0021). FR-MOMENT-04 suggests an editable place name from photo GPS |
 | 2026-11-17 | v0.31 | Fixed the image transform call and protected the image source domain; recorded the cache rule for non-public media. See ADR-0022. No functional requirement changed |
+| 2026-11-17 | v0.32 | Added `Media` to the v1 field contract. Uploads go through a dedicated owner endpoint (ADR-0024). No functional requirement changed |

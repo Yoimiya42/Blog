@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useActionState, useCallback, useEffect, useState } from "react";
 
+import type { ImageUploadConfig } from "../content/image-upload";
 import type { ArticleDocument } from "../content/types";
 import {
   POST_SLUG_MAX_LENGTH,
@@ -43,6 +44,10 @@ interface PostFormProps {
   version: string | null;
   /** True once the post has been published; the slug can no longer change. */
   slugFrozen: boolean;
+  /** Image upload endpoint, from the media module through the page. */
+  imageUpload?: ImageUploadConfig;
+  /** Display URLs of the images in `initialDocument`, by media id. */
+  initialMediaUrls?: Readonly<Record<string, string>>;
 }
 
 // A dynamic import keeps the TipTap runtime out of the statically imported
@@ -68,6 +73,8 @@ export function PostForm({
   status,
   version,
   slugFrozen,
+  imageUpload,
+  initialMediaUrls,
 }: PostFormProps) {
   const initialState: PostFormState = {
     values: initialValues,
@@ -239,7 +246,9 @@ export function PostForm({
         {initialDocument ? (
           <div className="mt-2">
             <ArticleEditor
+              imageUpload={imageUpload}
               initialDocument={initialDocument}
+              initialMediaUrls={initialMediaUrls}
               labelledBy="post-content-label"
               name="content"
               onBlur={saveOnBlur}

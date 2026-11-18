@@ -98,3 +98,5 @@ export {
 } from "./content/render/article-content";
 
 export type { ArticleMedia, ArticleMediaMap } from "./content/render/media";
+
+export type { ImageUploadConfig } from "./content/image-upload";

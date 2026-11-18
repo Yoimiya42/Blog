@@ -10,7 +10,11 @@ import {
   CONTENT_SCHEMA_VERSION,
   EMPTY_ARTICLE_DOCUMENT,
 } from "../content/types";
-import { validateArticleDocument } from "../content/validate";
+import {
+  validateArticleDocument,
+  validateMediaReferences,
+  type MediaReferenceResolver,
+} from "../content/validate";
 import {
   POST_STATUSES,
   PostAccessDeniedError,
@@ -47,6 +51,11 @@ interface PostServiceDependencies {
   tags: TagRepository;
   /** The auth module owns the owner rule; the service only applies it. */
   isOwner: (actor: PostActor) => boolean;
+  /**
+   * Rejects image nodes that name no stored media. Omitted only by tests that
+   * do not exercise images.
+   */
+  media?: MediaReferenceResolver;
   now?: () => Date;
   newId?: () => string;
 }
@@ -69,8 +78,15 @@ function parseFields(input: PostInput): ParsedInput {
   return { ok: false, fieldErrors };
 }
 
-function contentError(content: unknown): string | undefined {
-  const result = validateArticleDocument(content);
+async function contentError(
+  content: unknown,
+  media: MediaReferenceResolver | undefined,
+): Promise<string | undefined> {
+  const shape = validateArticleDocument(content);
+  const result =
+    shape.ok && media
+      ? await validateMediaReferences(shape.document, media)
+      : shape;
   if (result.ok) return undefined;
 
   const [first] = result.issues;
@@ -95,9 +111,12 @@ export function createPostService({
   posts,
   tags,
   isOwner,
+  media,
   now = () => new Date(),
   newId = () => crypto.randomUUID(),
 }: PostServiceDependencies) {
+  const checkContent = (content: unknown) => contentError(content, media);
+
   /**
    * Checked in every method, not only at the route: a service call from a new
    * entry point must not skip authorisation.
@@ -199,7 +218,7 @@ export function createPostService({
 
       const parsed = parseFields(input);
       const content = input.content ?? EMPTY_ARTICLE_DOCUMENT;
-      const invalidContent = contentError(content);
+      const invalidContent = await checkContent(content);
       const tagNames = parseTags(input);
       if (!parsed.ok || invalidContent || !tagNames.ok) {
         return {
@@ -264,7 +283,9 @@ export function createPostService({
       }
 
       const invalidContent =
-        input.content === undefined ? undefined : contentError(input.content);
+        input.content === undefined
+          ? undefined
+          : await checkContent(input.content);
       const tagNames = parseTags(input);
       if (!parsed.ok || invalidContent || !tagNames.ok) {
         return {
@@ -314,7 +335,7 @@ export function createPostService({
     ): Promise<PostAutosaveResult> {
       assertOwner(actor);
 
-      const invalidContent = contentError(content);
+      const invalidContent = await checkContent(content);
       if (invalidContent) {
         return { ok: false, reason: "invalid", message: invalidContent };
       }
@@ -355,7 +376,7 @@ export function createPostService({
       // The public renderer accepts only the current schema version.
       const invalidContent =
         current.contentSchemaVersion === CONTENT_SCHEMA_VERSION
-          ? contentError(current.content)
+          ? await checkContent(current.content)
           : "The stored content is not valid schema v1.";
       if (invalidContent) {
         return {
@@ -422,16 +443,22 @@ export async function getPostService(): Promise<PostService> {
   // Loaded lazily: the repository and the auth module need the Workers
   // runtime, and static imports would pull it into every consumer of the
   // post module, including the public renderer.
-  const [{ getPostRepository }, { getTagRepository }, { isOwnerSession }] =
-    await Promise.all([
-      import("./post.repository"),
-      import("@/features/tag"),
-      import("@/features/auth"),
-    ]);
+  const [
+    { getPostRepository },
+    { getTagRepository },
+    { isOwnerSession },
+    { getMediaService },
+  ] = await Promise.all([
+    import("./post.repository"),
+    import("@/features/tag"),
+    import("@/features/auth"),
+    import("@/features/media"),
+  ]);
 
   return createPostService({
     posts: await getPostRepository(),
     tags: await getTagRepository(),
     isOwner: isOwnerSession,
+    media: await getMediaService(),
   });
 }

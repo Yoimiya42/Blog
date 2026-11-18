@@ -3,7 +3,12 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 
 import { requireOwner } from "@/features/auth";
-import { getPublicPostService, PostArticle } from "@/features/post";
+import { getMediaService } from "@/features/media";
+import {
+  collectMediaReferences,
+  getPublicPostService,
+  PostArticle,
+} from "@/features/post";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -32,7 +37,11 @@ export default async function PostPage({ params }: Props) {
   // Checked only for drafts, so published pages never read the session.
   if (post.isDraft) await requireOwner();
 
-  // Media resolution arrives with the Media table in Issue #14; until then an
-  // image node renders the renderer's unavailable fallback.
-  return <PostArticle mediaById={{}} post={post} />;
+  const mediaIds = post.document ? collectMediaReferences(post.document) : [];
+  const mediaById =
+    mediaIds.length > 0
+      ? await (await getMediaService()).resolveForArticle(mediaIds)
+      : {};
+
+  return <PostArticle mediaById={mediaById} post={post} />;
 }

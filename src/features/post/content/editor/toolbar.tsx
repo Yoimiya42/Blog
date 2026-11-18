@@ -62,7 +62,24 @@ function ToolbarButton({
   );
 }
 
-export function EditorToolbar({ editor }: { editor: Editor }) {
+/**
+ * The image control. The editor owns the upload, so a paste or drop can show
+ * progress in the same panel.
+ */
+export interface ToolbarImageControl {
+  open: boolean;
+  onToggle: () => void;
+  panel: ReactNode;
+}
+
+export function EditorToolbar({
+  editor,
+  image,
+}: {
+  editor: Editor;
+  /** Omitted when uploads are unavailable; the image control is hidden. */
+  image?: ToolbarImageControl;
+}) {
   const linkFieldId = useId();
   // Null while the link field is closed.
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
@@ -176,6 +193,15 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
         >
           Code
         </ToolbarButton>
+        {image ? (
+          <ToolbarButton
+            label="Insert image"
+            onPress={image.onToggle}
+            pressed={image.open}
+          >
+            Image
+          </ToolbarButton>
+        ) : null}
         {state.codeBlock ? (
           <select
             aria-label="Code language"
@@ -263,6 +289,8 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
           ) : null}
         </div>
       ) : null}
+
+      {image?.open ? image.panel : null}
     </div>
   );
 }
