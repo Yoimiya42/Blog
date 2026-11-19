@@ -85,4 +85,11 @@ Local: Wrangler applied migrations `0001` to `0006` to an empty database and rep
 3. `post`, `tag`, `post_tag`, and their three indexes existed; `d1_migrations` held six rows; `user` still held the one owner row.
 4. `https://fangmingluan.com/` and `/login` returned 200.
 
+`blog-production`, apply `0007` for Issue #14:
+
+1. Wrangler recorded `0007_create_media.sql` as applied at 2026-11-18 07:44:24 UTC.
+2. No bookmark was recorded beforehand. For Issue #76, `time-travel info` at 07:44:23 UTC returned `0000006a-00000002-00005127-6b7c3cbf8df1e63d00a36ee9420c269d`. This bookmark is derived from the timestamp and is not verified by a restore. Restore to it to undo `0007`.
+3. Checked on 2026-11-19: `d1_migrations` held seven rows; `media`, its primary-key index, and `media_storage_key_uidx` existed; `user` still held the one owner row.
+4. The owner uploaded two JPEG images through the production editor at 07:56 and 07:57 UTC. Both rows had null GPS columns.
+
 Not rehearsed: any restore on `blog-production`.

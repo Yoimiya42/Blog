@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v2.10 · 2026-11-18
+> v2.11 · 2026-11-19
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## Planning rules
@@ -46,10 +46,10 @@
 
 ## Current state
 
-- M0, M1, and M2 are complete. In M3, #4, #62, and #14 are done; #63 is in progress. #66 runs in parallel as an owner task.
+- M0, M1, and M2 are complete. In M3, #4, #62, #14, and #63 are done. #66 runs in parallel as an owner task.
 - `fangmingluan.com` serves the `main` Workers build: the real homepage from #11 and owner login from #8.
 - The owner signs in on production with an email code and reaches `/admin`.
-- The owner uploaded an image on production through the editor, and the editor displayed it (#14). That test image stays in storage until #63 ships deletion.
+- The owner uploaded an image on production through the editor, and the editor displayed it (#14). The library from #63 is deployed. The unreferenced test image is not yet deleted on production.
 - Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold migrations `0001` to `0006`: auth, then Post, Tag, and PostTag. Production also holds `0007`, the Media table, applied for #14. Production holds the seeded owner and the four auth secrets. `personal-site-development` was deleted on 2026-11-14.
 - `www.fangmingluan.com` redirects to the root domain with 301, plain HTTP redirects to HTTPS, and DMARC is published at `p=quarantine`. The owner signed in on production; Gmail reported SPF, DKIM, and DMARC `PASS`. `life.fangmingluan.com` has no record. See `runbooks/production-domain.md`.
 - Worker rollback and D1 Time Travel restore are rehearsed; see `runbooks/production-recovery.md`.
@@ -107,7 +107,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | [#4](https://github.com/Yoimiya42/Blog/issues/4) | Decide the v1 image pipeline | M3 | P0 | S | Done | #29 |
 | [#62](https://github.com/Yoimiya42/Blog/issues/62) | Serve images from the R2 project domain | M3 | P0 | S | Done | #4, owner R2 access |
 | [#14](https://github.com/Yoimiya42/Blog/issues/14) | Implement image upload | M3 | P0 | M | Done | #4, #62, #13 |
-| [#63](https://github.com/Yoimiya42/Blog/issues/63) | Implement media library | M3 | P0 | S | In progress | #14 |
+| [#63](https://github.com/Yoimiya42/Blog/issues/63) | Implement media library | M3 | P0 | S | Done | #14 |
 | [#64](https://github.com/Yoimiya42/Blog/issues/64) | Present article images for reading | M3 | P1 | S | Backlog | #14 |
 | [#65](https://github.com/Yoimiya42/Blog/issues/65) | Accept HEIC input | M3 | P1 | S | Backlog | #14 |
 | [#66](https://github.com/Yoimiya42/Blog/issues/66) | Decide the visual direction | M4 | P0 | M | Backlog | Owner decisions |
@@ -149,4 +149,4 @@ GitHub Project states are `Backlog -> Ready -> In progress -> In review -> Done`
 
 ## History
 
-The original plan targeted 2026-09-30 with dated windows. Work paused from 2026-09-08 to 2026-11-10 and the target was missed. Version 2.0 replaced the dated plan with ordered milestones. Version 2.1 recorded the #8 pause and the #11 order exception. Version 2.2 allowed a blocked branch to be parked while a dependency-free Issue proceeds. Version 2.3 recorded #8 resuming and #45 closing. Version 2.4 recorded M0 closing, #18 starting, the R2 image domain moving from #18 to #14, the QQ Mail and 163 Mail delivery tests moving out of v1, visitor accounts and interaction moving to v2.5 under #49, and phone acceptance of the admin moving to v1.5 under #50. Version 2.5 recorded #13 closing, #15 starting, and scheduled publishing moving to v1.5. Version 2.6 recorded #15 and #10 closing and #16 starting. Version 2.7 recorded #16 and M2 closing. Version 2.8 re-sliced M3 into #4, #62, #14, #63, #64, and #65, added M4 for the visual direction, renumbered the release gates to M5, and moved per-change checks out of #17. Version 2.9 recorded #4 closing with ADR-0021, adopted Cloudflare Images in v1, and made mainland tests recorded rather than blocking under ADR-0020. Version 2.10 recorded #62 and #14 closing and #63 starting.
+The original plan targeted 2026-09-30 with dated windows. Work paused from 2026-09-08 to 2026-11-10 and the target was missed. Version 2.0 replaced the dated plan with ordered milestones. Version 2.1 recorded the #8 pause and the #11 order exception. Version 2.2 allowed a blocked branch to be parked while a dependency-free Issue proceeds. Version 2.3 recorded #8 resuming and #45 closing. Version 2.4 recorded M0 closing, #18 starting, the R2 image domain moving from #18 to #14, the QQ Mail and 163 Mail delivery tests moving out of v1, visitor accounts and interaction moving to v2.5 under #49, and phone acceptance of the admin moving to v1.5 under #50. Version 2.5 recorded #13 closing, #15 starting, and scheduled publishing moving to v1.5. Version 2.6 recorded #15 and #10 closing and #16 starting. Version 2.7 recorded #16 and M2 closing. Version 2.8 re-sliced M3 into #4, #62, #14, #63, #64, and #65, added M4 for the visual direction, renumbered the release gates to M5, and moved per-change checks out of #17. Version 2.9 recorded #4 closing with ADR-0021, adopted Cloudflare Images in v1, and made mainland tests recorded rather than blocking under ADR-0020. Version 2.10 recorded #62 and #14 closing and #63 starting. Version 2.11 recorded #63 closing.
