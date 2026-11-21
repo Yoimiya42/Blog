@@ -56,6 +56,34 @@ export function mediaUrl(storageKey: string, width: MediaWidth): string {
   return `/${storageKey}?w=${width}`;
 }
 
+/**
+ * Smallest allowed width that covers an original `intrinsicWidth` wide. The
+ * transform only scales down, so any larger width repeats this variant and
+ * spends another unique transformation for no extra pixels.
+ */
+export function coveringWidth(intrinsicWidth: number): MediaWidth {
+  return (
+    MEDIA_WIDTHS.find((width) => width >= intrinsicWidth) ??
+    MEDIA_WIDTHS[MEDIA_WIDTHS.length - 1]
+  );
+}
+
+/**
+ * `srcset` for one image. Descriptors state the pixels each variant really
+ * holds, so the covering variant of a small original is described at its
+ * intrinsic width rather than the requested one.
+ */
+export function mediaSrcSet(storageKey: string, intrinsicWidth: number) {
+  const top = coveringWidth(intrinsicWidth);
+
+  return MEDIA_WIDTHS.filter((width) => width <= top)
+    .map(
+      (width) =>
+        `${mediaUrl(storageKey, width)} ${Math.min(width, intrinsicWidth)}w`,
+    )
+    .join(", ");
+}
+
 export function mediaSourceUrl(sourceOrigin: string, key: string) {
   return new URL(`/${key}`, sourceOrigin).toString();
 }

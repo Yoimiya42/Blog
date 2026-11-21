@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   MEDIA_WIDTHS,
+  coveringWidth,
+  mediaSrcSet,
   mediaSourceUrl,
   mediaTransformOptions,
   parseMediaRequest,
@@ -66,5 +68,26 @@ describe("mediaSourceUrl", () => {
     expect(
       mediaSourceUrl("https://src.fangmingluan.com", `media/${id}.jpg`),
     ).toBe(`https://src.fangmingluan.com/media/${id}.jpg`);
+  });
+});
+
+describe("responsive sources", () => {
+  const key = `media/${id}.jpg`;
+
+  it("covers the original with the smallest allowed width", () => {
+    expect(coveringWidth(300)).toBe(480);
+    expect(coveringWidth(960)).toBe(960);
+    expect(coveringWidth(961)).toBe(1600);
+    expect(coveringWidth(6000)).toBe(2400);
+  });
+
+  it("stops at the covering width and describes real pixels", () => {
+    expect(mediaSrcSet(key, 300)).toBe(`/${key}?w=480 300w`);
+    expect(mediaSrcSet(key, 960)).toBe(
+      `/${key}?w=480 480w, /${key}?w=960 960w`,
+    );
+    expect(mediaSrcSet(key, 4032)).toBe(
+      [480, 960, 1600, 2400].map((w) => `/${key}?w=${w} ${w}w`).join(", "),
+    );
   });
 });

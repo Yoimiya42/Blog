@@ -22,6 +22,8 @@ export type RenderResult = ReactNode | Promise<ReactNode>;
 
 export type RenderContext = {
   mediaById: ArticleMediaMap;
+  /** Path of the image that loads eagerly, if any. */
+  eagerImagePath?: string;
 };
 
 export type NodeRenderer<Type extends RenderableNodeType> = (
@@ -165,6 +167,7 @@ export const nodeRenderers = {
   image: (node, path, context) => (
     <ArticleImage
       key={path}
+      eager={path === context.eagerImagePath}
       media={context.mediaById[node.attrs.mediaId]}
       node={node}
     />

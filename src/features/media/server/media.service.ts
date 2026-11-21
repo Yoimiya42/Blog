@@ -1,6 +1,11 @@
 import type { StorageAdapter } from "@/lib/storage";
 
-import { mediaUrl, type MediaWidth } from "../delivery";
+import {
+  coveringWidth,
+  mediaSrcSet,
+  mediaUrl,
+  type MediaWidth,
+} from "../delivery";
 import { MediaAccessDeniedError, type Media } from "../schema";
 import { MediaRejectedError } from "../upload/errors";
 import { MEDIA_FORMATS, processImage } from "../upload/process";
@@ -11,8 +16,8 @@ export type MediaActor = { user: { role?: unknown } } | null | undefined;
 export const MAX_ALT_LENGTH = 500;
 
 /**
- * Article images load the 1600 px variant: sharp on a two-times display at the
- * article column width. Responsive sources arrive with Issue #64.
+ * Fallback `src` for article images: sharp on a two-times display at the
+ * article column width. Browsers with `srcset` pick their own variant.
  */
 export const ARTICLE_IMAGE_WIDTH: MediaWidth = 1600;
 
@@ -82,6 +87,10 @@ function toLibraryItem(item: Media): MediaLibraryItem {
 /** What an article renderer needs for one image. */
 export interface ResolvedMedia {
   url: string;
+  /** Every allowed variant up to the one that covers the original. */
+  srcSet: string;
+  /** Largest useful variant, for the enlarged view and no-script link. */
+  zoomUrl: string;
   width: number;
   height: number;
 }
@@ -188,7 +197,15 @@ export function createMediaService({
         found.map((item) => [
           item.id,
           {
-            url: mediaUrl(item.storageKey, ARTICLE_IMAGE_WIDTH),
+            url: mediaUrl(
+              item.storageKey,
+              Math.min(
+                ARTICLE_IMAGE_WIDTH,
+                coveringWidth(item.width),
+              ) as MediaWidth,
+            ),
+            srcSet: mediaSrcSet(item.storageKey, item.width),
+            zoomUrl: mediaUrl(item.storageKey, coveringWidth(item.width)),
             width: item.width,
             height: item.height,
           },
