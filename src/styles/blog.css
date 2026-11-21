@@ -195,42 +195,11 @@
   line-height: 1.6;
 }
 
-.formal .post-body img {
+/* The enlarged copy sizes to the viewport instead; see `globals.css`, which
+   the admin preview loads too. */
+.formal .post-body img:not([data-image-zoom-dialog] img) {
   max-width: 100%;
   height: auto;
-}
-
-.formal .post-body [data-image-zoom] {
-  display: block;
-  cursor: zoom-in;
-}
-
-.formal .post-body [data-image-zoom-dialog] {
-  max-width: 100vw;
-  max-height: 100vh;
-  margin: auto;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: zoom-out;
-}
-
-.formal .post-body [data-image-zoom-dialog]::backdrop {
-  background: rgb(0 0 0 / 0.85);
-}
-
-.formal .post-body [data-image-zoom-dialog] img {
-  max-width: 95vw;
-  max-height: 90vh;
-  width: auto;
-  object-fit: contain;
-}
-
-.formal .post-body [data-image-zoom-hint] {
-  margin-top: 0.5rem;
-  text-align: center;
-  font-size: 0.8125rem;
-  color: #e5e7eb;
 }
 
 /* ---- table of contents ---- */

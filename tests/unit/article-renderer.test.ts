@@ -177,10 +177,10 @@ describe("article renderer", () => {
 
     expect(ordered).toContain('<ol start="3"><li><p>third</p></li></ol>');
     expect(image).toContain(
-      '<figure data-media-id="med_01"><a aria-label="Enlarge image: a grey cat" data-image-zoom="" href="/media/cat.webp"><img alt="a grey cat" decoding="async" height="800" loading="lazy" src="/media/cat.webp" width="1200"/></a><dialog aria-label="a grey cat" data-image-zoom-dialog=""><p data-image-zoom-hint="">Click anywhere or press Esc to close.</p></dialog><figcaption>My cat</figcaption></figure>',
+      '<figure data-media-id="med_01"><a aria-label="Enlarge image: a grey cat" data-image-zoom="" href="/media/cat.webp"><img alt="a grey cat" decoding="async" fetchPriority="high" height="800" loading="eager" src="/media/cat.webp" width="1200"/></a><dialog aria-label="a grey cat" data-image-zoom-dialog=""><button aria-label="Close enlarged image" data-image-zoom-close="" type="button">Close</button></dialog><figcaption>My cat</figcaption></figure>',
     );
     expect(decorativeImage).toContain(
-      '<figure data-media-id="med_02"><a aria-label="Enlarge image" data-image-zoom="" href="/media/decorative.webp"><img alt="" decoding="async" height="480" loading="lazy" src="/media/decorative.webp" width="640"/></a><dialog aria-label="Enlarged image" data-image-zoom-dialog=""><p data-image-zoom-hint="">Click anywhere or press Esc to close.</p></dialog></figure>',
+      '<figure data-media-id="med_02"><a aria-label="Enlarge image" data-image-zoom="" href="/media/decorative.webp"><img alt="" decoding="async" fetchPriority="high" height="480" loading="eager" src="/media/decorative.webp" width="640"/></a><dialog aria-label="Enlarged image" data-image-zoom-dialog=""><button aria-label="Close enlarged image" data-image-zoom-close="" type="button">Close</button></dialog></figure>',
     );
     expect(countOccurrences(code, '<figure data-code-block="">')).toBe(6);
     expect(countOccurrences(code, "Copy code")).toBe(6);

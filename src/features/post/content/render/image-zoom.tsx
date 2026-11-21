@@ -1,26 +1,36 @@
 "use client";
 
-import { useRef, useState, type MouseEvent, type ReactNode } from "react";
+import {
+  useRef,
+  useState,
+  type MouseEvent,
+  type PropsWithChildren,
+} from "react";
 
-export type ImageZoomProps = {
+/** `children` is the inline image the reader selects. */
+export type ImageZoomProps = PropsWithChildren<{
+  /** Largest useful variant; also the no-script link target. */
   src: string;
+  srcSet?: string;
   alt: string;
   width: number;
   height: number;
-  children: ReactNode;
-};
+}>;
 
 /**
- * Click to enlarge (FR-BLOG-07). Without JavaScript the link opens the full
- * image, so enlargement never depends on hydration.
+ * Select to enlarge (FR-BLOG-07). Without JavaScript the link opens the large
+ * image, so enlargement never depends on hydration. The modal dialog supplies
+ * Escape, the focus trap, and the inert page.
  */
 export function ImageZoom({
   src,
+  srcSet,
   alt,
   width,
   height,
   children,
 }: ImageZoomProps) {
+  const triggerRef = useRef<HTMLAnchorElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   // The large copy mounts on first open, so the server markup carries one
   // image per node and nothing extra loads until a reader asks for it.
@@ -36,6 +46,10 @@ export function ImageZoom({
     dialog.showModal();
   }
 
+  function close() {
+    dialogRef.current?.close();
+  }
+
   return (
     <>
       <a
@@ -43,20 +57,40 @@ export function ImageZoom({
         data-image-zoom=""
         href={src}
         onClick={open}
+        ref={triggerRef}
       >
         {children}
       </a>
       <dialog
         aria-label={alt || "Enlarged image"}
         data-image-zoom-dialog=""
-        onClick={() => dialogRef.current?.close()}
+        // Browsers differ on where focus lands after `close()`; return it to
+        // the image the reader selected.
+        onClose={() => triggerRef.current?.focus()}
+        // Selecting the image or the backdrop closes the view too.
+        onClick={close}
         ref={dialogRef}
       >
+        <button
+          // First focusable element, so `showModal()` focuses it.
+          aria-label="Close enlarged image"
+          data-image-zoom-close=""
+          onClick={close}
+          type="button"
+        >
+          Close
+        </button>
         {zoomed ? (
-          // eslint-disable-next-line @next/next/no-img-element -- Issue #14 owns the responsive image pipeline.
-          <img alt={alt} height={height} src={src} width={width} />
+          // eslint-disable-next-line @next/next/no-img-element -- Cloudflare Images serves fixed widths (ADR-0021).
+          <img
+            alt={alt}
+            height={height}
+            sizes="95vw"
+            src={src}
+            srcSet={srcSet}
+            width={width}
+          />
         ) : null}
-        <p data-image-zoom-hint="">Click anywhere or press Esc to close.</p>
       </dialog>
     </>
   );

@@ -190,6 +190,13 @@ describe("media resolution", () => {
     expect(resolved).toEqual({
       [created.id]: {
         url: `/media/${created.id}.jpg?w=1600`,
+        // The 1600 variant holds the 1200 px original, so it says so.
+        srcSet: [
+          `/media/${created.id}.jpg?w=480 480w`,
+          `/media/${created.id}.jpg?w=960 960w`,
+          `/media/${created.id}.jpg?w=1600 1200w`,
+        ].join(", "),
+        zoomUrl: `/media/${created.id}.jpg?w=1600`,
         width: 1200,
         height: 800,
       },

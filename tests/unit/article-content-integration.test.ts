@@ -206,7 +206,7 @@ describe("article content integration", () => {
     expect(markup).toContain("<ul><li><p>Nested item</p></li></ul>");
     expect(markup).toContain("<hr/>");
     expect(markup).toContain(
-      '<figure data-media-id="med_architecture"><a aria-label="Enlarge image: System architecture diagram" data-image-zoom="" href="/media/architecture.webp"><img alt="System architecture diagram" decoding="async" height="900" loading="lazy" src="/media/architecture.webp" width="1600"/></a><dialog aria-label="System architecture diagram" data-image-zoom-dialog=""><p data-image-zoom-hint="">Click anywhere or press Esc to close.</p></dialog><figcaption>System architecture</figcaption></figure>',
+      '<figure data-media-id="med_architecture"><a aria-label="Enlarge image: System architecture diagram" data-image-zoom="" href="/media/architecture.webp"><img alt="System architecture diagram" decoding="async" height="900" loading="lazy" src="/media/architecture.webp" width="1600"/></a><dialog aria-label="System architecture diagram" data-image-zoom-dialog=""><button aria-label="Close enlarged image" data-image-zoom-close="" type="button">Close</button></dialog><figcaption>System architecture</figcaption></figure>',
     );
     expect(markup).toContain('<figure data-code-block="">');
     expect(markup).toContain("<span>typescript</span>");

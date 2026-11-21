@@ -3,6 +3,8 @@ import { MAX_UPLOAD_BYTES } from "./upload/process";
 
 export {
   MEDIA_WIDTHS,
+  coveringWidth,
+  mediaSrcSet,
   mediaSourceUrl,
   mediaTransformOptions,
   mediaUrl,

@@ -1,1 +1,56 @@
 @import "tailwindcss";
+
+/*
+ * Article image enlargement (FR-BLOG-07). Global because the public post page
+ * and the admin preview render the same component under different stylesheets.
+ */
+[data-image-zoom] {
+  display: block;
+  cursor: zoom-in;
+}
+
+[data-image-zoom-dialog] {
+  max-width: 100vw;
+  max-height: 100vh;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  cursor: zoom-out;
+}
+
+[data-image-zoom-dialog]::backdrop {
+  background: rgb(0 0 0 / 0.85);
+}
+
+[data-image-zoom-dialog] img {
+  display: block;
+  max-width: 95vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Fixed to the viewport corner, clear of the image, and a 44 px target. */
+[data-image-zoom-close] {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid rgb(255 255 255 / 0.6);
+  border-radius: 0.75rem;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+[data-image-zoom-close]:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
