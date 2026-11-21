@@ -49,7 +49,7 @@
 - M0, M1, and M2 are complete. In M3, #4, #62, #14, and #63 are done. #66 runs in parallel as an owner task.
 - `fangmingluan.com` serves the `main` Workers build: the real homepage from #11 and owner login from #8.
 - The owner signs in on production with an email code and reaches `/admin`.
-- The owner uploaded an image on production through the editor, and the editor displayed it (#14). The library from #63 is deployed. The unreferenced test image is not yet deleted on production.
+- The owner uploaded an image on production through the editor, and the editor displayed it (#14). On 2026-11-21 the owner deleted the unreferenced test image from the production library (#63): the row gained `deleted_at` with GPS cleared, and its R2 object was removed. Edge-cached widths keep serving until expiry; see TD-006.
 - Production binds `blog-production` and previews bind `blog-preview`; see ADR-0015. Both hold migrations `0001` to `0006`: auth, then Post, Tag, and PostTag. Production also holds `0007`, the Media table, applied for #14. Production holds the seeded owner and the four auth secrets. `personal-site-development` was deleted on 2026-11-14.
 - `www.fangmingluan.com` redirects to the root domain with 301, plain HTTP redirects to HTTPS, and DMARC is published at `p=quarantine`. The owner signed in on production; Gmail reported SPF, DKIM, and DMARC `PASS`. `life.fangmingluan.com` has no record. See `runbooks/production-domain.md`.
 - Worker rollback and D1 Time Travel restore are rehearsed; see `runbooks/production-recovery.md`.
