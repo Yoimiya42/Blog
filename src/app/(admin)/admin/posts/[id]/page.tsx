@@ -30,7 +30,10 @@ export default async function EditPostPage({
   const service = await getPostService();
   const post = await service.getById(session, id);
   if (!post) notFound();
-  const tags = await service.listTags(session, post.id);
+  const [tags, library] = await Promise.all([
+    service.listTags(session, post.id),
+    service.listAllTags(session),
+  ]);
 
   // The editor opens only a document that is valid for the current schema
   // version. Anything else stays stored as it is until it is migrated.
@@ -59,7 +62,7 @@ export default async function EditPostPage({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight">Edit post</h1>
+        <h1 className="text-lg font-semibold">Edit post</h1>
         <span className="rounded-full bg-stone-200 px-3 py-1 text-xs font-medium text-stone-700">
           {STATUS_LABELS[post.status]}
         </span>
@@ -71,7 +74,7 @@ export default async function EditPostPage({
         </Link>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-4">
         <PostForm
           imageUpload={{
             ...MEDIA_UPLOAD_CONFIG,
@@ -89,11 +92,12 @@ export default async function EditPostPage({
           postId={post.id}
           slugFrozen={post.publishedAt !== null}
           status={post.status}
+          tagSuggestions={library.map((tag) => tag.name)}
           version={toPostVersion(post.updatedAt)}
         />
       </div>
 
-      <section className="mt-12 max-w-2xl border-t border-stone-200 pt-8">
+      <section className="mt-12 border-t border-stone-200 pt-8">
         <h2 className="text-sm font-semibold tracking-wide text-stone-500 uppercase">
           Delete
         </h2>

@@ -135,7 +135,8 @@ export function EditorToolbar({
   }
 
   return (
-    <div className="mb-2 rounded-xl border border-stone-300 bg-stone-50 p-1">
+    // Sticks under the admin header so formatting stays in reach while writing.
+    <div className="sticky top-14 z-10 -mx-1 mb-4 border-b border-stone-100 bg-white/95 px-1 py-1 backdrop-blur">
       <div
         aria-label="Formatting"
         className="flex flex-wrap items-center gap-1"

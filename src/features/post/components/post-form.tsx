@@ -20,6 +20,7 @@ import {
 } from "../server/post.actions";
 import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
 import { SubmitButton } from "./submit-button";
+import { TagPicker } from "./tag-picker";
 
 const AUTOSAVE_INTERVAL_MS = 10_000;
 
@@ -50,6 +51,8 @@ interface PostFormProps {
   initialMediaUrls?: Readonly<Record<string, string>>;
   /** Media ids in `initialDocument` that were deleted from the library. */
   deletedMediaIds?: readonly string[];
+  /** Every tag name in the library, offered by the tag picker. */
+  tagSuggestions?: readonly string[];
 }
 
 // A dynamic import keeps the TipTap runtime out of the statically imported
@@ -59,14 +62,15 @@ const ArticleEditor = dynamic(
   () => import("../content/editor/article-editor"),
   {
     ssr: false,
-    loading: () => (
-      <p className="mt-2 text-sm text-stone-600">Loading editor…</p>
-    ),
+    loading: () => <p className="text-sm text-stone-500">Loading editor…</p>,
   },
 );
 
 const INPUT_CLASS =
-  "mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none focus:border-stone-900 focus:ring-4 focus:ring-black/5 aria-invalid:border-red-700";
+  "mt-1.5 w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:border-stone-400 aria-invalid:border-red-700";
+
+const SIDEBAR_HEADING_CLASS =
+  "block text-xs font-medium tracking-wide text-stone-500 uppercase";
 
 export function PostForm({
   postId,
@@ -78,6 +82,7 @@ export function PostForm({
   imageUpload,
   initialMediaUrls,
   deletedMediaIds,
+  tagSuggestions = [],
 }: PostFormProps) {
   const initialState: PostFormState = {
     values: initialValues,
@@ -155,117 +160,44 @@ export function PostForm({
 
   return (
     // The max lengths mirror the server rules; the server remains the authority.
-    <form action={formAction} className="max-w-2xl space-y-6" noValidate>
-      <div>
-        <label className="block text-sm font-medium" htmlFor="post-title">
-          Title
-        </label>
+    <form
+      action={formAction}
+      className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]"
+      noValidate
+    >
+      <div className="min-w-0 rounded-2xl bg-white px-5 py-8 shadow-sm ring-1 ring-stone-200 md:px-12 md:py-12">
         <input
           aria-describedby={fieldErrors.title ? "post-title-error" : undefined}
           aria-invalid={fieldErrors.title ? true : undefined}
-          className={INPUT_CLASS}
+          aria-label="Title"
+          className="w-full bg-transparent text-3xl leading-tight font-semibold tracking-tight outline-none placeholder:text-stone-300 md:text-4xl"
           defaultValue={values.title}
           id="post-title"
           maxLength={POST_TITLE_MAX_LENGTH}
           name="title"
+          placeholder="Title"
           type="text"
         />
         <FieldError id="post-title-error" message={fieldErrors.title} />
-      </div>
 
-      <div>
-        <label className="block text-sm font-medium" htmlFor="post-slug">
-          Slug
-        </label>
-        <input
-          aria-describedby={
-            fieldErrors.slug ? "post-slug-error" : "post-slug-hint"
-          }
-          aria-invalid={fieldErrors.slug ? true : undefined}
-          autoCapitalize="none"
-          autoCorrect="off"
-          className={`${INPUT_CLASS} font-mono text-sm`}
-          defaultValue={values.slug}
-          id="post-slug"
-          maxLength={POST_SLUG_MAX_LENGTH}
-          name="slug"
-          readOnly={slugFrozen}
-          spellCheck={false}
-          type="text"
-        />
-        <p className="mt-2 text-sm text-stone-600" id="post-slug-hint">
-          {slugFrozen
-            ? "The post address. Frozen since first publication."
-            : "The post address. Lowercase letters, numbers, and hyphens. Frozen once published."}
-        </p>
-        <FieldError id="post-slug-error" message={fieldErrors.slug} />
-      </div>
+        <hr className="my-6 border-stone-200" />
 
-      <div>
-        <label className="block text-sm font-medium" htmlFor="post-summary">
-          Summary
-        </label>
-        <textarea
-          aria-describedby={
-            fieldErrors.summary ? "post-summary-error" : undefined
-          }
-          aria-invalid={fieldErrors.summary ? true : undefined}
-          className={INPUT_CLASS}
-          defaultValue={values.summary}
-          id="post-summary"
-          maxLength={POST_SUMMARY_MAX_LENGTH}
-          name="summary"
-          rows={3}
-        />
-        <FieldError id="post-summary-error" message={fieldErrors.summary} />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium" htmlFor="post-tags">
-          Tags
-        </label>
-        <input
-          aria-describedby={
-            fieldErrors.tags ? "post-tags-error" : "post-tags-hint"
-          }
-          aria-invalid={fieldErrors.tags ? true : undefined}
-          autoCapitalize="none"
-          className={INPUT_CLASS}
-          defaultValue={values.tags}
-          id="post-tags"
-          name="tags"
-          type="text"
-        />
-        <p className="mt-2 text-sm text-stone-600" id="post-tags-hint">
-          Comma-separated, up to {TAG_LIMIT_HINT}. A new name creates the tag.
-        </p>
-        <FieldError id="post-tags-error" message={fieldErrors.tags} />
-      </div>
-
-      <div>
-        <p className="block text-sm font-medium" id="post-content-label">
+        <p className="sr-only" id="post-content-label">
           Content
         </p>
         {initialDocument ? (
-          <div className="mt-2">
-            <ArticleEditor
-              imageUpload={imageUpload}
-              initialDocument={initialDocument}
-              deletedMediaIds={deletedMediaIds}
-              initialMediaUrls={initialMediaUrls}
-              labelledBy="post-content-label"
-              name="content"
-              onBlur={saveOnBlur}
-              onChange={autosave.change}
-            />
-            <AutosaveNote
-              enabled={autosaveEnabled}
-              status={autosaveStatus}
-              postStatus={status}
-            />
-          </div>
+          <ArticleEditor
+            imageUpload={imageUpload}
+            initialDocument={initialDocument}
+            deletedMediaIds={deletedMediaIds}
+            initialMediaUrls={initialMediaUrls}
+            labelledBy="post-content-label"
+            name="content"
+            onBlur={saveOnBlur}
+            onChange={autosave.change}
+          />
         ) : (
-          <p className="mt-2 text-sm text-red-700" role="alert">
+          <p className="text-sm text-red-700" role="alert">
             The stored content is not valid schema v1 and cannot be opened.
             Saving keeps it unchanged.
           </p>
@@ -273,45 +205,142 @@ export function PostForm({
         <FieldError id="post-content-error" message={fieldErrors.content} />
       </div>
 
-      {state.formError ? (
-        <p className="text-sm text-red-700" role="alert">
-          {state.formError}
-        </p>
-      ) : null}
-      {state.saved ? (
-        <p className="text-sm text-green-800" role="status">
-          Saved.
-        </p>
-      ) : null}
+      <aside className="space-y-4 lg:sticky lg:top-20">
+        <section className="space-y-3 rounded-2xl bg-white p-4 ring-1 ring-stone-200">
+          <div className="flex flex-wrap gap-2">
+            <SubmitButton
+              label={postId === null ? "Create draft" : "Save"}
+              pendingLabel="Saving…"
+            />
+            {status === "DRAFT" ? (
+              <SubmitButton
+                intent="publish"
+                label="Publish"
+                pendingLabel="Publishing…"
+                tone="secondary"
+              />
+            ) : null}
+            {status === "PUBLISHED" ? (
+              <SubmitButton
+                intent="unpublish"
+                label="Unpublish"
+                pendingLabel="Unpublishing…"
+                tone="secondary"
+              />
+            ) : null}
+          </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SubmitButton
-          label={postId === null ? "Create draft" : "Save"}
-          pendingLabel="Saving…"
-        />
-        {status === "DRAFT" ? (
-          <SubmitButton
-            intent="publish"
-            label="Save and publish"
-            pendingLabel="Publishing…"
-            tone="secondary"
-          />
-        ) : null}
-        {status === "PUBLISHED" ? (
-          <SubmitButton
-            intent="unpublish"
-            label="Unpublish"
-            pendingLabel="Unpublishing…"
-            tone="secondary"
-          />
-        ) : null}
+          {state.formError ? (
+            <p className="text-sm text-red-700" role="alert">
+              {state.formError}
+            </p>
+          ) : null}
+          {state.saved ? (
+            <p className="text-sm text-green-800" role="status">
+              Saved.
+            </p>
+          ) : null}
+          {initialDocument ? (
+            <AutosaveNote
+              enabled={autosaveEnabled}
+              status={autosaveStatus}
+              postStatus={status}
+            />
+          ) : null}
+        </section>
+
+        <section className="rounded-2xl bg-white p-4 ring-1 ring-stone-200">
+          <h2 className={SIDEBAR_HEADING_CLASS}>Tags</h2>
+          <div className="mt-2">
+            <TagPicker
+              describedBy={fieldErrors.tags ? "post-tags-error" : undefined}
+              defaultValue={values.tags}
+              invalid={fieldErrors.tags ? true : undefined}
+              limit={TAG_LIMIT_HINT}
+              name="tags"
+              suggestions={tagSuggestions}
+            />
+          </div>
+          <FieldError id="post-tags-error" message={fieldErrors.tags} />
+        </section>
+
+        <details
+          className="group rounded-2xl bg-white ring-1 ring-stone-200"
+          // A collapsed field would hide its error, so an error opens it.
+          key={fieldErrors.slug || fieldErrors.summary ? "error" : "ok"}
+          open={Boolean(fieldErrors.slug || fieldErrors.summary)}
+        >
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-sm font-medium text-stone-600 hover:text-stone-900">
+            Slug and summary
+            <span
+              aria-hidden
+              className="text-stone-400 transition-transform group-open:rotate-90"
+            >
+              ›
+            </span>
+          </summary>
+
+          <div className="space-y-4 px-4 pb-4">
+            <div>
+              <label className={SIDEBAR_HEADING_CLASS} htmlFor="post-slug">
+                Slug
+              </label>
+              <input
+                aria-describedby={
+                  fieldErrors.slug ? "post-slug-error" : "post-slug-hint"
+                }
+                aria-invalid={fieldErrors.slug ? true : undefined}
+                autoCapitalize="none"
+                autoCorrect="off"
+                className={`${INPUT_CLASS} font-mono`}
+                defaultValue={values.slug}
+                id="post-slug"
+                maxLength={POST_SLUG_MAX_LENGTH}
+                name="slug"
+                readOnly={slugFrozen}
+                spellCheck={false}
+                type="text"
+              />
+              <p className="mt-1 text-xs text-stone-500" id="post-slug-hint">
+                {slugFrozen
+                  ? "Frozen since first publication."
+                  : "Lowercase letters, numbers, hyphens. Frozen once published."}
+              </p>
+              <FieldError id="post-slug-error" message={fieldErrors.slug} />
+            </div>
+
+            <div>
+              <label className={SIDEBAR_HEADING_CLASS} htmlFor="post-summary">
+                Summary{" "}
+                <span className="font-normal normal-case">(optional)</span>
+              </label>
+              <textarea
+                aria-describedby={
+                  fieldErrors.summary ? "post-summary-error" : undefined
+                }
+                aria-invalid={fieldErrors.summary ? true : undefined}
+                className={INPUT_CLASS}
+                defaultValue={values.summary}
+                id="post-summary"
+                maxLength={POST_SUMMARY_MAX_LENGTH}
+                name="summary"
+                rows={4}
+              />
+              <FieldError
+                id="post-summary-error"
+                message={fieldErrors.summary}
+              />
+            </div>
+          </div>
+        </details>
+
         <Link
-          className="flex min-h-11 items-center rounded-xl px-4 text-sm font-medium text-stone-600 hover:bg-stone-200 hover:text-stone-900"
+          className="flex min-h-11 items-center px-1 text-sm text-stone-500 hover:text-stone-900"
           href="/admin/posts"
         >
-          Back to posts
+          ← Back to posts
         </Link>
-      </div>
+      </aside>
     </form>
   );
 }
@@ -327,7 +356,7 @@ function AutosaveNote({
 }) {
   if (status.kind === "stopped") {
     return (
-      <p className="mt-2 text-sm text-red-700" role="alert">
+      <p className="text-sm text-red-700" role="alert">
         {status.reason === "conflict"
           ? "Autosave stopped: this post changed in another tab or window. Reload the page to continue."
           : "Autosave stopped: this post no longer exists."}
@@ -355,7 +384,7 @@ function AutosaveNote({
   }
 
   return (
-    <p className="mt-2 text-sm text-stone-600" role="status">
+    <p className="text-xs text-stone-500" role="status">
       {message}
     </p>
   );

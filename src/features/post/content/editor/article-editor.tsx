@@ -41,8 +41,8 @@ interface ArticleEditorProps {
 // The box around the editing area. Fluid by design: no fixed widths. Prose
 // styles are shared with the rendered article.
 const CONTENT_CLASS = [
-  "min-h-64 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none",
-  "focus:border-stone-900 focus:ring-4 focus:ring-black/5",
+  // Borderless, so the page reads like the published article.
+  "min-h-[60vh] w-full text-lg leading-relaxed outline-none",
   // An atom such as an image has no cursor, so its selection must be visible.
   "[&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-stone-900",
   ARTICLE_PROSE_CLASS,

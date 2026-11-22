@@ -191,6 +191,13 @@ export function createPostService({
   }
 
   return {
+    /** Every tag in the library, for the edit form's tag picker. */
+    async listAllTags(actor: PostActor): Promise<Tag[]> {
+      assertOwner(actor);
+
+      return tags.list();
+    },
+
     /** Tags of one post, for the edit form. */
     async listTags(actor: PostActor, postId: string): Promise<Tag[]> {
       assertOwner(actor);
