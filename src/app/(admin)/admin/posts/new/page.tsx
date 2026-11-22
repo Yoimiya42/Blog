@@ -1,3 +1,7 @@
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+
+import { buttonVariants } from "@/components/ui/button";
 import { requireOwner } from "@/features/auth";
 import {
   listMediaForPickerAction,
@@ -15,7 +19,21 @@ export default async function NewPostPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold">New post</h1>
+      <div className="flex items-center gap-1">
+        <Link
+          aria-label="Back to posts"
+          className={buttonVariants({
+            variant: "ghost",
+            size: "icon",
+            className: "-ml-2 size-11 text-stone-500",
+          })}
+          href="/admin/posts"
+          title="Back to posts"
+        >
+          <ArrowLeft />
+        </Link>
+        <h1 className="text-sm font-medium text-stone-600">New post</h1>
+      </div>
 
       <div className="mt-4">
         <PostForm

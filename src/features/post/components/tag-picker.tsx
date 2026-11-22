@@ -1,6 +1,22 @@
 "use client";
 
-import { useId, useMemo, useState, type KeyboardEvent } from "react";
+import { Check, Plus, X } from "lucide-react";
+import { useState } from "react";
+
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface TagPickerProps {
   /** Form field that carries the comma-separated names. */
@@ -28,8 +44,8 @@ const sameName = (a: string, b: string) =>
   a.localeCompare(b, undefined, { sensitivity: "accent" }) === 0;
 
 /**
- * Chip input over the tag library. Picks existing tags or adds new names; the
- * server still parses, validates, and creates tags from the hidden field.
+ * Chips plus a searchable library popover. Picks existing tags or creates new
+ * names; the server still parses, validates, and creates tags from the field.
  */
 export function TagPicker({
   name,
@@ -39,148 +55,119 @@ export function TagPicker({
   invalid,
   describedBy,
 }: TagPickerProps) {
-  const listId = useId();
   const [tags, setTags] = useState(() => splitNames(defaultValue));
-  const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
+  const [query, setQuery] = useState("");
 
-  const trimmed = query.replace(/\s+/gu, " ").trim();
-  const matches = useMemo(() => {
-    const needle = trimmed.toLocaleLowerCase();
-    return suggestions
-      .filter((tag) => !tags.some((chosen) => sameName(chosen, tag)))
-      .filter((tag) => tag.toLocaleLowerCase().includes(needle))
-      .slice(0, 8);
-  }, [suggestions, tags, trimmed]);
+  const draft = query.replace(/\s+/gu, " ").trim();
+  const isChosen = (tag: string) =>
+    tags.some((chosen) => sameName(chosen, tag));
   const canCreate =
-    trimmed !== "" &&
-    !SEPARATOR.test(trimmed) &&
-    !suggestions.some((tag) => sameName(tag, trimmed)) &&
-    !tags.some((tag) => sameName(tag, trimmed));
-  const options = canCreate ? [...matches, trimmed] : matches;
+    draft !== "" &&
+    !SEPARATOR.test(draft) &&
+    !suggestions.some((tag) => sameName(tag, draft)) &&
+    !isChosen(draft);
   const full = tags.length >= limit;
 
-  function add(tag: string) {
-    const value = tag.replace(/\s+/gu, " ").trim();
-    if (value === "" || full) return;
-    if (!tags.some((chosen) => sameName(chosen, value))) {
-      setTags([...tags, value]);
+  function toggle(tag: string) {
+    if (isChosen(tag)) {
+      setTags(tags.filter((chosen) => !sameName(chosen, tag)));
+    } else if (!full) {
+      setTags([...tags, tag]);
     }
     setQuery("");
-    setActive(0);
-  }
-
-  function remove(tag: string) {
-    setTags(tags.filter((chosen) => chosen !== tag));
-  }
-
-  function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    // Composition keys belong to the input method, not to the picker.
-    if (event.nativeEvent.isComposing) return;
-
-    if (event.key === "ArrowDown" && options.length > 0) {
-      event.preventDefault();
-      setOpen(true);
-      setActive((active + 1) % options.length);
-    } else if (event.key === "ArrowUp" && options.length > 0) {
-      event.preventDefault();
-      setActive((active - 1 + options.length) % options.length);
-    } else if (event.key === "Enter" || event.key === ",") {
-      // Enter must never submit the post form from here.
-      event.preventDefault();
-      const choice = open ? options[active] : undefined;
-      add(choice ?? trimmed);
-    } else if (event.key === "Backspace" && query === "" && tags.length > 0) {
-      setTags(tags.slice(0, -1));
-    } else if (event.key === "Escape") {
-      setOpen(false);
-    }
   }
 
   return (
-    <div className="relative">
-      <div
-        aria-invalid={invalid}
-        className="flex flex-wrap items-center gap-1.5 rounded-lg border border-stone-200 bg-white p-1.5 focus-within:border-stone-400 aria-invalid:border-red-700"
-      >
-        {tags.map((tag) => (
-          <span
-            className="flex items-center gap-1 rounded-md bg-stone-100 py-0.5 pr-1 pl-2 text-sm text-stone-800"
-            key={tag}
-          >
-            {tag}
-            <button
-              aria-label={`Remove ${tag}`}
-              className="flex size-6 items-center justify-center rounded text-stone-500 hover:bg-stone-200 hover:text-stone-900"
-              onClick={() => remove(tag)}
-              type="button"
-            >
-              ×
-            </button>
-          </span>
-        ))}
-        <input
-          aria-activedescendant={
-            open && options.length > 0 ? `${listId}-${active}` : undefined
-          }
-          aria-autocomplete="list"
-          aria-controls={listId}
-          aria-describedby={describedBy}
-          aria-expanded={open && options.length > 0}
-          aria-label="Add tag"
-          autoCapitalize="none"
-          className="min-h-8 min-w-24 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-stone-400 disabled:cursor-not-allowed"
-          disabled={full}
-          onBlur={() => setOpen(false)}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setActive(0);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={onKeyDown}
-          placeholder={full ? `Up to ${limit} tags` : "Add tag…"}
-          role="combobox"
-          type="text"
-          value={query}
-        />
-      </div>
-
-      {open && options.length > 0 ? (
-        <ul
-          className="absolute inset-x-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-lg border border-stone-200 bg-white p-1 shadow-lg"
-          id={listId}
-          role="listbox"
+    <div
+      aria-describedby={describedBy}
+      aria-invalid={invalid}
+      className="flex flex-wrap items-center gap-1.5"
+    >
+      {tags.map((tag) => (
+        <span
+          className="flex h-7 items-center gap-0.5 rounded-md bg-stone-100 pr-0.5 pl-2 text-sm text-stone-800"
+          key={tag}
         >
-          {options.map((option, index) => {
-            const created = canCreate && index === options.length - 1;
-            return (
-              <li
-                aria-selected={index === active}
-                className="flex min-h-9 cursor-pointer items-center rounded-md px-2 text-sm aria-selected:bg-stone-100"
-                id={`${listId}-${index}`}
-                key={created ? `new:${option}` : option}
-                // Mouse down, not click: the input's blur would close the list first.
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  add(option);
-                }}
-                onMouseEnter={() => setActive(index)}
-                role="option"
-              >
-                {created ? (
-                  <span>
-                    <span className="text-stone-500">Create </span>“{option}”
-                  </span>
-                ) : (
-                  option
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
+          {tag}
+          <button
+            aria-label={`Remove ${tag}`}
+            className="flex size-6 items-center justify-center rounded text-stone-400 hover:bg-stone-200 hover:text-stone-900"
+            onClick={() => toggle(tag)}
+            type="button"
+          >
+            <X className="size-3.5" />
+          </button>
+        </span>
+      ))}
+
+      <Popover
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setQuery("");
+        }}
+        open={open}
+      >
+        <PopoverTrigger asChild>
+          <button
+            aria-label="Add tag"
+            className={cn(
+              "flex h-7 items-center gap-1 rounded-md border border-dashed border-stone-300 px-2 text-sm text-stone-500 hover:border-stone-400 hover:text-stone-900",
+              invalid && "border-red-700 text-red-700",
+            )}
+            disabled={full}
+            type="button"
+          >
+            <Plus className="size-3.5" />
+            {tags.length === 0 ? "Tag" : null}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-0">
+          <Command>
+            <CommandInput
+              className="border-b border-border"
+              onValueChange={setQuery}
+              placeholder="Search or create…"
+              value={query}
+            />
+            <CommandList>
+              {canCreate ? null : <CommandEmpty>No tags yet</CommandEmpty>}
+              <CommandGroup>
+                {suggestions.map((tag) => (
+                  <CommandItem
+                    disabled={full && !isChosen(tag)}
+                    key={tag}
+                    onSelect={() => toggle(tag)}
+                    value={tag}
+                  >
+                    <Check
+                      className={cn(
+                        "!text-stone-900",
+                        isChosen(tag) ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    {tag}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              {canCreate && !full ? (
+                // Own group, force-mounted: cmdk hides a group whose filtered
+                // items are empty, and the new name never matches the library.
+                <CommandGroup forceMount>
+                  <CommandItem
+                    forceMount
+                    onSelect={() => toggle(draft)}
+                    value={`create:${draft}`}
+                  >
+                    <Plus />
+                    {draft}
+                  </CommandItem>
+                </CommandGroup>
+              ) : null}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
 
       <input name={name} readOnly type="hidden" value={tags.join(", ")} />
     </div>

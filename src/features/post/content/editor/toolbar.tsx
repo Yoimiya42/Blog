@@ -1,12 +1,39 @@
 "use client";
 
 import { useEditorState, type Editor } from "@tiptap/react";
+import {
+  Bold,
+  Check,
+  Code,
+  Heading2,
+  Heading3,
+  Heading4,
+  ImagePlus,
+  Link2,
+  List,
+  ListOrdered,
+  Unlink,
+  type LucideIcon,
+} from "lucide-react";
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { isSafeHref } from "../schema";
 import { CODE_LANGUAGES, type HeadingLevel } from "../types";
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [2, 3, 4];
+
+const HEADING_ICONS: Record<HeadingLevel, LucideIcon> = {
+  2: Heading2,
+  3: Heading3,
+  4: Heading4,
+};
 
 const LANGUAGE_LABELS: Record<(typeof CODE_LANGUAGES)[number], string> = {
   plaintext: "Plain text",
@@ -20,7 +47,7 @@ const LANGUAGE_LABELS: Record<(typeof CODE_LANGUAGES)[number], string> = {
 // 44px targets: the same controls must work with touch, and no action may
 // depend on hover.
 const BUTTON_CLASS =
-  "flex min-h-11 min-w-11 items-center justify-center rounded-lg px-3 text-sm font-medium text-stone-700 hover:bg-stone-200 disabled:text-stone-400 disabled:hover:bg-transparent aria-pressed:bg-stone-900 aria-pressed:text-white";
+  "flex size-11 items-center justify-center rounded-md text-stone-500 hover:bg-stone-100 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:outline-none disabled:text-stone-300 disabled:hover:bg-transparent aria-pressed:bg-stone-900 aria-pressed:text-white [&_svg]:size-[18px]";
 
 /**
  * A press on a toolbar control must not move focus out of the editor: the
@@ -46,19 +73,25 @@ function ToolbarButton({
   onPress,
   children,
 }: ToolbarButtonProps) {
+  // The tooltip only repeats the accessible name; nothing depends on hover.
   return (
-    <button
-      aria-label={label}
-      aria-pressed={pressed}
-      className={BUTTON_CLASS}
-      disabled={disabled}
-      onClick={onPress}
-      onMouseDown={keepEditorSelection}
-      // The toolbar sits inside the post form; the default type would submit.
-      type="button"
-    >
-      {children}
-    </button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          aria-label={label}
+          aria-pressed={pressed}
+          className={BUTTON_CLASS}
+          disabled={disabled}
+          onClick={onPress}
+          onMouseDown={keepEditorSelection}
+          // The toolbar sits inside the post form; the default type would submit.
+          type="button"
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -136,162 +169,173 @@ export function EditorToolbar({
 
   return (
     // Sticks under the admin header so formatting stays in reach while writing.
-    <div className="sticky top-14 z-10 -mx-1 mb-4 border-b border-stone-100 bg-white/95 px-1 py-1 backdrop-blur">
-      <div
-        aria-label="Formatting"
-        className="flex flex-wrap items-center gap-1"
-        role="toolbar"
-      >
-        {HEADING_LEVELS.map((level) => (
-          <ToolbarButton
-            key={level}
-            label={`Heading ${level}`}
-            onPress={() =>
-              editor.chain().focus().toggleHeading({ level }).run()
-            }
-            pressed={state.headingLevel === level}
-          >
-            H{level}
-          </ToolbarButton>
-        ))}
-        <ToolbarButton
-          disabled={!state.canBold}
-          label="Bold"
-          onPress={() => editor.chain().focus().toggleBold().run()}
-          pressed={state.bold}
+    <TooltipProvider>
+      <div className="sticky top-14 z-10 -mx-1 mb-4 border-b border-stone-100 bg-white/95 px-1 py-1 backdrop-blur">
+        <div
+          aria-label="Formatting"
+          className="flex flex-wrap items-center gap-0.5"
+          role="toolbar"
         >
-          <span className="font-bold">B</span>
-        </ToolbarButton>
-        <ToolbarButton
-          disabled={!state.canLink}
-          label="Link"
-          onPress={() => {
-            if (linkDraft === null) setLinkDraft(state.href);
-            else closeLinkField();
-          }}
-          pressed={state.link}
-        >
-          Link
-        </ToolbarButton>
-        <ToolbarButton
-          label="Bulleted list"
-          onPress={() => editor.chain().focus().toggleBulletList().run()}
-          pressed={state.bulletList}
-        >
-          List
-        </ToolbarButton>
-        <ToolbarButton
-          label="Numbered list"
-          onPress={() => editor.chain().focus().toggleOrderedList().run()}
-          pressed={state.orderedList}
-        >
-          1. List
-        </ToolbarButton>
-        <ToolbarButton
-          label="Code block"
-          onPress={() => editor.chain().focus().toggleCodeBlock().run()}
-          pressed={state.codeBlock}
-        >
-          Code
-        </ToolbarButton>
-        {image ? (
-          <ToolbarButton
-            label="Insert image"
-            onPress={image.onToggle}
-            pressed={image.open}
-          >
-            Image
-          </ToolbarButton>
-        ) : null}
-        {state.codeBlock ? (
-          <select
-            aria-label="Code language"
-            className="min-h-11 rounded-lg border border-stone-300 bg-white px-2 text-sm"
-            onChange={(event) =>
-              editor
-                .chain()
-                .focus()
-                .updateAttributes("codeBlock", { language: event.target.value })
-                .run()
-            }
-            value={state.language ?? "plaintext"}
-          >
-            {CODE_LANGUAGES.map((language) => (
-              <option key={language} value={language}>
-                {LANGUAGE_LABELS[language]}
-              </option>
-            ))}
-          </select>
-        ) : null}
-      </div>
-
-      {linkDraft !== null ? (
-        <div className="mt-1 border-t border-stone-200 p-2">
-          <label className="block text-sm font-medium" htmlFor={linkFieldId}>
-            Link address
-          </label>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <input
-              aria-describedby={linkError ? `${linkFieldId}-error` : undefined}
-              aria-invalid={linkError ? true : undefined}
-              autoCapitalize="none"
-              autoCorrect="off"
-              // Opening the field is an explicit request to type an address.
-              autoFocus
-              className="min-h-11 min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-3 text-sm outline-none focus:border-stone-900 aria-invalid:border-red-700"
-              id={linkFieldId}
-              onChange={(event) => {
-                setLinkDraft(event.target.value);
-                setLinkError(null);
-              }}
-              onKeyDown={(event) => {
-                // Enter would otherwise submit the surrounding post form.
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  applyLink();
-                } else if (event.key === "Escape") {
-                  closeLinkField();
-                  editor.commands.focus();
-                }
-              }}
-              placeholder="https://"
-              spellCheck={false}
-              type="text"
-              value={linkDraft}
-            />
-            <ToolbarButton label="Apply link" onPress={applyLink}>
-              Apply
-            </ToolbarButton>
-            {state.link ? (
+          {HEADING_LEVELS.map((level) => {
+            const Icon = HEADING_ICONS[level];
+            return (
               <ToolbarButton
-                label="Remove link"
-                onPress={() => {
-                  editor
-                    .chain()
-                    .focus()
-                    .extendMarkRange("link")
-                    .unsetLink()
-                    .run();
-                  closeLinkField();
-                }}
+                key={level}
+                label={`Heading ${level}`}
+                onPress={() =>
+                  editor.chain().focus().toggleHeading({ level }).run()
+                }
+                pressed={state.headingLevel === level}
               >
-                Remove
+                <Icon />
               </ToolbarButton>
-            ) : null}
-          </div>
-          {linkError ? (
-            <p
-              className="mt-2 text-sm text-red-700"
-              id={`${linkFieldId}-error`}
-              role="alert"
+            );
+          })}
+          <span aria-hidden className="mx-1 h-5 w-px bg-stone-200" />
+          <ToolbarButton
+            disabled={!state.canBold}
+            label="Bold"
+            onPress={() => editor.chain().focus().toggleBold().run()}
+            pressed={state.bold}
+          >
+            <Bold />
+          </ToolbarButton>
+          <ToolbarButton
+            disabled={!state.canLink}
+            label="Link"
+            onPress={() => {
+              if (linkDraft === null) setLinkDraft(state.href);
+              else closeLinkField();
+            }}
+            pressed={state.link}
+          >
+            <Link2 />
+          </ToolbarButton>
+          <span aria-hidden className="mx-1 h-5 w-px bg-stone-200" />
+          <ToolbarButton
+            label="Bulleted list"
+            onPress={() => editor.chain().focus().toggleBulletList().run()}
+            pressed={state.bulletList}
+          >
+            <List />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Numbered list"
+            onPress={() => editor.chain().focus().toggleOrderedList().run()}
+            pressed={state.orderedList}
+          >
+            <ListOrdered />
+          </ToolbarButton>
+          <ToolbarButton
+            label="Code block"
+            onPress={() => editor.chain().focus().toggleCodeBlock().run()}
+            pressed={state.codeBlock}
+          >
+            <Code />
+          </ToolbarButton>
+          {image ? (
+            <ToolbarButton
+              label="Insert image"
+              onPress={image.onToggle}
+              pressed={image.open}
             >
-              {linkError}
-            </p>
+              <ImagePlus />
+            </ToolbarButton>
+          ) : null}
+          {state.codeBlock ? (
+            <select
+              aria-label="Code language"
+              className="ml-1 h-9 rounded-md border border-stone-200 bg-white px-2 text-sm text-stone-700"
+              onChange={(event) =>
+                editor
+                  .chain()
+                  .focus()
+                  .updateAttributes("codeBlock", {
+                    language: event.target.value,
+                  })
+                  .run()
+              }
+              value={state.language ?? "plaintext"}
+            >
+              {CODE_LANGUAGES.map((language) => (
+                <option key={language} value={language}>
+                  {LANGUAGE_LABELS[language]}
+                </option>
+              ))}
+            </select>
           ) : null}
         </div>
-      ) : null}
 
-      {image?.open ? image.panel : null}
-    </div>
+        {linkDraft !== null ? (
+          <div className="mt-1 border-t border-stone-100 py-1">
+            <label className="sr-only" htmlFor={linkFieldId}>
+              Link address
+            </label>
+            <div className="flex items-center gap-1">
+              <input
+                aria-describedby={
+                  linkError ? `${linkFieldId}-error` : undefined
+                }
+                aria-invalid={linkError ? true : undefined}
+                autoCapitalize="none"
+                autoCorrect="off"
+                // Opening the field is an explicit request to type an address.
+                autoFocus
+                className="h-9 min-w-0 flex-1 rounded-md border border-stone-200 bg-white px-3 text-sm outline-none focus:border-stone-400 aria-invalid:border-red-700"
+                id={linkFieldId}
+                onChange={(event) => {
+                  setLinkDraft(event.target.value);
+                  setLinkError(null);
+                }}
+                onKeyDown={(event) => {
+                  // Enter would otherwise submit the surrounding post form.
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    applyLink();
+                  } else if (event.key === "Escape") {
+                    closeLinkField();
+                    editor.commands.focus();
+                  }
+                }}
+                placeholder="https://"
+                spellCheck={false}
+                type="text"
+                value={linkDraft}
+              />
+              <ToolbarButton label="Apply link" onPress={applyLink}>
+                <Check />
+              </ToolbarButton>
+              {state.link ? (
+                <ToolbarButton
+                  label="Remove link"
+                  onPress={() => {
+                    editor
+                      .chain()
+                      .focus()
+                      .extendMarkRange("link")
+                      .unsetLink()
+                      .run();
+                    closeLinkField();
+                  }}
+                >
+                  <Unlink />
+                </ToolbarButton>
+              ) : null}
+            </div>
+            {linkError ? (
+              <p
+                className="mt-2 text-sm text-red-700"
+                id={`${linkFieldId}-error`}
+                role="alert"
+              >
+                {linkError}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {image?.open ? image.panel : null}
+      </div>
+    </TooltipProvider>
   );
 }

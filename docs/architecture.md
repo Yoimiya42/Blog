@@ -120,6 +120,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 
 - Next.js 16 App Router and strict TypeScript form the application runtime.
 - Tailwind CSS v4 is the styling base. shadcn/ui and Radix are limited to admin primitives. Public pages may use custom CSS and components.
+  - Admin primitives live in `src/components/ui` (`radix-ui`, `cmdk`, `lucide-react` icons, `class-variance-authority`, `clsx`, `tailwind-merge`). All are bundled npm packages with no runtime CDN, so mainland reachability is unaffected. `globals.css` defines the shadcn tokens without a base layer, so public element styles are unchanged.
 - Cloudflare D1 is the relational source of truth. Handwritten SQLite migrations and typed prepared statements own data access. See ADR-0009 and ADR-0012.
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.

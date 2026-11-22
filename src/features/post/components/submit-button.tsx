@@ -2,6 +2,8 @@
 
 import { useFormStatus } from "react-dom";
 
+import { buttonVariants } from "@/components/ui/button";
+
 interface SubmitButtonProps {
   label: string;
   pendingLabel: string;
@@ -14,9 +16,9 @@ interface SubmitButtonProps {
 }
 
 const TONES = {
-  primary: "bg-stone-900 text-white hover:bg-black",
-  secondary: "border border-stone-300 bg-white hover:bg-stone-100",
-  danger: "bg-red-700 text-white hover:bg-red-800",
+  primary: "default",
+  secondary: "outline",
+  danger: "destructive",
 } as const;
 
 /** Must render inside the form it submits: useFormStatus reads that form. */
@@ -33,7 +35,7 @@ export function SubmitButton({
 
   return (
     <button
-      className={`min-h-11 rounded-xl px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${TONES[tone]}`}
+      className={buttonVariants({ variant: TONES[tone] })}
       disabled={pending}
       name={intent === undefined ? undefined : "intent"}
       type="submit"
