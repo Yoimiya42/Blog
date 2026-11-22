@@ -42,7 +42,7 @@ import {
 import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
 import { SubmitButton } from "./submit-button";
 import { TagPicker } from "./tag-picker";
-import { useUnsavedChangesGuard } from "./unsaved-guard";
+import { UnsavedChangesGuard } from "./unsaved-guard";
 
 const AUTOSAVE_INTERVAL_MS = 10_000;
 
@@ -174,7 +174,6 @@ export function PostForm({
     () => readFields() !== savedFields.current || autosave.hasUnsavedContent(),
     [autosave, readFields],
   );
-  useUnsavedChangesGuard(isDirty);
 
   // Ctrl or Cmd+S saves from anywhere on the page (FR-ADMIN-18).
   useEffect(() => {
@@ -248,6 +247,7 @@ export function PostForm({
       className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]"
       noValidate
     >
+      <UnsavedChangesGuard isDirty={isDirty} />
       <div className="min-w-0 rounded-card bg-card px-5 py-8 shadow-sm ring-1 ring-border md:px-12 md:py-12">
         <input
           aria-describedby={fieldErrors.title ? "post-title-error" : undefined}

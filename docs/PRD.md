@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.35 · 2026-11-22 · Draft
+> v0.36 · 2026-11-22 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -253,7 +253,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 |---|---|---|---|
 | FR-ADMIN-01 | Login and authorisation | v1 | Non-owner requests to `/admin/*` return 404 |
 | FR-ADMIN-02 | Post list grouped by state | v1 | Create, find, edit, and delete on a desktop browser. One-handed phone use in v1.5 |
-| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5 |
+| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5. Preview opens the saved version on the public post page in a new tab, with the public layout and table of contents; a draft uses the owner-only URL (FR-BLOG-06) |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the article content of an existing draft only. A new post autosaves once it is created; a published post changes only through an explicit save. A save never overwrites a newer version |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
 | FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. HEIC and HEIF are not accepted: the owner uploads Lightroom JPEG exports, and the iOS photo picker already converts HEIF to JPEG. Reopen when HEIC files reach the desktop upload. See ADR-0021 |
@@ -268,7 +268,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-15 | Installable as a PWA | v1.5 | Add to home screen |
 | FR-ADMIN-16 | Admin overview desk | v1 | `/admin` shows draft and published counts, the most recently updated drafts to resume, recent posts, and New post and Media actions |
 | FR-ADMIN-17 | Command palette | v1 | Ctrl or Cmd+K opens a search over admin pages, actions, and post titles; Enter navigates |
-| FR-ADMIN-18 | Editor keyboard save and leave guard | v1 | Ctrl or Cmd+S saves the post. Leaving the editor with unsaved title, field, or content changes asks for confirmation |
+| FR-ADMIN-18 | Editor keyboard save and leave guard | v1 | Ctrl or Cmd+S saves the post. Leaving the editor with unsaved title, field, or content changes asks for confirmation. In-app links confirm through an in-app dialog; the browser's own prompt covers only closing or reloading the tab |
 | FR-ADMIN-19 | Action feedback | v1 | Save, create, publish, unpublish, delete, and copy outcomes show a transient toast, including after a redirect |
 | FR-ADMIN-20 | Post list search and live link | v1 | The post list filters by title or slug as the owner types; a published post links to its public page |
 | FR-ADMIN-21 | Media grid | v1 | The library shows a thumbnail grid; opening an item shows its details, copy link, and delete |
@@ -695,3 +695,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-22 | v0.33 | Deferred HEIC input indefinitely under FR-ADMIN-06; Issue #65 closed as not planned |
 | 2026-11-22 | v0.34 | Added C++ to FR-BLOG-03, highlighted with the C grammar; see ADR-0028 |
 | 2026-11-22 | v0.35 | Added FR-ADMIN-16 to FR-ADMIN-22: overview desk, command palette, keyboard save and leave guard, toasts, post search and live link, media grid, styled system pages |
+| 2026-11-22 | v0.36 | FR-ADMIN-03 preview uses the public post page; FR-ADMIN-18 confirms in an in-app dialog |

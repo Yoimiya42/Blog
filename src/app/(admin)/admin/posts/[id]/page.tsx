@@ -73,6 +73,11 @@ export default async function EditPostPage({
       ? [...(await mediaService.findKnown(unresolved))]
       : [];
 
+  const previewLabel =
+    post.status === "PUBLISHED"
+      ? "View saved version on the site"
+      : "Preview saved draft";
+
   return (
     <div>
       <div className="flex items-center gap-1">
@@ -91,18 +96,23 @@ export default async function EditPostPage({
         <h1 className="sr-only">Edit post</h1>
         <Badge status={post.status} />
         <div className="ml-auto flex items-center">
-          <Link
-            aria-label="Preview saved version"
+          {/* The public page is the preview (FR-ADMIN-03): same layout and
+              table of contents; a draft shows there to the owner only. A new
+              tab keeps the editor and its unsaved changes. */}
+          <a
+            aria-label={previewLabel}
             className={buttonVariants({
               variant: "ghost",
               size: "icon",
               className: "size-11 text-muted-foreground",
             })}
-            href={`/admin/posts/${post.id}/preview`}
-            title="Preview saved version"
+            href={`/blog/${post.slug}`}
+            rel="noreferrer"
+            target="_blank"
+            title={previewLabel}
           >
             <Eye />
-          </Link>
+          </a>
           <DeletePostButton postId={post.id} title={post.title} />
         </div>
       </div>
