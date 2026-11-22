@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.32 · 2026-11-17 · Draft
+> v0.33 · 2026-11-22 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -256,7 +256,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5 |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the article content of an existing draft only. A new post autosaves once it is created; a published post changes only through an explicit save. A save never overwrites a newer version |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
-| FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. See ADR-0021 |
+| FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. HEIC and HEIF are not accepted: the owner uploads Lightroom JPEG exports, and the iOS photo picker already converts HEIF to JPEG. Reopen when HEIC files reach the desktop upload. See ADR-0021 |
 | FR-ADMIN-07 | Publish, unpublish, schedule | v1 | Publish and unpublish ship in v1. Scheduling is deferred to v1.5 |
 | FR-ADMIN-08 | Media library management | v1 | Browse, copy link, delete |
 | FR-ADMIN-09 | Mobile rich-text toolbar | v1.5 | One-tap heading, bold, link, list, image, and code-block controls |
@@ -685,3 +685,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-17 | v0.30 | Mainland tests are recorded, not blocking (ADR-0020). Selected the v1 image pipeline: Cloudflare Images on delivery, server-side GPS removal, owner-only coordinates (ADR-0021). FR-MOMENT-04 suggests an editable place name from photo GPS |
 | 2026-11-17 | v0.31 | Fixed the image transform call and protected the image source domain; recorded the cache rule for non-public media. See ADR-0022. No functional requirement changed |
 | 2026-11-17 | v0.32 | Added `Media` to the v1 field contract. Uploads go through a dedicated owner endpoint (ADR-0024). No functional requirement changed |
+| 2026-11-22 | v0.33 | Deferred HEIC input indefinitely under FR-ADMIN-06; Issue #65 closed as not planned |
