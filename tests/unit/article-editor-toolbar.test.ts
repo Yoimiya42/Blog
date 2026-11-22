@@ -70,6 +70,18 @@ async function select(range: { from: number; to: number }) {
   });
 }
 
+/** Popover menus render in a portal on document.body. */
+function menuItem(label: string): HTMLButtonElement {
+  const item = [
+    ...document.body.querySelectorAll<HTMLButtonElement>(
+      '[role="menuitemradio"]',
+    ),
+  ].find((element) => element.textContent === label);
+  if (!item) throw new Error(`no menu item ${label}`);
+
+  return item;
+}
+
 async function press(label: string) {
   await act(async () => control(label).click());
 }
@@ -171,23 +183,25 @@ describe("editor toolbar", () => {
     expect(control("Numbered list").getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("creates a code block and sets its language", async () => {
+  it("creates a code block in the picked language and changes it from the header", async () => {
     await select({ from: 10, to: 10 });
-    expect(container.querySelector('[aria-label="Code language"]')).toBeNull();
 
+    // The language is picked before the block exists.
     await press("Code block");
     expect(submittedDocument().content[1]).toMatchObject({
+      type: "paragraph",
+    });
+    await act(async () => menuItem("TypeScript").click());
+
+    expect(submittedDocument().content[1]).toMatchObject({
       type: "codeBlock",
-      attrs: { language: "plaintext" },
+      attrs: { language: "typescript" },
     });
     // Marks are not allowed inside a code block.
     expect(control("Bold").disabled).toBe(true);
 
-    const language = container.querySelector("select")!;
-    await act(async () => {
-      language.value = "python";
-      language.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    await press("Code language: TypeScript");
+    await act(async () => menuItem("Python").click());
 
     expect(submittedDocument().content[1]).toMatchObject({
       type: "codeBlock",

@@ -23,9 +23,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import { isSafeHref } from "../schema";
-import { CODE_LANGUAGES, type HeadingLevel } from "../types";
+import type { HeadingLevel } from "../types";
+import { CodeLanguageMenu } from "./code-language-menu";
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [2, 3, 4];
 
@@ -33,15 +39,6 @@ const HEADING_ICONS: Record<HeadingLevel, LucideIcon> = {
   2: Heading2,
   3: Heading3,
   4: Heading4,
-};
-
-const LANGUAGE_LABELS: Record<(typeof CODE_LANGUAGES)[number], string> = {
-  plaintext: "Plain text",
-  python: "Python",
-  typescript: "TypeScript",
-  java: "Java",
-  c: "C",
-  go: "Go",
 };
 
 // 44px targets: the same controls must work with touch, and no action may
@@ -117,6 +114,7 @@ export function EditorToolbar({
   // Null while the link field is closed.
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const [codeMenuOpen, setCodeMenuOpen] = useState(false);
 
   const state = useEditorState({
     editor,
@@ -130,8 +128,6 @@ export function EditorToolbar({
       bulletList: current.isActive("bulletList"),
       orderedList: current.isActive("orderedList"),
       codeBlock: current.isActive("codeBlock"),
-      language: current.getAttributes("codeBlock").language as
-        string | undefined,
       link: current.isActive("link"),
       href: (current.getAttributes("link").href as string | undefined) ?? "",
       // A link needs text to attach to: a selection, or an existing link.
@@ -226,13 +222,45 @@ export function EditorToolbar({
           >
             <ListOrdered />
           </ToolbarButton>
-          <ToolbarButton
-            label="Code block"
-            onPress={() => editor.chain().focus().toggleCodeBlock().run()}
-            pressed={state.codeBlock}
-          >
-            <Code />
-          </ToolbarButton>
+          {state.codeBlock ? (
+            // Inside a code block the control turns it back into a paragraph.
+            <ToolbarButton
+              label="Code block"
+              onPress={() => editor.chain().focus().toggleCodeBlock().run()}
+              pressed
+            >
+              <Code />
+            </ToolbarButton>
+          ) : (
+            // Otherwise it asks for the language first, so a new block never
+            // needs a second step to set it.
+            <Popover onOpenChange={setCodeMenuOpen} open={codeMenuOpen}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <button
+                      aria-label="Code block"
+                      aria-pressed={false}
+                      className={BUTTON_CLASS}
+                      onMouseDown={keepEditorSelection}
+                      type="button"
+                    >
+                      <Code />
+                    </button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Code block</TooltipContent>
+              </Tooltip>
+              <PopoverContent className="w-44">
+                <CodeLanguageMenu
+                  onPick={(language) => {
+                    editor.chain().focus().setCodeBlock({ language }).run();
+                    setCodeMenuOpen(false);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
           {image ? (
             <ToolbarButton
               label="Insert image"
@@ -241,28 +269,6 @@ export function EditorToolbar({
             >
               <ImagePlus />
             </ToolbarButton>
-          ) : null}
-          {state.codeBlock ? (
-            <select
-              aria-label="Code language"
-              className="ml-1 h-9 rounded-md border border-stone-200 bg-white px-2 text-sm text-stone-700"
-              onChange={(event) =>
-                editor
-                  .chain()
-                  .focus()
-                  .updateAttributes("codeBlock", {
-                    language: event.target.value,
-                  })
-                  .run()
-              }
-              value={state.language ?? "plaintext"}
-            >
-              {CODE_LANGUAGES.map((language) => (
-                <option key={language} value={language}>
-                  {LANGUAGE_LABELS[language]}
-                </option>
-              ))}
-            </select>
           ) : null}
         </div>
 
