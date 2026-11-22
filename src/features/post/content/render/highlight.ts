@@ -1,34 +1,26 @@
 import { createHighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import c from "shiki/langs/c.mjs";
-import go from "shiki/langs/go.mjs";
-import java from "shiki/langs/java.mjs";
-import python from "shiki/langs/python.mjs";
-import typescript from "shiki/langs/typescript.mjs";
-import githubDark from "shiki/themes/github-dark.mjs";
 
+import {
+  CODE_THEME,
+  GRAMMAR_LOADERS,
+  loadCodeTheme,
+  toShikiLanguage,
+} from "../code-highlight";
 import type { CodeLanguage } from "../types";
 
-// Dark, to match the code card shared with the editor.
-const ARTICLE_CODE_THEME = "github-dark";
-
+// The server loads every grammar once; the editor loads them per language.
 const highlighterPromise = createHighlighterCore({
-  themes: [githubDark],
-  langs: [python, typescript, java, c, go],
+  themes: [loadCodeTheme()],
+  langs: Object.values(GRAMMAR_LOADERS).map((load) => load()),
   engine: createJavaScriptRegexEngine(),
 });
-
-function toShikiLanguage(
-  language: CodeLanguage,
-): Exclude<CodeLanguage, "plaintext"> | "text" {
-  return language === "plaintext" ? "text" : language;
-}
 
 export async function highlightCode(code: string, language: CodeLanguage) {
   const highlighter = await highlighterPromise;
 
   return highlighter.codeToTokens(code, {
     lang: toShikiLanguage(language),
-    theme: ARTICLE_CODE_THEME,
+    theme: CODE_THEME,
   });
 }

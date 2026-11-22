@@ -106,6 +106,8 @@
   overflow-x: auto;
   border-radius: 0;
   background: transparent;
+  /* github-dark foreground; the renderer sets the same value inline. */
+  color: #e1e4e8;
   font-family: var(
     --font-mono,
     ui-monospace,

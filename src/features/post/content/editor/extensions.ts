@@ -3,6 +3,7 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { isSafeHref } from "../schema";
 import { ArticleBlockquote } from "./blockquote";
 import { ArticleCodeBlock } from "./code-block";
+import { ArticleCodeHighlight } from "./code-highlight";
 import { ArticleHeading } from "./heading";
 import { ArticleImage } from "./image";
 import { ArticleListItem } from "./list-item";
@@ -34,6 +35,7 @@ const baseExtensions = [
   ArticleHeading.configure({ levels: [2, 3, 4] }),
   ArticleBlockquote,
   ArticleCodeBlock,
+  ArticleCodeHighlight,
   ArticleListItem,
 ];
 
