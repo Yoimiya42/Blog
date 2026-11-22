@@ -6,17 +6,21 @@ Provisions the single owner account in D1. Sign-up is disabled, so the owner row
 
 Apply migrations first, then seed. The command is safe to rerun.
 
+Locally, `npm run setup:local` does both and reads the address from `OWNER_EMAIL` in `.env`; see `local-development.md`. The explicit form:
+
 ```bash
 npx wrangler d1 migrations apply DB --local
-npm run seed:owner -- --email owner@example.com
+node scripts/seed-owner.mjs --email owner@example.com
 ```
+
+Call the script with `node`, not `npm run seed:owner -- ...`: PowerShell drops the bare `--`, so npm consumes `--email`.
 
 Add `--remote` to target the remote database. The `DB` binding is production, `blog-production`; see ADR-0015. Arguments after a second `--` pass to `wrangler d1 execute`.
 
 `--database <binding>` selects another binding. Seed `blog-preview` through the preview migrations config:
 
 ```bash
-npm run seed:owner -- --email owner@example.com --remote --database PREVIEW_DB -- --config wrangler.preview-migrations.jsonc
+node scripts/seed-owner.mjs --email owner@example.com --remote --database PREVIEW_DB -- --config wrangler.preview-migrations.jsonc
 ```
 
 Preview login also needs `RESEND_API_KEY`, `AUTH_EMAIL_FROM`, `OWNER_EMAIL`, and `BETTER_AUTH_SECRET` on the Preview base config:
@@ -33,7 +37,7 @@ A Preview copies the base secrets once, when it is created. A Preview that alrea
 npx wrangler preview delete --name <branch>
 ```
 
-Without `--email`, the script reads `OWNER_EMAIL` from the process environment.
+Without `--email`, the script reads `OWNER_EMAIL` from the process environment. A local seed then falls back to `.env`; a `--remote` seed never does.
 
 ## Behaviour
 

@@ -4,7 +4,43 @@ import {
   buildOwnerSeedSql,
   normalizeOwnerEmail,
   resolveDatabase,
+  resolveOwnerEmail,
 } from "../../scripts/seed-owner.mjs";
+
+describe("resolveOwnerEmail", () => {
+  const fail = () => {
+    throw new Error("must not read .env");
+  };
+
+  it("prefers --email", () => {
+    expect(
+      resolveOwnerEmail(
+        ["--email", "a@example.com"],
+        { OWNER_EMAIL: "b@example.com" },
+        fail,
+      ),
+    ).toBe("a@example.com");
+  });
+
+  it("uses OWNER_EMAIL before reading .env", () => {
+    expect(resolveOwnerEmail([], { OWNER_EMAIL: "b@example.com" }, fail)).toBe(
+      "b@example.com",
+    );
+  });
+
+  it("reads .env for a local seed", () => {
+    const env: { OWNER_EMAIL?: string } = {};
+    const email = resolveOwnerEmail([], env, () => {
+      env.OWNER_EMAIL = "c@example.com";
+    });
+    expect(email).toBe("c@example.com");
+  });
+
+  // A local file must never choose the owner of a remote database.
+  it("never reads .env for a remote seed", () => {
+    expect(resolveOwnerEmail(["--remote"], {}, fail)).toBeUndefined();
+  });
+});
 
 describe("resolveDatabase", () => {
   it("defaults to the DB binding", () => {

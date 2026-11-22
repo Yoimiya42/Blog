@@ -59,14 +59,33 @@ export function resolveDatabase(argv) {
   return database;
 }
 
+/**
+ * `--email`, then `OWNER_EMAIL`. A local seed also reads `.env`, the file the
+ * dev server uses, so `npm run setup:local` needs no arguments. A remote seed
+ * never falls back to a local file.
+ */
+export function resolveOwnerEmail(argv, env, loadLocalEnv) {
+  const index = argv.indexOf("--email");
+  if (index !== -1) return argv[index + 1];
+
+  if (!env.OWNER_EMAIL && !argv.includes("--remote")) loadLocalEnv();
+  return env.OWNER_EMAIL;
+}
+
+function loadDotEnv() {
+  try {
+    process.loadEnvFile(".env");
+  } catch {
+    // No `.env`: normalizeOwnerEmail reports the missing address.
+  }
+}
+
 function main(argv) {
   const separator = argv.indexOf("--");
   const own = separator === -1 ? argv : argv.slice(0, separator);
   const passthrough = separator === -1 ? [] : argv.slice(separator + 1);
 
-  const emailIndex = own.indexOf("--email");
-  const email =
-    emailIndex === -1 ? process.env.OWNER_EMAIL : own[emailIndex + 1];
+  const email = resolveOwnerEmail(own, process.env, loadDotEnv);
   const target = own.includes("--remote") ? "--remote" : "--local";
   const database = resolveDatabase(own);
 
