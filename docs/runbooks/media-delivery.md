@@ -77,4 +77,4 @@ Existing Previews keep the old secret. Delete and recreate them, or set the secr
   - A 27.5 MB, 6000×4000 noise JPEG with fake GPS EXIF returned `201` after 47.6 s end to end, about 0.6 MB/s upload. Worker CPU 204 ms, wall 1,505 ms, outcome ok (TD-005). The row kept the coordinates; the `w=1600` WebP variant contained no `Exif` or `GPS` bytes. A 1200×800 JPEG used 11 ms CPU.
   - A 70 MB body returned `413` (6 to 8 ms CPU). The browser sent the whole body before reading the reply, 82 s on this link.
   - GIF returned `422` "Use a JPEG, PNG, or WebP image." HEIC returned `422` with or without an `image/jpeg` content type. The editor refused a `.HEIC` file with no request sent.
-- Mainland China: not tested; recorded, not blocking (ADR-0020).
+- Mainland China, 2026-11-22, production: the owner reported that a tester on a direct mainland connection opened a post with an image. The page loaded in an acceptable time and the image opened. Network type and load times were not measured; #19 repeats the test with measurements. Recorded, not blocking (ADR-0020).
