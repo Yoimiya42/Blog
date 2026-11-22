@@ -7,7 +7,7 @@ import {
   ReactNodeViewRenderer,
   type ReactNodeViewProps,
 } from "@tiptap/react";
-import { Check, ChevronDown, Code, Copy } from "lucide-react";
+import { Check, ChevronDown, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -18,6 +18,7 @@ import {
 
 import { CodeLanguageMenu } from "./code-language-menu";
 import { codeLanguageLabel } from "./code-languages";
+import { LanguageIcon } from "./language-icons";
 
 const COPY_FEEDBACK_MS = 2000;
 
@@ -48,15 +49,19 @@ function CodeBlockView({ node, updateAttributes, editor }: ReactNodeViewProps) {
         className="flex items-center gap-2 px-4 pt-3 select-none"
         contentEditable={false}
       >
-        <Code aria-hidden className="size-4 text-stone-300" />
         <Popover onOpenChange={setMenuOpen} open={menuOpen}>
           <PopoverTrigger asChild>
             <button
               aria-label={`Code language: ${codeLanguageLabel(language)}`}
-              className="flex h-8 items-center gap-1 rounded-md px-1.5 text-sm font-semibold text-stone-100 hover:bg-white/10 disabled:pointer-events-none"
+              className="-ml-1.5 flex h-8 items-center gap-2 rounded-md px-1.5 text-sm font-semibold text-stone-100 hover:bg-white/10 disabled:pointer-events-none"
               disabled={!editor.isEditable}
               type="button"
             >
+              <LanguageIcon
+                className="text-stone-300"
+                language={language}
+                mono
+              />
               {codeLanguageLabel(language)}
               <ChevronDown aria-hidden className="size-3.5 text-stone-400" />
             </button>

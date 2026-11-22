@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 import type { CodeLanguage } from "../types";
 import { CODE_LANGUAGE_OPTIONS } from "./code-languages";
+import { LanguageIcon } from "./language-icons";
 
 /** Language list shared by the toolbar's insert menu and a block's header. */
 export function CodeLanguageMenu({
@@ -32,6 +33,8 @@ export function CodeLanguageMenu({
           aria-checked={current === value}
           type="button"
         >
+          <LanguageIcon className="text-stone-500" language={value} />
+          <span className="flex-1">{label}</span>
           <Check
             aria-hidden
             className={cn(
@@ -39,7 +42,6 @@ export function CodeLanguageMenu({
               current === value ? "opacity-100" : "opacity-0",
             )}
           />
-          {label}
         </button>
       ))}
     </div>
