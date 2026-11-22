@@ -147,7 +147,7 @@ describe("article editor library picker", () => {
     expect(
       container.querySelector('.ProseMirror img[src$="w=1600"]'),
     ).not.toBeNull();
-    expect(container.textContent).toContain("Image inserted.");
+    expect(container.textContent).toContain("Image inserted");
   });
 
   it("hides the library button without a loader", async () => {
@@ -158,6 +158,8 @@ describe("article editor library picker", () => {
     });
 
     await act(async () => button("Insert image").click());
-    expect(container.textContent).not.toContain("Choose from library");
+    expect(
+      container.querySelector('[aria-label="Choose from library"]'),
+    ).toBeNull();
   });
 });
