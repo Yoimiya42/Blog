@@ -24,14 +24,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  DropdownMenu,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { isSafeHref } from "../schema";
 import type { HeadingLevel } from "../types";
-import { CodeLanguageMenu } from "./code-language-menu";
+import { CodeLanguageMenuContent } from "./code-language-menu";
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [2, 3, 4];
 
@@ -114,7 +113,6 @@ export function EditorToolbar({
   // Null while the link field is closed.
   const [linkDraft, setLinkDraft] = useState<string | null>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
-  const [codeMenuOpen, setCodeMenuOpen] = useState(false);
 
   const state = useEditorState({
     editor,
@@ -234,10 +232,10 @@ export function EditorToolbar({
           ) : (
             // Otherwise it asks for the language first, so a new block never
             // needs a second step to set it.
-            <Popover onOpenChange={setCodeMenuOpen} open={codeMenuOpen}>
+            <DropdownMenu>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <PopoverTrigger asChild>
+                  <DropdownMenuTrigger asChild>
                     <button
                       aria-label="Code block"
                       aria-pressed={false}
@@ -247,19 +245,16 @@ export function EditorToolbar({
                     >
                       <Code />
                     </button>
-                  </PopoverTrigger>
+                  </DropdownMenuTrigger>
                 </TooltipTrigger>
                 <TooltipContent>Code block</TooltipContent>
               </Tooltip>
-              <PopoverContent className="w-44">
-                <CodeLanguageMenu
-                  onPick={(language) => {
-                    editor.chain().focus().setCodeBlock({ language }).run();
-                    setCodeMenuOpen(false);
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
+              <CodeLanguageMenuContent
+                onPick={(language) =>
+                  editor.chain().focus().setCodeBlock({ language }).run()
+                }
+              />
+            </DropdownMenu>
           )}
           {image ? (
             <ToolbarButton

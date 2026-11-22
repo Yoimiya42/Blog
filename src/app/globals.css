@@ -43,6 +43,52 @@
 }
 
 /*
+ * Open and close motion for admin overlays (shadcn style: fade, slight zoom,
+ * and a short slide away from the trigger). Radix sets `data-state` and
+ * `data-side`; `.ui-motion` opts a surface in. Disabled for reduced motion.
+ */
+@keyframes ui-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translate(var(--ui-shift-x, 0), var(--ui-shift-y, 0));
+  }
+}
+
+@keyframes ui-exit {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.ui-motion[data-side="bottom"] {
+  --ui-shift-y: -0.25rem;
+}
+.ui-motion[data-side="top"] {
+  --ui-shift-y: 0.25rem;
+}
+.ui-motion[data-side="left"] {
+  --ui-shift-x: 0.25rem;
+}
+.ui-motion[data-side="right"] {
+  --ui-shift-x: -0.25rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ui-motion:is(
+    [data-state="open"],
+    [data-state="delayed-open"],
+    [data-state="instant-open"]
+  ) {
+    animation: ui-enter 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ui-motion[data-state="closed"] {
+    animation: ui-exit 100ms ease-in forwards;
+  }
+}
+
+/*
  * Code card. Global and unlayered: the editor node view, the admin preview,
  * and the public post render the same card under different stylesheets, and
  * these rules must beat the shared prose utilities for `pre` and `figcaption`.

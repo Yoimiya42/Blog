@@ -125,14 +125,13 @@ export function TagPicker({
         <PopoverContent className="w-64 p-0">
           <Command>
             <CommandInput
-              className="border-b border-border"
               onValueChange={setQuery}
               placeholder="Search or create…"
               value={query}
             />
             <CommandList>
-              {canCreate ? null : <CommandEmpty>No tags yet</CommandEmpty>}
-              <CommandGroup>
+              {canCreate ? null : <CommandEmpty>No matching tags</CommandEmpty>}
+              <CommandGroup heading="Tags">
                 {suggestions.map((tag) => (
                   <CommandItem
                     disabled={full && !isChosen(tag)}
@@ -153,7 +152,7 @@ export function TagPicker({
               {canCreate && !full ? (
                 // Own group, force-mounted: cmdk hides a group whose filtered
                 // items are empty, and the new name never matches the library.
-                <CommandGroup forceMount>
+                <CommandGroup forceMount heading="New tag">
                   <CommandItem
                     forceMount
                     onSelect={() => toggle(draft)}

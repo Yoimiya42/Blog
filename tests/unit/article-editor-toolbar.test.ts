@@ -82,6 +82,19 @@ function menuItem(label: string): HTMLButtonElement {
   return item;
 }
 
+/** Radix menus open on a primary pointer press, not on a synthetic click. */
+async function openMenu(label: string) {
+  await act(async () => {
+    control(label).dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        button: 0,
+        pointerType: "mouse",
+      }),
+    );
+  });
+}
+
 async function press(label: string) {
   await act(async () => control(label).click());
 }
@@ -187,7 +200,7 @@ describe("editor toolbar", () => {
     await select({ from: 10, to: 10 });
 
     // The language is picked before the block exists.
-    await press("Code block");
+    await openMenu("Code block");
     expect(submittedDocument().content[1]).toMatchObject({
       type: "paragraph",
     });
@@ -200,7 +213,7 @@ describe("editor toolbar", () => {
     // Marks are not allowed inside a code block.
     expect(control("Bold").disabled).toBe(true);
 
-    await press("Code language: TypeScript");
+    await openMenu("Code language: TypeScript");
     await act(async () => menuItem("Python").click());
 
     expect(submittedDocument().content[1]).toMatchObject({

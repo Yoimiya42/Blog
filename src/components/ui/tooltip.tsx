@@ -25,13 +25,14 @@ function TooltipContent({
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         className={cn(
-          "z-50 rounded-md bg-primary px-2.5 py-1.5 text-xs text-primary-foreground",
+          "ui-motion z-50 origin-(--radix-tooltip-content-transform-origin) rounded-md bg-primary px-2.5 py-1.5 text-xs text-balance text-primary-foreground",
           className,
         )}
         sideOffset={sideOffset}
         {...props}
       >
         {children}
+        <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px] bg-primary fill-primary" />
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );
