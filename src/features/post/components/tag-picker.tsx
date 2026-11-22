@@ -86,13 +86,13 @@ export function TagPicker({
     >
       {tags.map((tag) => (
         <span
-          className="flex h-7 items-center gap-0.5 rounded-md bg-stone-100 pr-0.5 pl-2 text-sm text-stone-800"
+          className="flex h-7 items-center gap-0.5 rounded-control bg-muted pr-0.5 pl-2 text-sm text-foreground"
           key={tag}
         >
           {tag}
           <button
             aria-label={`Remove ${tag}`}
-            className="flex size-6 items-center justify-center rounded text-stone-400 hover:bg-stone-200 hover:text-stone-900"
+            className="flex size-6 items-center justify-center rounded-mark text-faint hover:bg-foreground/5 hover:text-foreground"
             onClick={() => toggle(tag)}
             type="button"
           >
@@ -112,8 +112,8 @@ export function TagPicker({
           <button
             aria-label="Add tag"
             className={cn(
-              "flex h-7 items-center gap-1 rounded-md border border-dashed border-stone-300 px-2 text-sm text-stone-500 hover:border-stone-400 hover:text-stone-900",
-              invalid && "border-red-700 text-red-700",
+              "flex h-7 items-center gap-1 rounded-control border border-dashed border-input px-2 text-sm text-muted-foreground hover:border-faint hover:text-foreground",
+              invalid && "border-destructive text-destructive",
             )}
             disabled={full}
             type="button"
@@ -141,7 +141,7 @@ export function TagPicker({
                   >
                     <Check
                       className={cn(
-                        "!text-stone-900",
+                        "!text-foreground",
                         isChosen(tag) ? "opacity-100" : "opacity-0",
                       )}
                     />

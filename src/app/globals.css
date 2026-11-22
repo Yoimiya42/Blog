@@ -1,12 +1,16 @@
 @import "tailwindcss";
 
 /*
- * shadcn/ui tokens for admin primitives (stone scale). Tokens only: no base
- * layer, so public pages keep their own element styles.
+ * Design tokens (ADR-0029). One vocabulary for every surface; components use
+ * the semantic utilities or `var(--token)`, never raw palette values. A shell
+ * may override values on its root element (see `.formal` in formal.css).
+ * Tokens only: no base layer, so public pages keep their own element styles.
  */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
@@ -15,31 +19,106 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-faint: var(--faint);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-code-background: var(--code-background);
+  --color-code-foreground: var(--code-foreground);
+  --color-code-muted: var(--code-muted);
+}
+
+/*
+ * Scales. `static` emits every variable, because plain stylesheets read them
+ * through `var()` where Tailwind cannot see a utility class.
+ */
+@theme static {
+  --font-sans:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+
+  /* Radius by role: inline marks, controls, containers inside a card, cards. */
+  --radius-mark: 0.25rem;
+  --radius-control: 0.5rem;
+  --radius-container: 0.75rem;
+  --radius-card: 1rem;
+
+  /* Type scale. Titles: home name 4xl, post title 3xl, page titles 2xl. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+
+  /* Motion: exits are faster than entrances; slow steps are for emphasis. */
+  --duration-fast: 100ms;
+  --duration-base: 150ms;
+  --duration-slow: 300ms;
+  --duration-slower: 400ms;
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --default-transition-duration: var(--duration-base);
 }
 
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.216 0.006 56.043);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.216 0.006 56.043);
-  --primary: oklch(0.216 0.006 56.043);
+  --popover-foreground: var(--foreground);
+  --primary: var(--foreground);
   --primary-foreground: oklch(0.985 0.001 106.423);
   --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
+  --secondary-foreground: var(--foreground);
+  /* Subtle fills: chips, hover, the admin canvas. */
   --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
+  /* Secondary text; 5.9:1 on white. */
+  --muted-foreground: oklch(0.5 0.011 58);
+  /* Non-text marks only: icons, placeholders, idle dots. */
+  --faint: oklch(0.709 0.01 56.259);
   --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.577 0.245 27.325);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.505 0.213 27.518);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.527 0.154 150.069);
+  --warning: oklch(0.828 0.189 84.429);
   --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
+  /* Field and dashed-zone borders, one step stronger than `--border`. */
+  --input: oklch(0.869 0.005 56.366);
+  --ring: var(--foreground);
+
+  /* Code card: a dark surface on every theme. */
+  --code-background: #2a2a2a;
+  --code-edge: rgb(255 255 255 / 0.05);
+  --code-foreground: #e7e5e4;
+  --code-heading: #f5f5f4;
+  --code-muted: #d6d3d1;
+  /* github-dark foreground; the Shiki renderer sets the same value inline. */
+  --code-text: #e1e4e8;
+
+  /* Image enlargement overlay. */
+  --overlay: rgb(0 0 0 / 0.85);
+  --overlay-control: rgb(0 0 0 / 0.6);
+  --overlay-edge: rgb(255 255 255 / 0.6);
+  --overlay-foreground: #fff;
 }
 
 /*
@@ -80,11 +159,11 @@
     [data-state="delayed-open"],
     [data-state="instant-open"]
   ) {
-    animation: ui-enter 140ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: ui-enter var(--duration-base) var(--ease-enter);
   }
 
   .ui-motion[data-state="closed"] {
-    animation: ui-exit 100ms ease-in forwards;
+    animation: ui-exit var(--duration-fast) var(--ease-exit) forwards;
   }
 }
 
@@ -96,10 +175,10 @@
 [data-code-block] {
   margin: 1.25rem 0;
   overflow: hidden;
-  border-radius: 1rem;
-  background: #2a2a2a;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05);
-  color: #e7e5e4;
+  border-radius: var(--radius-card);
+  background: var(--code-background);
+  box-shadow: inset 0 0 0 1px var(--code-edge);
+  color: var(--code-foreground);
 }
 
 [data-code-block] [data-code-header] {
@@ -109,14 +188,14 @@
   gap: 0.5rem;
   margin: 0;
   padding: 0.75rem 0.75rem 0 1rem;
-  color: #f5f5f4;
-  font-size: 0.875rem;
+  color: var(--code-heading);
+  font-size: var(--text-sm);
   font-weight: 600;
   user-select: none;
 }
 
 [data-code-block] [data-code-header] > svg {
-  color: #d6d3d1;
+  color: var(--code-muted);
 }
 
 [data-code-block] [data-code-copy] {
@@ -126,18 +205,18 @@
   width: 2.75rem;
   height: 2.75rem;
   margin-left: auto;
-  border-radius: 0.5rem;
-  color: #d6d3d1;
+  border-radius: var(--radius-control);
+  color: var(--code-muted);
   cursor: pointer;
 }
 
 [data-code-block] [data-code-copy]:hover {
-  background: rgb(255 255 255 / 0.1);
-  color: #fff;
+  background: color-mix(in oklab, var(--code-foreground) 10%, transparent);
+  color: var(--code-heading);
 }
 
 [data-code-block] [data-code-copy]:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--code-heading);
   outline-offset: -2px;
 }
 
@@ -152,8 +231,7 @@
   overflow-x: auto;
   border-radius: 0;
   background: transparent;
-  /* github-dark foreground; the renderer sets the same value inline. */
-  color: #e1e4e8;
+  color: var(--code-text);
   font-family: var(
     --font-mono,
     ui-monospace,
@@ -162,7 +240,7 @@
     Consolas,
     monospace
   );
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   line-height: 1.6;
 }
 
@@ -187,7 +265,7 @@
 }
 
 [data-image-zoom-dialog]::backdrop {
-  background: rgb(0 0 0 / 0.85);
+  background: var(--overlay);
 }
 
 [data-image-zoom-dialog] img {
@@ -207,16 +285,16 @@
   min-width: 2.75rem;
   min-height: 2.75rem;
   padding: 0 1rem;
-  border: 1px solid rgb(255 255 255 / 0.6);
-  border-radius: 0.75rem;
-  background: rgb(0 0 0 / 0.6);
-  color: #fff;
-  font-size: 0.875rem;
+  border: 1px solid var(--overlay-edge);
+  border-radius: var(--radius-control);
+  background: var(--overlay-control);
+  color: var(--overlay-foreground);
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
 }
 
 [data-image-zoom-close]:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--overlay-foreground);
   outline-offset: 2px;
 }

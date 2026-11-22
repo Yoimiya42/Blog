@@ -11,9 +11,9 @@ export default async function AdminPostsPage() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold tracking-tight">Posts</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Posts</h1>
         <Link
-          className="flex min-h-11 items-center rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white hover:bg-black"
+          className="flex min-h-11 items-center rounded-control bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           href="/admin/posts/new"
         >
           New post

@@ -32,10 +32,10 @@ export interface ArticleImageOptions {
 }
 
 const IMAGE_PLACEHOLDER_CLASS =
-  "rounded-lg border border-dashed border-stone-400 bg-stone-50 p-4 text-sm text-stone-600";
+  "rounded-control border border-dashed border-faint bg-muted/50 p-4 text-sm text-muted-foreground";
 const IMAGE_DELETED_CLASS =
-  "rounded-lg border border-dashed border-red-700 bg-red-50 p-4 text-sm text-red-800";
-const IMAGE_PREVIEW_CLASS = "rounded-lg";
+  "rounded-control border border-dashed border-destructive bg-destructive/10 p-4 text-sm text-destructive";
+const IMAGE_PREVIEW_CLASS = "rounded-control";
 
 /**
  * Project-owned image node. Only a media reference is stored, so changing the

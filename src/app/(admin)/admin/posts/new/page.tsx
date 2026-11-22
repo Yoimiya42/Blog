@@ -25,14 +25,14 @@ export default async function NewPostPage() {
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
-            className: "-ml-2 size-11 text-stone-500",
+            className: "-ml-2 size-11 text-muted-foreground",
           })}
           href="/admin/posts"
           title="Back to posts"
         >
           <ArrowLeft />
         </Link>
-        <h1 className="text-sm font-medium text-stone-600">New post</h1>
+        <h1 className="text-sm font-medium text-muted-foreground">New post</h1>
       </div>
 
       <div className="mt-4">

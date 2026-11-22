@@ -24,10 +24,10 @@ const STATUS_LABELS = { DRAFT: "Draft", PUBLISHED: "Published" } as const;
 
 function Badge({ status }: { status: keyof typeof STATUS_LABELS }) {
   return (
-    <span className="flex items-center gap-1.5 rounded-full px-2 text-xs font-medium text-stone-600">
+    <span className="flex items-center gap-1.5 rounded-full px-2 text-xs font-medium text-muted-foreground">
       <span
         aria-hidden
-        className={`size-1.5 rounded-full ${status === "PUBLISHED" ? "bg-green-600" : "bg-stone-400"}`}
+        className={`size-1.5 rounded-full ${status === "PUBLISHED" ? "bg-success" : "bg-faint"}`}
       />
       {STATUS_LABELS[status]}
     </span>
@@ -81,7 +81,7 @@ export default async function EditPostPage({
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
-            className: "-ml-2 size-11 text-stone-500",
+            className: "-ml-2 size-11 text-muted-foreground",
           })}
           href="/admin/posts"
           title="Back to posts"
@@ -96,7 +96,7 @@ export default async function EditPostPage({
             className={buttonVariants({
               variant: "ghost",
               size: "icon",
-              className: "size-11 text-stone-500",
+              className: "size-11 text-muted-foreground",
             })}
             href={`/admin/posts/${post.id}/preview`}
             title="Preview saved version"

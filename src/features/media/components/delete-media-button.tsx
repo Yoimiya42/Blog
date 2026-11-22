@@ -10,14 +10,14 @@ import {
 } from "../server/media.actions";
 
 const QUIET_CLASS =
-  "min-h-11 rounded-xl px-4 text-sm font-medium text-stone-600 hover:bg-stone-200 hover:text-stone-900";
+  "min-h-11 rounded-control px-4 text-sm font-medium text-muted-foreground hover:bg-foreground/5 hover:text-foreground";
 
 function ConfirmButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
 
   return (
     <button
-      className="min-h-11 rounded-xl bg-red-700 px-5 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60"
+      className="min-h-11 rounded-control bg-destructive px-5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60"
       disabled={pending}
       type="submit"
     >
@@ -28,7 +28,7 @@ function ConfirmButton({ label }: { label: string }) {
 
 function ErrorMessage({ message }: { message: string | null }) {
   return message ? (
-    <p className="text-sm text-red-700" role="alert">
+    <p className="text-sm text-destructive" role="alert">
       {message}
     </p>
   ) : null;
@@ -59,7 +59,7 @@ export function DeleteMediaButton({ mediaId }: { mediaId: string }) {
   if (!confirming) {
     return (
       <button
-        className="min-h-11 rounded-xl border border-red-700 px-4 text-sm font-semibold text-red-700 hover:bg-red-50"
+        className="min-h-11 rounded-control border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-destructive/10"
         onClick={() => setConfirming(true)}
         type="button"
       >
@@ -84,7 +84,7 @@ export function DeleteMediaButton({ mediaId }: { mediaId: string }) {
     return (
       <form action={force} className="space-y-3">
         <div className="text-sm" role="alert">
-          <p className="font-medium text-red-800">
+          <p className="font-medium text-destructive">
             {count === 1 ? "1 post shows" : `${count} posts show`} this image.
             Deleting it leaves “Image unavailable” in its place.
           </p>

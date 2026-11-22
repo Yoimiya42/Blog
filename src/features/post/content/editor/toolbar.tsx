@@ -43,7 +43,7 @@ const HEADING_ICONS: Record<HeadingLevel, LucideIcon> = {
 // 44px targets: the same controls must work with touch, and no action may
 // depend on hover.
 const BUTTON_CLASS =
-  "flex size-11 items-center justify-center rounded-md text-stone-500 hover:bg-stone-100 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:outline-none disabled:text-stone-300 disabled:hover:bg-transparent aria-pressed:bg-stone-900 aria-pressed:text-white [&_svg]:size-[18px]";
+  "flex size-11 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:text-faint disabled:hover:bg-transparent aria-pressed:bg-primary aria-pressed:text-primary-foreground [&_svg]:size-[18px]";
 
 /**
  * A press on a toolbar control must not move focus out of the editor: the
@@ -164,7 +164,7 @@ export function EditorToolbar({
   return (
     // Sticks under the admin header so formatting stays in reach while writing.
     <TooltipProvider>
-      <div className="sticky top-14 z-10 -mx-1 mb-4 border-b border-stone-100 bg-white/95 px-1 py-1 backdrop-blur">
+      <div className="sticky top-14 z-10 -mx-1 mb-4 border-b border-border bg-background/95 px-1 py-1 backdrop-blur">
         <div
           aria-label="Formatting"
           className="flex flex-wrap items-center gap-0.5"
@@ -185,7 +185,7 @@ export function EditorToolbar({
               </ToolbarButton>
             );
           })}
-          <span aria-hidden className="mx-1 h-5 w-px bg-stone-200" />
+          <span aria-hidden className="mx-1 h-5 w-px bg-foreground/5" />
           <ToolbarButton
             disabled={!state.canBold}
             label="Bold"
@@ -205,7 +205,7 @@ export function EditorToolbar({
           >
             <Link2 />
           </ToolbarButton>
-          <span aria-hidden className="mx-1 h-5 w-px bg-stone-200" />
+          <span aria-hidden className="mx-1 h-5 w-px bg-foreground/5" />
           <ToolbarButton
             label="Bulleted list"
             onPress={() => editor.chain().focus().toggleBulletList().run()}
@@ -268,7 +268,7 @@ export function EditorToolbar({
         </div>
 
         {linkDraft !== null ? (
-          <div className="mt-1 border-t border-stone-100 py-1">
+          <div className="mt-1 border-t border-border py-1">
             <label className="sr-only" htmlFor={linkFieldId}>
               Link address
             </label>
@@ -282,7 +282,7 @@ export function EditorToolbar({
                 autoCorrect="off"
                 // Opening the field is an explicit request to type an address.
                 autoFocus
-                className="h-9 min-w-0 flex-1 rounded-md border border-stone-200 bg-white px-3 text-sm outline-none focus:border-stone-400 aria-invalid:border-red-700"
+                className="h-9 min-w-0 flex-1 rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-faint aria-invalid:border-destructive"
                 id={linkFieldId}
                 onChange={(event) => {
                   setLinkDraft(event.target.value);
@@ -325,7 +325,7 @@ export function EditorToolbar({
             </div>
             {linkError ? (
               <p
-                className="mt-2 text-sm text-red-700"
+                className="mt-2 text-sm text-destructive"
                 id={`${linkFieldId}-error`}
                 role="alert"
               >

@@ -40,12 +40,12 @@ export default async function PreviewPostPage({
   return (
     <div className="max-w-2xl">
       <Link
-        className="inline-flex min-h-11 items-center rounded-xl text-sm font-medium text-stone-600 hover:text-stone-900"
+        className="inline-flex min-h-11 items-center rounded-control text-sm font-medium text-muted-foreground hover:text-foreground"
         href={`/admin/posts/${post.id}`}
       >
         Back to editing
       </Link>
-      <p className="mt-4 text-sm text-stone-600">
+      <p className="mt-4 text-sm text-muted-foreground">
         Preview of the last saved version.
       </p>
 
@@ -53,14 +53,14 @@ export default async function PreviewPostPage({
         {post.title}
       </h1>
       {post.summary ? (
-        <p className="mt-3 text-stone-600">{post.summary}</p>
+        <p className="mt-3 text-muted-foreground">{post.summary}</p>
       ) : null}
 
       <div className={`mt-8 ${ARTICLE_PROSE_CLASS}`}>
         {stored?.ok ? (
           <ArticleContent document={stored.document} mediaById={mediaById} />
         ) : (
-          <p className="text-sm text-red-700" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             The stored content is not valid schema v1 and cannot be previewed.
           </p>
         )}

@@ -44,7 +44,7 @@ const CONTENT_CLASS = [
   // Borderless, so the page reads like the published article.
   "min-h-[60vh] w-full text-lg leading-relaxed outline-none",
   // An atom such as an image has no cursor, so its selection must be visible.
-  "[&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-stone-900",
+  "[&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-ring",
   ARTICLE_PROSE_CLASS,
 ].join(" ");
 

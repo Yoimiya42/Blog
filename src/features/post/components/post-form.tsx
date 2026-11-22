@@ -81,12 +81,14 @@ const ArticleEditor = dynamic(
   () => import("../content/editor/article-editor"),
   {
     ssr: false,
-    loading: () => <p className="text-sm text-stone-500">Loading editor…</p>,
+    loading: () => (
+      <p className="text-sm text-muted-foreground">Loading editor…</p>
+    ),
   },
 );
 
 const INPUT_CLASS =
-  "mt-1.5 w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm outline-none focus:border-stone-400 aria-invalid:border-red-700";
+  "mt-1.5 w-full rounded-control border border-border bg-background px-3 py-2 text-sm outline-none focus:border-faint aria-invalid:border-destructive";
 
 export function PostForm({
   postId,
@@ -181,12 +183,12 @@ export function PostForm({
       className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]"
       noValidate
     >
-      <div className="min-w-0 rounded-2xl bg-white px-5 py-8 shadow-sm ring-1 ring-stone-200 md:px-12 md:py-12">
+      <div className="min-w-0 rounded-card bg-card px-5 py-8 shadow-sm ring-1 ring-border md:px-12 md:py-12">
         <input
           aria-describedby={fieldErrors.title ? "post-title-error" : undefined}
           aria-invalid={fieldErrors.title ? true : undefined}
           aria-label="Title"
-          className="w-full bg-transparent text-3xl leading-tight font-semibold tracking-tight outline-none placeholder:text-stone-300 md:text-4xl"
+          className="w-full bg-transparent text-3xl leading-tight font-semibold tracking-tight outline-none placeholder:text-faint"
           defaultValue={values.title}
           id="post-title"
           maxLength={POST_TITLE_MAX_LENGTH}
@@ -196,7 +198,7 @@ export function PostForm({
         />
         <FieldError id="post-title-error" message={fieldErrors.title} />
 
-        <hr className="my-6 border-stone-200" />
+        <hr className="my-6 border-border" />
 
         <p className="sr-only" id="post-content-label">
           Content
@@ -213,7 +215,7 @@ export function PostForm({
             onChange={autosave.change}
           />
         ) : (
-          <p className="text-sm text-red-700" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             The stored content is not valid schema v1 and cannot be opened.
             Saving keeps it unchanged.
           </p>
@@ -221,7 +223,7 @@ export function PostForm({
         <FieldError id="post-content-error" message={fieldErrors.content} />
       </div>
 
-      <aside className="divide-y divide-stone-100 rounded-2xl bg-white ring-1 ring-stone-200 lg:sticky lg:top-20">
+      <aside className="divide-y divide-border rounded-card bg-card ring-1 ring-border lg:sticky lg:top-20">
         <div className="space-y-2 p-4">
           <div className="flex gap-2">
             <SubmitButton
@@ -247,12 +249,12 @@ export function PostForm({
           </div>
 
           {state.formError ? (
-            <p className="text-sm text-red-700" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {state.formError}
             </p>
           ) : null}
           {state.saved ? (
-            <p className="text-xs text-green-800" role="status">
+            <p className="text-xs text-success" role="status">
               Saved
             </p>
           ) : null}
@@ -266,10 +268,7 @@ export function PostForm({
         </div>
 
         <div className="flex gap-3 p-4">
-          <TagIcon
-            aria-hidden
-            className="mt-1.5 size-4 shrink-0 text-stone-400"
-          />
+          <TagIcon aria-hidden className="mt-1.5 size-4 shrink-0 text-faint" />
           <div className="min-w-0 flex-1">
             <TagPicker
               describedBy={fieldErrors.tags ? "post-tags-error" : undefined}
@@ -296,7 +295,7 @@ export function PostForm({
             aria-label="Slug"
             autoCapitalize="none"
             autoCorrect="off"
-            className={`${INPUT_CLASS} font-mono read-only:text-stone-500`}
+            className={`${INPUT_CLASS} font-mono read-only:text-muted-foreground`}
             defaultValue={values.slug}
             id="post-slug"
             maxLength={POST_SLUG_MAX_LENGTH}
@@ -362,12 +361,12 @@ function SidebarSection({
 }) {
   return (
     <Collapsible defaultOpen={invalid} key={invalid ? "error" : "ok"}>
-      <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 px-4 text-sm text-stone-500 hover:text-stone-900">
-        <Icon aria-hidden className="size-4 text-stone-400" />
+      <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 px-4 text-sm text-muted-foreground hover:text-foreground">
+        <Icon aria-hidden className="size-4 text-faint" />
         <span className="flex-1 text-left">{label}</span>
         <ChevronRight
           aria-hidden
-          className="size-4 text-stone-400 transition-transform group-data-[state=open]:rotate-90"
+          className="size-4 text-faint transition-transform group-data-[state=open]:rotate-90"
         />
       </CollapsibleTrigger>
       {/* forceMount keeps the field in the form while collapsed. */}
@@ -392,7 +391,7 @@ function AutosaveNote({
 }) {
   if (status.kind === "stopped") {
     return (
-      <p className="text-sm text-red-700" role="alert">
+      <p className="text-sm text-destructive" role="alert">
         {status.reason === "conflict"
           ? "Autosave stopped: this post changed in another tab or window. Reload the page to continue."
           : "Autosave stopped: this post no longer exists."}
@@ -401,7 +400,7 @@ function AutosaveNote({
   }
 
   let message: string;
-  let tone = "bg-stone-300";
+  let tone = "bg-faint";
   if (!enabled) {
     if (postStatus === "PUBLISHED") {
       message = "Published: save to update";
@@ -412,20 +411,20 @@ function AutosaveNote({
     }
   } else if (status.kind === "saving") {
     message = "Saving…";
-    tone = "bg-amber-400";
+    tone = "bg-warning";
   } else if (status.kind === "saved") {
     message = `Saved ${status.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-    tone = "bg-green-600";
+    tone = "bg-success";
   } else if (status.kind === "error") {
     message = "Autosave failed, retrying";
-    tone = "bg-red-600";
+    tone = "bg-destructive";
   } else {
     message = "Autosave on";
   }
 
   return (
     <p
-      className="flex items-center gap-1.5 text-xs text-stone-500"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground"
       role="status"
       title="Autosaves drafts every 10 seconds and when the editor loses focus."
     >
@@ -439,7 +438,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
 
   return (
-    <p className="mt-2 text-sm text-red-700" id={id} role="alert">
+    <p className="mt-2 text-sm text-destructive" id={id} role="alert">
       {message}
     </p>
   );

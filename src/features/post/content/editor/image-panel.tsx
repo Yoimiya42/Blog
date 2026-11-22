@@ -28,9 +28,9 @@ export type ImageUploadStatus =
   | { kind: "library"; items: LibraryImage[] | null };
 
 const ICON_BUTTON_CLASS =
-  "flex size-9 shrink-0 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-40";
+  "flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40";
 const TILE_CLASS =
-  "flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-xl border px-4 text-center transition-colors";
+  "flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-container border px-4 text-center transition-colors";
 
 interface ImagePanelProps {
   status: ImageUploadStatus;
@@ -87,7 +87,7 @@ export function ImagePanel({
         {onOpenLibrary ? (
           <button
             aria-label="Choose from library"
-            className={`${TILE_CLASS} w-28 shrink-0 border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-40`}
+            className={`${TILE_CLASS} w-28 shrink-0 border-border text-muted-foreground hover:border-faint hover:text-foreground disabled:pointer-events-none disabled:opacity-40`}
             disabled={uploading}
             onClick={onOpenLibrary}
             type="button"
@@ -98,7 +98,7 @@ export function ImagePanel({
         ) : null}
       </div>
       {status.kind === "error" ? (
-        <p className="mt-2 text-sm text-red-700" role="alert">
+        <p className="mt-2 text-sm text-destructive" role="alert">
           {status.message}
         </p>
       ) : null}
@@ -118,7 +118,7 @@ function PanelFrame({
 }) {
   return (
     <div
-      className="mt-1 flex items-start gap-2 border-t border-stone-200 p-3"
+      className="mt-1 flex items-start gap-2 border-t border-border p-3"
       onKeyDown={(event) => {
         if (event.key === "Escape" && !closeDisabled) {
           event.preventDefault();
@@ -163,14 +163,14 @@ function DropZone({
   }
 
   const state = disabled
-    ? "cursor-default border-stone-200 text-stone-500"
+    ? "cursor-default border-border text-muted-foreground"
     : dragging
-      ? "cursor-copy border-stone-900 bg-stone-100 text-stone-900"
-      : "cursor-pointer border-stone-300 text-stone-600 hover:border-stone-500 hover:bg-stone-50 hover:text-stone-900";
+      ? "cursor-copy border-foreground bg-muted text-foreground"
+      : "cursor-pointer border-input text-muted-foreground hover:border-muted-foreground hover:bg-muted/50 hover:text-foreground";
 
   return (
     <label
-      className={`${TILE_CLASS} min-w-0 flex-1 border-dashed has-[input:focus-visible]:border-stone-900 ${state}`}
+      className={`${TILE_CLASS} min-w-0 flex-1 border-dashed has-[input:focus-visible]:border-ring ${state}`}
       onDragLeave={() => setDragging(false)}
       onDragOver={(event) => {
         event.preventDefault();
@@ -194,7 +194,7 @@ function DropZone({
         <>
           <ImageUp aria-hidden className="size-5" />
           <span className="text-sm font-medium">Upload image</span>
-          <span className="text-xs text-stone-500">
+          <span className="text-xs text-muted-foreground">
             JPEG, PNG, WebP · 50 MB
           </span>
         </>
@@ -205,7 +205,7 @@ function DropZone({
         >
           <LoaderCircle aria-hidden className="size-5 animate-spin" />
           <span className="text-sm font-medium">Uploading</span>
-          <span className="max-w-full truncate text-xs text-stone-500">
+          <span className="max-w-full truncate text-xs text-muted-foreground">
             {fileName}
           </span>
         </span>
@@ -226,15 +226,15 @@ function AltTextField({
   return (
     <PanelFrame onClose={onDone}>
       <p
-        className="flex items-center gap-1.5 text-sm font-medium text-stone-900"
+        className="flex items-center gap-1.5 text-sm font-medium text-foreground"
         role="status"
       >
-        <Check aria-hidden className="size-4 text-green-700" />
+        <Check aria-hidden className="size-4 text-success" />
         Image inserted
       </p>
       <input
         aria-label="Alt text"
-        className="mt-2 h-9 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm outline-none placeholder:text-stone-400 focus:border-stone-900"
+        className="mt-2 h-9 w-full rounded-control border border-border bg-background px-3 text-sm outline-none placeholder:text-faint focus:border-ring"
         maxLength={500}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => {
@@ -282,21 +282,21 @@ function LibraryPicker({ items, onPick, onBack, onClose }: LibraryPickerProps) {
       </div>
       {items === null ? (
         <p
-          className="flex items-center gap-2 py-6 text-sm text-stone-500"
+          className="flex items-center gap-2 py-6 text-sm text-muted-foreground"
           role="status"
         >
           <LoaderCircle aria-hidden className="size-4 animate-spin" />
           Loading
         </p>
       ) : items.length === 0 ? (
-        <p className="py-6 text-sm text-stone-500">No images yet.</p>
+        <p className="py-6 text-sm text-muted-foreground">No images yet.</p>
       ) : (
         <ul className="mt-2 grid max-h-80 grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2 overflow-y-auto">
           {items.map((image) => (
             <li key={image.id}>
               <button
                 aria-label={`Insert ${image.alt || "image without alt text"}`}
-                className="block w-full overflow-hidden rounded-lg ring-1 ring-stone-200 transition hover:ring-2 hover:ring-stone-900 focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:outline-none"
+                className="block w-full overflow-hidden rounded-control ring-1 ring-border transition hover:ring-2 hover:ring-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 onClick={() => onPick(image)}
                 type="button"
               >

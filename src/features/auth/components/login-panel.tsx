@@ -85,11 +85,11 @@ export function LoginPanel() {
   }
 
   return (
-    <section className="w-full max-w-md rounded-3xl border border-black/10 bg-white p-6 shadow-xl sm:p-8">
+    <section className="w-full max-w-md rounded-card border border-border bg-card p-6 shadow-xl sm:p-8">
       <header className="flex items-center justify-between">
         <span className="text-sm font-bold">FM</span>
 
-        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600">
+        <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
           Owner access
         </span>
       </header>
@@ -116,9 +116,9 @@ function EmailStep({
 }: EmailStepProps) {
   return (
     <div className="mt-10">
-      <p className="text-sm font-medium text-stone-500">Admin</p>
+      <p className="text-sm font-medium text-muted-foreground">Admin</p>
 
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight">
         Welcome back.
       </h1>
 
@@ -135,7 +135,7 @@ function EmailStep({
 
         <input
           autoComplete="email"
-          className="mt-2 h-12 w-full rounded-2xl border border-stone-300 bg-stone-50 px-4 outline-none focus:border-stone-900 focus:ring-4 focus:ring-black/5"
+          className="mt-2 h-12 w-full rounded-control border border-input bg-muted/50 px-4 outline-none focus:border-ring focus:ring-4 focus:ring-foreground/5"
           id="email"
           name="email"
           onChange={(event) => onEmailChange(event.target.value)}
@@ -146,13 +146,13 @@ function EmailStep({
         />
 
         {error ? (
-          <p className="mt-3 text-sm text-red-700" role="alert">
+          <p className="mt-3 text-sm text-destructive" role="alert">
             {error}
           </p>
         ) : null}
 
         <button
-          className="mt-4 h-12 w-full rounded-2xl bg-stone-900 text-sm font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-4 h-12 w-full rounded-control bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={pending}
           type="submit"
         >
@@ -176,7 +176,7 @@ function CodeStep({ error, onBack, onVerify, pending }: CodeStepProps) {
   return (
     <div className="mt-10">
       <button
-        className="text-sm font-medium text-stone-600 hover:text-stone-900"
+        className="text-sm font-medium text-muted-foreground hover:text-foreground"
         disabled={pending}
         onClick={onBack}
         type="button"
@@ -184,7 +184,7 @@ function CodeStep({ error, onBack, onVerify, pending }: CodeStepProps) {
         ← Change email
       </button>
 
-      <h1 className="mt-6 text-3xl font-semibold tracking-tight">
+      <h1 className="mt-6 text-2xl font-semibold tracking-tight">
         Enter your code.
       </h1>
 
@@ -202,7 +202,7 @@ function CodeStep({ error, onBack, onVerify, pending }: CodeStepProps) {
         <input
           autoComplete="one-time-code"
           autoFocus
-          className="mt-2 h-14 w-full rounded-2xl border border-stone-300 bg-stone-50 px-4 text-center font-mono text-2xl tracking-[0.5em] outline-none focus:border-stone-900 focus:ring-4 focus:ring-black/5"
+          className="mt-2 h-14 w-full rounded-control border border-input bg-muted/50 px-4 text-center font-mono text-2xl tracking-[0.5em] outline-none focus:border-ring focus:ring-4 focus:ring-foreground/5"
           id="code"
           inputMode="numeric"
           maxLength={6}
@@ -220,13 +220,13 @@ function CodeStep({ error, onBack, onVerify, pending }: CodeStepProps) {
         />
 
         {error ? (
-          <p className="mt-3 text-sm text-red-700" role="alert">
+          <p className="mt-3 text-sm text-destructive" role="alert">
             {error}
           </p>
         ) : null}
 
         <button
-          className="mt-4 h-12 w-full rounded-2xl bg-stone-900 text-sm font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-4 h-12 w-full rounded-control bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={pending}
           type="submit"
         >

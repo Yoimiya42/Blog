@@ -25,13 +25,13 @@ export function CopyLinkButton({ url }: CopyLinkButtonProps) {
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
       <button
-        className="min-h-11 rounded-xl border border-stone-300 bg-white px-4 text-sm font-medium hover:bg-stone-100"
+        className="min-h-11 rounded-control border border-input bg-background px-4 text-sm font-medium hover:bg-muted"
         onClick={() => void copy()}
         type="button"
       >
         Copy link
       </button>
-      <span aria-live="polite" className="text-sm text-stone-600">
+      <span aria-live="polite" className="text-sm text-muted-foreground">
         {state === "copied"
           ? "Copied."
           : state === "failed"

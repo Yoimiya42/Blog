@@ -24,7 +24,7 @@ export function DeletePostButton({ postId, title }: DeletePostButtonProps) {
       <PopoverTrigger asChild>
         <Button
           aria-label="Delete post"
-          className="size-11 text-stone-500 hover:text-red-700"
+          className="size-11 text-muted-foreground hover:text-destructive"
           size="icon"
           title="Delete post"
           type="button"

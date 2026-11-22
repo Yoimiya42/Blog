@@ -1,31 +1,36 @@
 /*
- * Formal host (fangmingluan.com) tokens and homepage layout.
- * Scoped to `.formal` so the admin and the future personal host keep their own
- * tokens; see "Public presentation boundary" in docs/architecture.md.
+ * Formal host (fangmingluan.com) token values and homepage layout.
+ * The vocabulary and scales live in globals.css (ADR-0029); `.formal` only
+ * overrides values, so the admin and the future personal host keep theirs.
+ * See "Public presentation boundary" in docs/architecture.md.
  * No webfont: the stack resolves to fonts already on the device, so first
  * paint never waits on a font request (NFR-CN-01).
  */
 .formal {
-  --ink: #16181d;
-  --muted: #5b616e; /* 6.3:1 on --surface */
-  --faint: #8b909a; /* 3.2:1 on --surface; non-text marks only */
-  --line: #dcdfe4;
-  --surface: #ffffff;
-  --focus: #1d4ed8;
-
-  --font-sans:
-    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* Cool neutrals until #66 decides the visual direction. */
+  --background: #ffffff;
+  --foreground: #16181d;
+  --muted-foreground: #5b616e; /* 6.3:1 on --background */
+  --faint: #8b909a; /* 3.2:1 on --background; non-text marks only */
+  --border: #dcdfe4;
+  --ring: #1d4ed8;
+  /* Aliases resolve where they are declared, so re-point them here. */
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --primary: var(--foreground);
+  --secondary-foreground: var(--foreground);
+  --accent-foreground: var(--foreground);
 
   --page: 68rem;
   --gutter: 1.25rem;
   --head-height: 3.5rem;
 
   min-height: 100vh;
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
-  font-size: 1rem;
+  font-size: var(--text-base);
   line-height: 1.6;
   -webkit-text-size-adjust: 100%;
 }
@@ -33,7 +38,7 @@
 .formal a {
   color: inherit;
   text-decoration: underline;
-  text-decoration-color: var(--line);
+  text-decoration-color: var(--border);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
@@ -43,9 +48,9 @@
 }
 
 .formal :focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: var(--radius-mark);
 }
 
 .formal .skip-link {
@@ -54,8 +59,9 @@
   top: -4rem;
   z-index: 50;
   padding: 0.5rem 0.75rem;
-  background: var(--ink);
-  color: var(--surface);
+  border-radius: var(--radius-control);
+  background: var(--foreground);
+  color: var(--background);
   text-decoration: none;
 }
 
@@ -69,8 +75,8 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
 }
 
 .formal .site-head__in {
@@ -100,8 +106,8 @@
   display: flex;
   gap: 1.25rem;
   overflow-x: auto;
-  font-size: 0.875rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
   white-space: nowrap;
   scrollbar-width: none;
 }
@@ -113,20 +119,20 @@
 }
 
 .formal .site-head__nav a:hover {
-  color: var(--ink);
+  color: var(--foreground);
 }
 
 .formal .site-foot {
   margin-top: 4rem;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 .formal .site-foot__in {
   max-width: var(--page);
   margin: 0 auto;
   padding: 1.25rem var(--gutter);
-  font-size: 0.8125rem;
-  color: var(--muted);
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
 }
 
 .formal .site-foot__in--split {
@@ -165,23 +171,23 @@
 .formal .entrance-glyph:hover,
 .formal .entrance-glyph:active,
 .formal .entrance-glyph:focus-visible {
-  color: var(--ink);
+  color: var(--foreground);
 }
 
 .formal .entrance-veil {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: var(--ink);
+  background: var(--foreground);
 }
 
 /* 300ms closing + 400ms lifting = 700ms, inside the 600–900ms budget. */
 .formal .entrance-veil[data-phase="closing"] {
-  animation: entrance-veil-in 300ms ease-in both;
+  animation: entrance-veil-in var(--duration-slow) ease-in both;
 }
 
 .formal .entrance-veil[data-phase="lifting"] {
-  animation: entrance-veil-in 400ms ease-out reverse both;
+  animation: entrance-veil-in var(--duration-slower) ease-out reverse both;
 }
 
 @keyframes entrance-veil-in {
@@ -196,11 +202,11 @@
 /* Reduced-motion users get a plain link; the script never raises the veil. */
 @media (prefers-reduced-motion: no-preference) {
   .formal .entrance-glyph svg {
-    transition: transform 300ms ease;
+    transition: transform var(--duration-slow) ease;
   }
 
   .formal .entrance-glyph {
-    transition: color 300ms ease;
+    transition: color var(--duration-slow) ease;
   }
 
   .formal .entrance-glyph:hover svg,
@@ -241,22 +247,22 @@
 }
 
 .formal .home-lead__name {
-  font-size: 2rem;
+  font-size: var(--text-4xl);
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .formal .home-lead__tagline {
   margin-top: 0.625rem;
-  font-size: 1.125rem;
+  font-size: var(--text-lg);
   line-height: 1.45;
 }
 
 .formal .home-lead__location {
   margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
 }
 
 .formal .home-lead__actions {
@@ -272,19 +278,20 @@
   align-items: center;
   min-height: 2.75rem;
   padding: 0 1rem;
-  border: 1px solid var(--line);
-  font-size: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  font-size: var(--text-sm);
   text-decoration: none;
 }
 
 .formal .action:hover {
-  border-color: var(--ink);
+  border-color: var(--foreground);
 }
 
 .formal .action--primary {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--surface);
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
 }
 
 /* ---- sections ---- */
@@ -301,18 +308,18 @@
 .formal .home-section__heading {
   margin-bottom: 1.25rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--line);
-  font-size: 0.8125rem;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .formal .home-section__more {
   margin-top: 1.25rem;
-  font-size: 0.875rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
 }
 
 .formal .prose p + p {
@@ -340,7 +347,7 @@
 }
 
 .formal .entry__title {
-  font-size: 1rem;
+  font-size: var(--text-base);
   font-weight: 600;
 }
 
@@ -350,20 +357,20 @@
 
 .formal .entry__period {
   flex: none;
-  font-size: 0.8125rem;
+  font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .formal .entry__sub,
 .formal .entry__meta {
-  font-size: 0.875rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
 }
 
 .formal .entry__body {
   margin-top: 0.25rem;
-  font-size: 0.9375rem;
+  font-size: var(--text-sm);
 }
 
 .formal .entry__meta {
@@ -374,8 +381,8 @@
   margin-top: 0.375rem;
   padding-left: 1.1em;
   list-style: disc;
-  font-size: 0.875rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
 }
 
 .formal .entry__links {
@@ -383,7 +390,7 @@
   flex-wrap: wrap;
   gap: 0 1rem;
   margin-top: 0.375rem;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
 }
 
 .formal .facts {
@@ -398,9 +405,9 @@
 }
 
 .formal .facts dt {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   line-height: 1.83;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .formal .facts dd {
@@ -417,7 +424,8 @@
 /* Deliberately looks unfinished so a reader cannot mistake it for content. */
 .formal .placeholder-note {
   padding: 0.75rem 1rem;
-  border: 1px dashed var(--line);
-  font-size: 0.875rem;
-  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-control);
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
 }

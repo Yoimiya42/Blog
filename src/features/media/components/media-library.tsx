@@ -19,14 +19,14 @@ function formatSize(bytes: number): string {
 export function MediaLibrary({ items }: { items: MediaLibraryItem[] }) {
   if (items.length === 0) {
     return (
-      <p className="text-sm text-stone-600">
+      <p className="text-sm text-muted-foreground">
         No media. Upload images from the post editor.
       </p>
     );
   }
 
   return (
-    <ul className="divide-y divide-stone-200">
+    <ul className="divide-y divide-border">
       {items.map((item) => (
         <li
           className="flex flex-col gap-4 py-6 sm:flex-row sm:items-start"
@@ -40,7 +40,7 @@ export function MediaLibrary({ items }: { items: MediaLibraryItem[] }) {
           >
             <img
               alt={item.alt}
-              className="h-auto w-full rounded-lg bg-stone-100 object-contain sm:h-32 sm:w-48"
+              className="h-auto w-full rounded-control bg-muted object-contain sm:h-32 sm:w-48"
               decoding="async"
               height={item.height}
               loading="lazy"
@@ -50,31 +50,33 @@ export function MediaLibrary({ items }: { items: MediaLibraryItem[] }) {
           </a>
           <div className="min-w-0 flex-1 space-y-3">
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-              <dt className="text-stone-500">Uploaded</dt>
+              <dt className="text-muted-foreground">Uploaded</dt>
               <dd>
                 <time dateTime={item.createdAt.toISOString()}>
                   {DATE_FORMAT.format(item.createdAt)}
                 </time>
               </dd>
-              <dt className="text-stone-500">Size</dt>
+              <dt className="text-muted-foreground">Size</dt>
               <dd>
                 {item.width} × {item.height} ·{" "}
                 {item.mimeType.replace("image/", "").toUpperCase()} ·{" "}
                 {formatSize(item.sizeBytes)}
               </dd>
-              <dt className="text-stone-500">Alt text</dt>
+              <dt className="text-muted-foreground">Alt text</dt>
               <dd className="break-words">
                 {item.alt || (
-                  <span className="text-stone-500">None (decorative)</span>
+                  <span className="text-muted-foreground">
+                    None (decorative)
+                  </span>
                 )}
               </dd>
               {item.hadLocation ? (
                 <>
-                  <dt className="text-stone-500">Location</dt>
+                  <dt className="text-muted-foreground">Location</dt>
                   <dd>Removed from the served file; kept privately.</dd>
                 </>
               ) : null}
-              <dt className="text-stone-500">Link</dt>
+              <dt className="text-muted-foreground">Link</dt>
               <dd className="font-mono text-xs leading-5 break-all">
                 {item.url}
               </dd>

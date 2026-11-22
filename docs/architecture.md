@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.22 · 2026-11-21
+> v0.23 · 2026-11-22
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -107,7 +107,7 @@ The six `*` entries are the project's only extension points.
 ### Public presentation boundary
 
 - Content and business modules remain independent of the public visual system.
-- Formal and personal pages use separate layout shells, design tokens, and style entry points.
+- Formal and personal pages use separate layout shells, token values, and style entry points. The token vocabulary and scales are shared in `globals.css`; see ADR-0029.
 - Content components expose semantic structure and contain no opening-sequence or ambient-motion logic.
 - Layout shells own page transitions and decorative motion. Effects cannot own navigation, data loading, or content visibility.
 - The formal shell stays restrained and has no background animation. The personal shell may add expressive colour and richer motion later.
@@ -301,3 +301,4 @@ Any failing row is an architectural defect.
 | 2026-11-15 | v0.20 | Kept production on Workers Free after the public blog release; see ADR-0019 |
 | 2026-11-17 | v0.21 | Narrowed the storage adapter to upload and delete; recorded the image upload and delivery paths; see ADR-0024 |
 | 2026-11-21 | v0.22 | Recorded responsive article image sources and the enlarged-view width |
+| 2026-11-22 | v0.23 | Shared one design-token vocabulary across shells; shells override values only; see ADR-0029 |

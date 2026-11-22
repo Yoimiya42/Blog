@@ -41,7 +41,7 @@ export function CodeLanguageMenuContent({
       >
         {CODE_LANGUAGE_OPTIONS.map(({ value, label }) => (
           <DropdownMenuRadioItem key={value} textValue={label} value={value}>
-            <LanguageIcon className="text-stone-500" language={value} />
+            <LanguageIcon className="text-muted-foreground" language={value} />
             {label}
           </DropdownMenuRadioItem>
         ))}

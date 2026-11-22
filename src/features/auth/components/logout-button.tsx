@@ -23,7 +23,7 @@ export function LogoutButton() {
 
   return (
     <button
-      className="min-h-11 rounded-xl px-3 text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900 disabled:opacity-60"
+      className="min-h-11 rounded-control px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-60"
       disabled={pending}
       onClick={signOut}
       type="button"

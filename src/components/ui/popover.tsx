@@ -20,7 +20,7 @@ function PopoverContent({
       <PopoverPrimitive.Content
         align={align}
         className={cn(
-          "ui-motion z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none",
+          "ui-motion z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-container border border-border bg-popover p-1 text-popover-foreground shadow-md outline-none",
           className,
         )}
         sideOffset={sideOffset}

@@ -49,17 +49,17 @@ function CodeBlockView({ node, updateAttributes, editor }: ReactNodeViewProps) {
           <DropdownMenuTrigger asChild>
             <button
               aria-label={`Code language: ${codeLanguageLabel(language)}`}
-              className="-ml-1.5 flex h-8 items-center gap-2 rounded-md px-1.5 hover:bg-white/10 disabled:pointer-events-none"
+              className="-ml-1.5 flex h-8 items-center gap-2 rounded-control px-1.5 hover:bg-code-foreground/10 disabled:pointer-events-none"
               disabled={!editor.isEditable}
               type="button"
             >
               <LanguageIcon
-                className="text-stone-300"
+                className="text-code-muted"
                 language={language}
                 mono
               />
               {codeLanguageLabel(language)}
-              <ChevronDown aria-hidden className="size-3.5 text-stone-400" />
+              <ChevronDown aria-hidden className="size-3.5 text-code-muted" />
             </button>
           </DropdownMenuTrigger>
           <CodeLanguageMenuContent

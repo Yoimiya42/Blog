@@ -7,7 +7,7 @@ export default async function AdminMediaPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-semibold tracking-tight">Media</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Media</h1>
       <div className="mt-8">
         <MediaLibrary items={items} />
       </div>
