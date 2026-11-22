@@ -1,10 +1,6 @@
-import { FileText } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-
 /**
  * Language logos from Simple Icons 16.38.1 (CC0 1.0), copied as path data so
- * the editor needs no icon dependency. Java uses the OpenJDK mark in Java
+ * neither the editor nor the public article needs an icon dependency. Java uses the OpenJDK mark in Java
  * orange; Simple Icons ships no Java logo. Colours are the brand colours.
  */
 const LANGUAGE_ICONS: Readonly<
@@ -36,14 +32,25 @@ const LANGUAGE_ICONS: Readonly<
   },
 };
 
+// Plain-text mark: the Lucide "file-text" outline (ISC), inlined so public
+// pages stay free of the admin icon kit (ADR-0026).
+const TEXT_ICON_PATHS = [
+  "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z",
+  "M14 2v4a2 2 0 0 0 2 2h4",
+  "M10 9H8",
+  "M16 13H8",
+  "M16 17H8",
+];
+
 /**
  * The logo of a code language, or a text icon for plain text and anything
  * unknown. `mono` draws it in the current text colour, for dark surfaces.
+ * Server-safe: no hooks, no client imports.
  */
 export function LanguageIcon({
   language,
   mono = false,
-  className,
+  className = "",
 }: {
   language: string;
   mono?: boolean;
@@ -52,16 +59,31 @@ export function LanguageIcon({
   const icon = Object.hasOwn(LANGUAGE_ICONS, language)
     ? LANGUAGE_ICONS[language]
     : undefined;
+
   if (!icon) {
-    return <FileText aria-hidden className={cn("size-4", className)} />;
+    return (
+      <svg
+        aria-hidden
+        className={`size-4 shrink-0 ${className}`}
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        viewBox="0 0 24 24"
+      >
+        {TEXT_ICON_PATHS.map((d) => (
+          <path d={d} key={d} />
+        ))}
+      </svg>
+    );
   }
 
   return (
     <svg
       aria-hidden
-      className={cn("size-4 shrink-0", className)}
+      className={`size-4 shrink-0 ${className}`}
       fill={mono ? "currentColor" : icon.color}
-      role="img"
       viewBox="0 0 24 24"
     >
       <path d={icon.path} />

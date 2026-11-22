@@ -143,7 +143,7 @@ describe("article renderer", () => {
       "<blockquote><p>quoted</p><ul><li><p>quoted item</p></li></ul>",
     );
     expect(quote).toContain('<figure data-code-block="">');
-    expect(quote).toContain("<span>go</span>");
+    expect(quote).toContain("<span>Go</span>");
     expect(quote).toContain("Copy code");
     expect(quote).toContain("</figure><hr/></blockquote>");
     expect(lists).toContain(
@@ -183,19 +183,23 @@ describe("article renderer", () => {
       '<figure data-media-id="med_02"><a aria-label="Enlarge image" data-image-zoom="" href="/media/decorative.webp"><img alt="" decoding="async" fetchPriority="high" height="480" loading="eager" src="/media/decorative.webp" width="640"/></a><dialog aria-label="Enlarged image" data-image-zoom-dialog=""><button aria-label="Close enlarged image" data-image-zoom-close="" type="button">Close</button></dialog></figure>',
     );
     expect(countOccurrences(code, '<figure data-code-block="">')).toBe(6);
-    expect(countOccurrences(code, "Copy code")).toBe(6);
-    for (const language of [
-      "plaintext",
-      "python",
-      "typescript",
-      "java",
-      "c",
-      "go",
+    // The title attribute and the visually hidden name each carry the text.
+    expect(
+      countOccurrences(code, '<span class="sr-only">Copy code</span>'),
+    ).toBe(6);
+    for (const label of [
+      "Plain text",
+      "Python",
+      "TypeScript",
+      "Java",
+      "C",
+      "Go",
     ]) {
-      expect(code).toContain(`<span>${language}</span>`);
+      expect(code).toContain(`<span>${label}</span>`);
     }
     expect(code).toContain('data-code-line=""');
-    expect(code).toContain("background-color:#fff;color:#24292e");
+    // The card owns the background; the dark theme owns the text colour.
+    expect(code).toContain('<pre style="color:#e1e4e8">');
     expect(code).toMatch(/style="color:#[0-9A-F]{6}"/);
   });
 

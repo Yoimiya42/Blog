@@ -209,7 +209,7 @@ describe("article content integration", () => {
       '<figure data-media-id="med_architecture"><a aria-label="Enlarge image: System architecture diagram" data-image-zoom="" href="/media/architecture.webp"><img alt="System architecture diagram" decoding="async" height="900" loading="lazy" src="/media/architecture.webp" width="1600"/></a><dialog aria-label="System architecture diagram" data-image-zoom-dialog=""><button aria-label="Close enlarged image" data-image-zoom-close="" type="button">Close</button></dialog><figcaption>System architecture</figcaption></figure>',
     );
     expect(markup).toContain('<figure data-code-block="">');
-    expect(markup).toContain("<span>typescript</span>");
+    expect(markup).toContain("<span>TypeScript</span>");
     expect(markup).toContain("Copy code");
     expect(markup).toContain('data-code-line=""');
     expect(markup).not.toContain("<main>safe</main>");

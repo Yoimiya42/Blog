@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/popover";
 
 import { CodeLanguageMenu } from "./code-language-menu";
-import { codeLanguageLabel } from "./code-languages";
-import { LanguageIcon } from "./language-icons";
+import { codeLanguageLabel } from "../code-languages";
+import { LanguageIcon } from "../language-icons";
 
 const COPY_FEEDBACK_MS = 2000;
 
@@ -43,17 +43,15 @@ function CodeBlockView({ node, updateAttributes, editor }: ReactNodeViewProps) {
   }
 
   return (
-    <NodeViewWrapper className="my-5 overflow-hidden rounded-2xl bg-[#2a2a2a] text-stone-100 ring-1 ring-white/5">
+    // Same `[data-code-block]` card as the rendered article (globals.css).
+    <NodeViewWrapper data-code-block="">
       {/* The header is chrome, not document content. */}
-      <div
-        className="flex items-center gap-2 px-4 pt-3 select-none"
-        contentEditable={false}
-      >
+      <div contentEditable={false} data-code-header="">
         <Popover onOpenChange={setMenuOpen} open={menuOpen}>
           <PopoverTrigger asChild>
             <button
               aria-label={`Code language: ${codeLanguageLabel(language)}`}
-              className="-ml-1.5 flex h-8 items-center gap-2 rounded-md px-1.5 text-sm font-semibold text-stone-100 hover:bg-white/10 disabled:pointer-events-none"
+              className="-ml-1.5 flex h-8 items-center gap-2 rounded-md px-1.5 hover:bg-white/10 disabled:pointer-events-none"
               disabled={!editor.isEditable}
               type="button"
             >
@@ -80,17 +78,16 @@ function CodeBlockView({ node, updateAttributes, editor }: ReactNodeViewProps) {
         <button
           aria-label={copied ? "Copied" : "Copy code"}
           aria-live="polite"
-          className="ml-auto flex size-8 items-center justify-center rounded-md text-stone-300 hover:bg-white/10 hover:text-white"
+          data-code-copy=""
           onClick={() => void copy()}
           title={copied ? "Copied" : "Copy code"}
           type="button"
         >
-          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+          {copied ? <Check /> : <Copy />}
         </button>
       </div>
 
-      {/* `!` beats the shared prose rule for <pre>, which styles the public block. */}
-      <pre className="m-0! rounded-none! bg-transparent! px-5! pt-2! pb-5! font-mono text-sm leading-relaxed">
+      <pre>
         <NodeViewContent<"code"> as="code" />
       </pre>
     </NodeViewWrapper>

@@ -6,8 +6,8 @@ import type { MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 
 import type { CodeLanguage } from "../types";
-import { CODE_LANGUAGE_OPTIONS } from "./code-languages";
-import { LanguageIcon } from "./language-icons";
+import { CODE_LANGUAGE_OPTIONS } from "../code-languages";
+import { LanguageIcon } from "../language-icons";
 
 /** Language list shared by the toolbar's insert menu and a block's header. */
 export function CodeLanguageMenu({

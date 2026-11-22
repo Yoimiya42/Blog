@@ -5,14 +5,15 @@ import go from "shiki/langs/go.mjs";
 import java from "shiki/langs/java.mjs";
 import python from "shiki/langs/python.mjs";
 import typescript from "shiki/langs/typescript.mjs";
-import githubLight from "shiki/themes/github-light.mjs";
+import githubDark from "shiki/themes/github-dark.mjs";
 
 import type { CodeLanguage } from "../types";
 
-const ARTICLE_CODE_THEME = "github-light";
+// Dark, to match the code card shared with the editor.
+const ARTICLE_CODE_THEME = "github-dark";
 
 const highlighterPromise = createHighlighterCore({
-  themes: [githubLight],
+  themes: [githubDark],
   langs: [python, typescript, java, c, go],
   engine: createJavaScriptRegexEngine(),
 });

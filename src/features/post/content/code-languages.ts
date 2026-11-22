@@ -1,4 +1,4 @@
-import { CODE_LANGUAGES, type CodeLanguage } from "../types";
+import { CODE_LANGUAGES, type CodeLanguage } from "./types";
 
 export const CODE_LANGUAGE_LABELS: Record<CodeLanguage, string> = {
   plaintext: "Plain text",

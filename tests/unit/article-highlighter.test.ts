@@ -37,7 +37,7 @@ describe("article code highlighting", () => {
       const highlighted = await highlightCode(CODE_SAMPLES[language], language);
 
       expect(tokenText(highlighted.tokens)).toBe(CODE_SAMPLES[language]);
-      expect(highlighted.themeName).toBe("github-light");
+      expect(highlighted.themeName).toBe("github-dark");
       expect(highlighted.fg).toMatch(/^#[0-9a-f]{6}$/i);
       expect(highlighted.bg).toMatch(/^#[0-9a-f]{3,6}$/i);
     }
@@ -71,7 +71,7 @@ describe("article code highlighting", () => {
     const markup = renderToStaticMarkup(await CodeBlock({ node }));
 
     expect(markup).toContain('<figure data-code-block="">');
-    expect(markup).toContain("<span>go</span>");
+    expect(markup).toContain("<span>Go</span>");
     expect(markup).toContain("Copy code");
     expect(markup).toContain("<code>");
   });
