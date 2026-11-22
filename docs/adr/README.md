@@ -41,3 +41,4 @@ Template: `template.md`.
 | [0023](0023-worker-entry-serves-media.md) | A custom Worker entry serves `/media` before vinext | `worker/index.ts` answers `/media` with year-long browser caching and delegates everything else to vinext | Accepted | 2026-11-17 |
 | [0024](0024-image-upload-endpoint.md) | Image upload through the Worker entry | `POST /api/media` checks origin and owner before reading a raw body, then strips GPS in place | Accepted | 2026-11-17 |
 | [0025](0025-media-deletion.md) | Media deletion and reference safety | Scan posts for references at delete time; confirm twice for referenced items; keep the row so saves still pass; publishing needs live media | Accepted | 2026-11-18 |
+| [0026](0026-admin-component-kit.md) | Admin component kit | Build admin UI from shadcn/ui in `src/components/ui` with Radix, cmdk, and Lucide; icon-first controls | Accepted | 2026-11-22 |
