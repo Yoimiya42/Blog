@@ -29,6 +29,11 @@ export {
   type PublishedPostQuery,
 } from "./schema";
 
+export {
+  listPostsForCommandAction,
+  type PostCommandItem,
+} from "./server/post.actions";
+
 export { DeletePostButton } from "./components/delete-post-button";
 export { PostForm } from "./components/post-form";
 export { PostList } from "./components/post-list";

@@ -1,5 +1,7 @@
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
+import { buttonVariants } from "@/components/ui/button";
 import { requireOwner } from "@/features/auth";
 import { getPostService, PostList } from "@/features/post";
 
@@ -12,10 +14,8 @@ export default async function AdminPostsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Posts</h1>
-        <Link
-          className="flex min-h-11 items-center rounded-control bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-          href="/admin/posts/new"
-        >
+        <Link className={buttonVariants()} href="/admin/posts/new">
+          <Plus />
           New post
         </Link>
       </div>

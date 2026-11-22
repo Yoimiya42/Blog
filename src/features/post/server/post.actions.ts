@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
+import { setFlash } from "@/lib/flash";
 
 import {
   formatTagNames,
@@ -127,6 +128,7 @@ export async function savePostAction(
 
     revalidatePath(POSTS_PATH);
     revalidatePublicReads();
+    await setFlash("Unpublished");
     // A fresh render shows the new status and carries the new token.
     redirect(`${POSTS_PATH}/${postId}`);
   }
@@ -167,7 +169,10 @@ export async function savePostAction(
 
   revalidatePath(POSTS_PATH);
   // redirect() throws, so it stays outside any try block.
-  if (postId === null) redirect(`${POSTS_PATH}/${post.id}`);
+  if (postId === null) {
+    await setFlash("Draft created");
+    redirect(`${POSTS_PATH}/${post.id}`);
+  }
 
   if (intent === "publish") {
     // The token pins the publication to the version saved above.
@@ -186,6 +191,7 @@ export async function savePostAction(
     }
 
     revalidatePublicReads();
+    await setFlash("Published");
     // A fresh render shows the new status and carries the new token.
     redirect(`${POSTS_PATH}/${post.id}`);
   }
@@ -247,5 +253,27 @@ export async function deletePostAction(postId: string): Promise<void> {
   revalidatePath(POSTS_PATH);
   // The post may have been public; the refresh is cheap when it was not.
   revalidatePublicReads();
+  await setFlash("Post deleted");
   redirect(POSTS_PATH);
+}
+
+/** What the command palette searches (FR-ADMIN-17). Serialisable. */
+export interface PostCommandItem {
+  id: string;
+  title: string;
+  slug: string;
+  status: "DRAFT" | "PUBLISHED";
+}
+
+/** Read on each palette open, so the list is never stale. */
+export async function listPostsForCommandAction(): Promise<PostCommandItem[]> {
+  const session = await requireOwner();
+  const groups = await (await getPostService()).listByStatus(session);
+
+  return [...groups.DRAFT, ...groups.PUBLISHED].map((post) => ({
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    status: post.status,
+  }));
 }

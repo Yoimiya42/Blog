@@ -113,6 +113,7 @@ describe("schema v1 matrix completeness", () => {
         "getMediaReferenceFinder",
         "getPostService",
         "getPublicPostService",
+        "listPostsForCommandAction",
         "parseArticleDocument",
         "toCalendarDate",
         "toPostVersion",

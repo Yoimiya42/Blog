@@ -13,6 +13,7 @@ import {
   useActionState,
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -22,6 +23,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { toast } from "@/components/ui/toast";
 
 import type { ImageUploadConfig } from "../content/image-upload";
 import type { ArticleDocument } from "../content/types";
@@ -40,8 +42,12 @@ import {
 import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
 import { SubmitButton } from "./submit-button";
 import { TagPicker } from "./tag-picker";
+import { useUnsavedChangesGuard } from "./unsaved-guard";
 
 const AUTOSAVE_INTERVAL_MS = 10_000;
+
+/** Fields compared against the last save; content is tracked by autosave. */
+const TRACKED_FIELDS = ["title", "slug", "summary", "tags"] as const;
 
 /**
  * Mirrors `TAGS_PER_POST_MAX` in the tag module, checked by a unit test. The
@@ -148,38 +154,97 @@ export function PostForm({
 
   const saveOnBlur = useCallback(() => void autosave.flush(), [autosave]);
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const saving = useRef(false);
+  const savedFields = useRef<string | null>(null);
+
+  const readFields = useCallback(() => {
+    const form = formRef.current;
+    if (!form) return null;
+    const data = new FormData(form);
+    return JSON.stringify(TRACKED_FIELDS.map((field) => data.get(field)));
+  }, []);
+
+  // A fresh server render (mount, publish, unpublish) is the saved baseline.
+  useEffect(() => {
+    savedFields.current = readFields();
+  }, [readFields, version]);
+
+  const isDirty = useCallback(
+    () => readFields() !== savedFields.current || autosave.hasUnsavedContent(),
+    [autosave, readFields],
+  );
+  useUnsavedChangesGuard(isDirty);
+
+  // Ctrl or Cmd+S saves from anywhere on the page (FR-ADMIN-18).
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (
+        event.key.toLowerCase() !== "s" ||
+        !(event.metaKey || event.ctrlKey) ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+      event.preventDefault();
+      // No submitter: a plain save, never publish.
+      if (!saving.current) formRef.current?.requestSubmit();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const [state, formAction] = useActionState(
-    (previous: PostFormState, formData: FormData) =>
+    (previous: PostFormState, formData: FormData) => {
+      saving.current = true;
       // Queued behind any autosave in flight, and sent with the token that
       // save produced.
-      autosave.runExclusive(async (current, latestContent) => {
-        if (current !== "") formData.set("version", current);
-        // The form data was captured at submit. The editor stays editable
-        // while this waits, and a queued autosave may have stored a newer
-        // document since; send that one, not the snapshot.
-        if (formData.has("content")) formData.set("content", latestContent);
+      return autosave
+        .runExclusive(async (current, latestContent) => {
+          if (current !== "") formData.set("version", current);
+          // The form data was captured at submit. The editor stays editable
+          // while this waits, and a queued autosave may have stored a newer
+          // document since; send that one, not the snapshot.
+          if (formData.has("content")) formData.set("content", latestContent);
 
-        // A redirecting action may settle without a state; keep the last one.
-        const next = (await savePostAction(postId, previous, formData)) as
-          PostFormState | undefined;
-        if (next?.version) {
-          const content = formData.get("content");
-          autosave.markSaved(
-            next.version,
-            typeof content === "string" ? content : undefined,
-          );
-        }
+          // A redirecting action may settle without a state; keep the last one.
+          const next = (await savePostAction(postId, previous, formData)) as
+            PostFormState | undefined;
+          if (next?.version) {
+            const content = formData.get("content");
+            autosave.markSaved(
+              next.version,
+              typeof content === "string" ? content : undefined,
+            );
+          }
 
-        return next ?? previous;
-      }),
+          return next ?? previous;
+        })
+        .finally(() => {
+          saving.current = false;
+        });
+    },
     initialState,
   );
   const { values, fieldErrors } = state;
+
+  // Each submission yields a new state object; report its outcome once.
+  useEffect(() => {
+    if (state.saved) {
+      savedFields.current = readFields();
+      toast("Saved");
+    } else if (state.formError) {
+      toast(state.formError, "error");
+    }
+  }, [readFields, state]);
 
   return (
     // The max lengths mirror the server rules; the server remains the authority.
     <form
       action={formAction}
+      ref={formRef}
       className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]"
       noValidate
     >
@@ -251,11 +316,6 @@ export function PostForm({
           {state.formError ? (
             <p className="text-sm text-destructive" role="alert">
               {state.formError}
-            </p>
-          ) : null}
-          {state.saved ? (
-            <p className="text-xs text-success" role="status">
-              Saved
             </p>
           ) : null}
           {initialDocument ? (

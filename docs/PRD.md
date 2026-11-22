@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.34 · 2026-11-22 · Draft
+> v0.35 · 2026-11-22 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -266,6 +266,13 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-13 | Batch photo upload with EXIF extraction | v2.5 | |
 | FR-ADMIN-14 | Comment and whisper moderation | v2.5 | |
 | FR-ADMIN-15 | Installable as a PWA | v1.5 | Add to home screen |
+| FR-ADMIN-16 | Admin overview desk | v1 | `/admin` shows draft and published counts, the most recently updated drafts to resume, recent posts, and New post and Media actions |
+| FR-ADMIN-17 | Command palette | v1 | Ctrl or Cmd+K opens a search over admin pages, actions, and post titles; Enter navigates |
+| FR-ADMIN-18 | Editor keyboard save and leave guard | v1 | Ctrl or Cmd+S saves the post. Leaving the editor with unsaved title, field, or content changes asks for confirmation |
+| FR-ADMIN-19 | Action feedback | v1 | Save, create, publish, unpublish, delete, and copy outcomes show a transient toast, including after a redirect |
+| FR-ADMIN-20 | Post list search and live link | v1 | The post list filters by title or slug as the owner types; a published post links to its public page |
+| FR-ADMIN-21 | Media grid | v1 | The library shows a thumbnail grid; opening an item shows its details, copy link, and delete |
+| FR-ADMIN-22 | Styled system pages | v1 | Not-found, error, and loading states use the site tokens. A non-owner `/admin` request gets the same not-found page as any unknown URL |
 
 ---
 
@@ -687,3 +694,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-17 | v0.32 | Added `Media` to the v1 field contract. Uploads go through a dedicated owner endpoint (ADR-0024). No functional requirement changed |
 | 2026-11-22 | v0.33 | Deferred HEIC input indefinitely under FR-ADMIN-06; Issue #65 closed as not planned |
 | 2026-11-22 | v0.34 | Added C++ to FR-BLOG-03, highlighted with the C grammar; see ADR-0028 |
+| 2026-11-22 | v0.35 | Added FR-ADMIN-16 to FR-ADMIN-22: overview desk, command palette, keyboard save and leave guard, toasts, post search and live link, media grid, styled system pages |

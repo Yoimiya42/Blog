@@ -26,6 +26,7 @@ vi.mock("@/features/post/server/post.service", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: (...args: unknown[]) => revalidatePath(...args),
 }));
+vi.mock("@/lib/flash", () => ({ setFlash: async () => undefined }));
 vi.mock("next/navigation", () => ({
   redirect: (path: string) => {
     throw new RedirectSignal(path);

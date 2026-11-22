@@ -1,28 +1,25 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 
 import {
   deleteMediaAction,
   type DeleteMediaState,
 } from "../server/media.actions";
 
-const QUIET_CLASS =
-  "min-h-11 rounded-control px-4 text-sm font-medium text-muted-foreground hover:bg-foreground/5 hover:text-foreground";
-
 function ConfirmButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      className="min-h-11 rounded-control bg-destructive px-5 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60"
-      disabled={pending}
-      type="submit"
-    >
+    <Button disabled={pending} type="submit" variant="destructive">
       {pending ? "Deleting…" : label}
-    </button>
+    </Button>
   );
 }
 
@@ -39,7 +36,14 @@ function ErrorMessage({ message }: { message: string | null }) {
  * names the posts, and only the action bound to `true` deletes it anyway
  * (ADR-0025).
  */
-export function DeleteMediaButton({ mediaId }: { mediaId: string }) {
+export function DeleteMediaButton({
+  mediaId,
+  onDeleted,
+}: {
+  mediaId: string;
+  /** Called once the item is gone, e.g. to close the detail dialog. */
+  onDeleted?: () => void;
+}) {
   const [confirming, setConfirming] = useState(false);
   const [checkState, check] = useActionState<DeleteMediaState, FormData>(
     deleteMediaAction.bind(null, mediaId, false),
@@ -49,6 +53,8 @@ export function DeleteMediaButton({ mediaId }: { mediaId: string }) {
     deleteMediaAction.bind(null, mediaId, true),
     { kind: "idle" },
   );
+  const deleted =
+    checkState.kind === "deleted" || forceState.kind === "deleted";
   const error =
     forceState.kind === "error"
       ? forceState.message
@@ -56,26 +62,30 @@ export function DeleteMediaButton({ mediaId }: { mediaId: string }) {
         ? checkState.message
         : null;
 
+  useEffect(() => {
+    if (!deleted) return;
+    toast("Image deleted");
+    onDeleted?.();
+  }, [deleted, onDeleted]);
+
   if (!confirming) {
     return (
-      <button
-        className="min-h-11 rounded-control border border-destructive px-4 text-sm font-semibold text-destructive hover:bg-destructive/10"
+      <Button
+        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
         onClick={() => setConfirming(true)}
         type="button"
+        variant="ghost"
       >
+        <Trash2 />
         Delete
-      </button>
+      </Button>
     );
   }
 
   const cancel = (
-    <button
-      className={QUIET_CLASS}
-      onClick={() => setConfirming(false)}
-      type="button"
-    >
+    <Button onClick={() => setConfirming(false)} type="button" variant="ghost">
       Cancel
-    </button>
+    </Button>
   );
 
   if (checkState.kind === "referenced") {
@@ -101,7 +111,7 @@ export function DeleteMediaButton({ mediaId }: { mediaId: string }) {
             ))}
           </ul>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <ConfirmButton label="Delete anyway" />
           {cancel}
         </div>
@@ -115,7 +125,7 @@ export function DeleteMediaButton({ mediaId }: { mediaId: string }) {
       <p className="text-sm" role="alert">
         Delete this image? It cannot be restored.
       </p>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         <ConfirmButton label="Confirm delete" />
         {cancel}
       </div>

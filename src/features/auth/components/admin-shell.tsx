@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Toaster } from "@/components/ui/toast";
+
 import { LogoutButton } from "./logout-button";
 
 const navigation = [
@@ -9,7 +11,14 @@ const navigation = [
   { href: "/admin/media", label: "Media" },
 ] as const;
 
-export function AdminShell({ children }: { children: ReactNode }) {
+/** `search` is the command palette, injected by the admin layout. */
+export function AdminShell({
+  children,
+  search,
+}: {
+  children: ReactNode;
+  search?: ReactNode;
+}) {
   return (
     <div className="min-h-dvh bg-muted text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-background">
@@ -34,6 +43,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="flex shrink-0 items-center gap-1">
+            {search}
             <Link
               className="hidden min-h-11 items-center rounded-control px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground sm:flex"
               href="/"
@@ -49,6 +59,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-6xl min-w-0 px-4 py-8 pb-16 md:px-8">
         {children}
       </main>
+      <Toaster />
     </div>
   );
 }
