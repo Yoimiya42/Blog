@@ -2,13 +2,20 @@
 
 import dynamic from "next/dynamic";
 import {
+  AlignLeft,
   ChevronRight,
   Link2,
   Lock,
-  SlidersHorizontal,
   Tag as TagIcon,
+  type LucideIcon,
 } from "lucide-react";
-import { useActionState, useCallback, useEffect, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   Collapsible,
@@ -167,8 +174,6 @@ export function PostForm({
   );
   const { values, fieldErrors } = state;
 
-  const metaError = Boolean(fieldErrors.slug || fieldErrors.summary);
-
   return (
     // The max lengths mirror the server rules; the server remains the authority.
     <form
@@ -278,98 +283,101 @@ export function PostForm({
           </div>
         </div>
 
-        <Collapsible
-          // A collapsed field would hide its error, so an error opens it.
-          defaultOpen={metaError}
-          key={metaError ? "error" : "ok"}
+        <SidebarSection
+          icon={slugFrozen ? Lock : Link2}
+          invalid={Boolean(fieldErrors.slug)}
+          label="Slug"
         >
-          <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 px-4 text-sm text-stone-500 hover:text-stone-900">
-            <SlidersHorizontal aria-hidden className="size-4 text-stone-400" />
-            <span className="flex-1 text-left">Slug and summary</span>
-            <ChevronRight
-              aria-hidden
-              className="size-4 text-stone-400 transition-transform group-data-[state=open]:rotate-90"
-            />
-          </CollapsibleTrigger>
+          <input
+            aria-describedby={
+              fieldErrors.slug ? "post-slug-error" : "post-slug-hint"
+            }
+            aria-invalid={fieldErrors.slug ? true : undefined}
+            aria-label="Slug"
+            autoCapitalize="none"
+            autoCorrect="off"
+            className={`${INPUT_CLASS} font-mono read-only:text-stone-500`}
+            defaultValue={values.slug}
+            id="post-slug"
+            maxLength={POST_SLUG_MAX_LENGTH}
+            name="slug"
+            placeholder="post-address"
+            readOnly={slugFrozen}
+            spellCheck={false}
+            title={
+              slugFrozen
+                ? "Frozen since first publication"
+                : "Lowercase letters, numbers, hyphens"
+            }
+            type="text"
+          />
+          <p className="sr-only" id="post-slug-hint">
+            {slugFrozen
+              ? "Frozen since first publication."
+              : "Lowercase letters, numbers, and hyphens. Frozen once published."}
+          </p>
+          <FieldError id="post-slug-error" message={fieldErrors.slug} />
+        </SidebarSection>
 
-          {/* forceMount keeps both fields in the form while collapsed. */}
-          <CollapsibleContent
-            className="space-y-3 px-4 pb-4 data-[state=closed]:hidden"
-            forceMount
-          >
-            <div>
-              <label className="sr-only" htmlFor="post-slug">
-                Slug
-              </label>
-              <div className="relative">
-                {slugFrozen ? (
-                  <Lock
-                    aria-hidden
-                    className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-stone-400"
-                  />
-                ) : (
-                  <Link2
-                    aria-hidden
-                    className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-stone-400"
-                  />
-                )}
-                <input
-                  aria-describedby={
-                    fieldErrors.slug ? "post-slug-error" : "post-slug-hint"
-                  }
-                  aria-invalid={fieldErrors.slug ? true : undefined}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  className={`${INPUT_CLASS} pl-8 font-mono read-only:text-stone-500`}
-                  defaultValue={values.slug}
-                  id="post-slug"
-                  maxLength={POST_SLUG_MAX_LENGTH}
-                  name="slug"
-                  placeholder="post-address"
-                  readOnly={slugFrozen}
-                  spellCheck={false}
-                  title={
-                    slugFrozen
-                      ? "Frozen since first publication"
-                      : "Lowercase letters, numbers, hyphens"
-                  }
-                  type="text"
-                />
-              </div>
-              <p className="sr-only" id="post-slug-hint">
-                {slugFrozen
-                  ? "Frozen since first publication."
-                  : "Lowercase letters, numbers, and hyphens. Frozen once published."}
-              </p>
-              <FieldError id="post-slug-error" message={fieldErrors.slug} />
-            </div>
-
-            <div>
-              <label className="sr-only" htmlFor="post-summary">
-                Summary, optional
-              </label>
-              <textarea
-                aria-describedby={
-                  fieldErrors.summary ? "post-summary-error" : undefined
-                }
-                aria-invalid={fieldErrors.summary ? true : undefined}
-                className={INPUT_CLASS}
-                defaultValue={values.summary}
-                id="post-summary"
-                maxLength={POST_SUMMARY_MAX_LENGTH}
-                name="summary"
-                placeholder="Summary (optional)"
-                rows={4}
-              />
-              <FieldError
-                id="post-summary-error"
-                message={fieldErrors.summary}
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <SidebarSection
+          icon={AlignLeft}
+          invalid={Boolean(fieldErrors.summary)}
+          label="Summary"
+        >
+          <textarea
+            aria-describedby={
+              fieldErrors.summary ? "post-summary-error" : undefined
+            }
+            aria-invalid={fieldErrors.summary ? true : undefined}
+            aria-label="Summary, optional"
+            className={INPUT_CLASS}
+            defaultValue={values.summary}
+            id="post-summary"
+            maxLength={POST_SUMMARY_MAX_LENGTH}
+            name="summary"
+            placeholder="Optional"
+            rows={4}
+          />
+          <FieldError id="post-summary-error" message={fieldErrors.summary} />
+        </SidebarSection>
       </aside>
     </form>
+  );
+}
+
+/**
+ * One collapsed sidebar field. Starts closed; an error opens it so the message
+ * is never hidden.
+ */
+function SidebarSection({
+  icon: Icon,
+  label,
+  invalid,
+  children,
+}: {
+  icon: LucideIcon;
+  label: string;
+  invalid: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Collapsible defaultOpen={invalid} key={invalid ? "error" : "ok"}>
+      <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 px-4 text-sm text-stone-500 hover:text-stone-900">
+        <Icon aria-hidden className="size-4 text-stone-400" />
+        <span className="flex-1 text-left">{label}</span>
+        <ChevronRight
+          aria-hidden
+          className="size-4 text-stone-400 transition-transform group-data-[state=open]:rotate-90"
+        />
+      </CollapsibleTrigger>
+      {/* forceMount keeps the field in the form while collapsed. */}
+      <CollapsibleContent
+        className="px-4 pb-4 data-[state=closed]:hidden"
+        forceMount
+      >
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
