@@ -18,6 +18,7 @@ const CODE_SAMPLES = {
   typescript: "const value: number = 1;",
   java: "int value = 1;",
   c: "int value = 1;",
+  cpp: "std::vector<int> value;",
   go: "value := 1",
 } satisfies Record<CodeLanguage, string>;
 
@@ -30,8 +31,8 @@ function tokenText(
 }
 
 describe("article code highlighting", () => {
-  it("highlights exactly the six allowed languages without changing code", async () => {
-    expect(CODE_LANGUAGES).toHaveLength(6);
+  it("highlights every allowed language without changing code", async () => {
+    expect(CODE_LANGUAGES).toHaveLength(7);
 
     for (const language of CODE_LANGUAGES) {
       const highlighted = await highlightCode(CODE_SAMPLES[language], language);
@@ -41,6 +42,19 @@ describe("article code highlighting", () => {
       expect(highlighted.fg).toMatch(/^#[0-9a-f]{6}$/i);
       expect(highlighted.bg).toMatch(/^#[0-9a-f]{3,6}$/i);
     }
+  });
+
+  it("colours C++ with the C grammar", async () => {
+    const code = '#include <stdio.h>\nint main() { return 0; } // "done"';
+    const [cpp, c] = await Promise.all([
+      highlightCode(code, "cpp"),
+      highlightCode(code, "c"),
+    ]);
+
+    expect(cpp.tokens).toEqual(c.tokens);
+    // Directive, keyword, string, comment, and plain text are told apart.
+    const colours = new Set(cpp.tokens.flat().map((token) => token.color));
+    expect(colours.size).toBeGreaterThanOrEqual(4);
   });
 
   it("accepts only the project code-language type", () => {

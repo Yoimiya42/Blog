@@ -1,12 +1,13 @@
 export const CONTENT_SCHEMA_VERSION = 1;
 
-/** Shiki bundles exactly these grammars, so the list is shared with the renderer. */
+/** Stored code-block languages. C++ borrows the C grammar (ADR-0028). */
 export const CODE_LANGUAGES = [
   "plaintext",
   "python",
   "typescript",
   "java",
   "c",
+  "cpp",
   "go",
 ] as const;
 

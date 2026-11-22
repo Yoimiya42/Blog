@@ -182,17 +182,18 @@ describe("article renderer", () => {
     expect(decorativeImage).toContain(
       '<figure data-media-id="med_02"><a aria-label="Enlarge image" data-image-zoom="" href="/media/decorative.webp"><img alt="" decoding="async" fetchPriority="high" height="480" loading="eager" src="/media/decorative.webp" width="640"/></a><dialog aria-label="Enlarged image" data-image-zoom-dialog=""><button aria-label="Close enlarged image" data-image-zoom-close="" type="button">Close</button></dialog></figure>',
     );
-    expect(countOccurrences(code, '<figure data-code-block="">')).toBe(6);
+    expect(countOccurrences(code, '<figure data-code-block="">')).toBe(7);
     // The title attribute and the visually hidden name each carry the text.
     expect(
       countOccurrences(code, '<span class="sr-only">Copy code</span>'),
-    ).toBe(6);
+    ).toBe(7);
     for (const label of [
       "Plain text",
       "Python",
       "TypeScript",
       "Java",
       "C",
+      "C++",
       "Go",
     ]) {
       expect(code).toContain(`<span>${label}</span>`);

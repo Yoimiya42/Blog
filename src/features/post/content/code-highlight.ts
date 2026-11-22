@@ -9,7 +9,8 @@ import type { CodeLanguage } from "./types";
  */
 export const CODE_THEME = "github-dark";
 
-export type HighlightedLanguage = Exclude<CodeLanguage, "plaintext">;
+/** Languages with a bundled grammar. */
+export type HighlightedLanguage = Exclude<CodeLanguage, "plaintext" | "cpp">;
 
 type Loader<T> = () => Promise<T>;
 
@@ -34,9 +35,20 @@ export const GRAMMAR_LOADERS: Readonly<
 export const loadCodeTheme: Loader<ThemeRegistration> = () =>
   import("shiki/themes/github-dark.mjs").then((module) => module.default);
 
-/** Shiki's id for a language; plain text uses Shiki's built-in text mode. */
+/**
+ * Shiki's id for a language. Plain text uses Shiki's built-in text mode. C++
+ * uses the C grammar: no extra download or setup cost, and C++-only syntax is
+ * coloured less fully (ADR-0028).
+ */
 export function toShikiLanguage(
   language: CodeLanguage,
 ): HighlightedLanguage | "text" {
-  return language === "plaintext" ? "text" : language;
+  switch (language) {
+    case "plaintext":
+      return "text";
+    case "cpp":
+      return "c";
+    default:
+      return language;
+  }
 }

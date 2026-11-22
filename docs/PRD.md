@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.33 · 2026-11-22 · Draft
+> v0.34 · 2026-11-22 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -167,7 +167,7 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 |---|---|---|---|
 | FR-BLOG-01 | Post list, reverse-chronological, paginated | v1 | 10 per page; title, summary, date, tags, reading time |
 | FR-BLOG-02 | Post detail | v1 | CJK typography at line-height 1.75+, 17–18px |
-| FR-BLOG-03 | Code highlighting | v1 | Python, TS, Java, C, Go; language label, copy button |
+| FR-BLOG-03 | Code highlighting | v1 | Python, TS, Java, C, C++, Go; language label, copy button. C++ uses the C grammar (ADR-0028) |
 | FR-BLOG-04 | Tags and tag archive | v1 | Many tags per post, at most 10. The owner enters comma-separated tag names in the post form; an unknown name creates the tag. Archives list published posts only |
 | FR-BLOG-05 | Table of contents | v1 | Sidebar with scroll spy; collapsed on mobile |
 | FR-BLOG-06 | Draft and published states | v1 | Drafts hidden from lists, reachable by preview link |
@@ -686,3 +686,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-17 | v0.31 | Fixed the image transform call and protected the image source domain; recorded the cache rule for non-public media. See ADR-0022. No functional requirement changed |
 | 2026-11-17 | v0.32 | Added `Media` to the v1 field contract. Uploads go through a dedicated owner endpoint (ADR-0024). No functional requirement changed |
 | 2026-11-22 | v0.33 | Deferred HEIC input indefinitely under FR-ADMIN-06; Issue #65 closed as not planned |
+| 2026-11-22 | v0.34 | Added C++ to FR-BLOG-03, highlighted with the C grammar; see ADR-0028 |

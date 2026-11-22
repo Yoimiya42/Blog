@@ -43,3 +43,4 @@ Template: `template.md`.
 | [0025](0025-media-deletion.md) | Media deletion and reference safety | Scan posts for references at delete time; confirm twice for referenced items; keep the row so saves still pass; publishing needs live media | Accepted | 2026-11-18 |
 | [0026](0026-admin-component-kit.md) | Admin component kit | Build admin UI from shadcn/ui in `src/components/ui` with Radix, cmdk, and Lucide; icon-first controls | Accepted | 2026-11-22 |
 | [0027](0027-editor-side-code-highlighting.md) | Editor-side code highlighting with Shiki | Highlight editor code blocks in the browser with the server's Shiki theme and grammars, loaded per language | Accepted | 2026-11-22 |
+| [0028](0028-cpp-code-blocks.md) | C++ code blocks with the C grammar | Add `cpp` to schema v1 as an additive language value, highlighted with the C grammar | Accepted | 2026-11-22 |

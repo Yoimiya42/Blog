@@ -6,6 +6,7 @@ export const CODE_LANGUAGE_LABELS: Record<CodeLanguage, string> = {
   typescript: "TypeScript",
   java: "Java",
   c: "C",
+  cpp: "C++",
   go: "Go",
 };
 
