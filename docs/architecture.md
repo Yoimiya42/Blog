@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.25 · 2026-11-23
+> v0.26 · 2026-11-23
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -304,3 +304,4 @@ Any failing row is an architectural defect.
 | 2026-11-22 | v0.23 | Shared one design-token vocabulary across shells; shells override values only; see ADR-0029 |
 | 2026-11-23 | v0.24 | Added the owner-only post preview route to the blog shell |
 | 2026-11-23 | v0.25 | Moved the post preview into the admin; it frames the blog shell under the editor's header row |
+| 2026-11-23 | v0.26 | The post preview frames the article layout only, without the site header and footer |

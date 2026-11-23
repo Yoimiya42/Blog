@@ -125,7 +125,8 @@
 @media (min-width: 75rem) {
   .formal .post-layout--toc {
     grid-template-columns: minmax(0, 44rem) 15rem;
-    column-gap: 4rem;
+    /* 44 + 6 + 15 = 65rem, inside the 68rem page less its gutters. */
+    column-gap: 6rem;
     max-width: none;
   }
 
@@ -276,14 +277,14 @@
 }
 
 /*
- * Owner preview frame (FR-ADMIN-03): the blog shell inside the admin page.
- * The admin header owns the top edge, so the site header scrolls with the
- * page, and the frame is as tall as its content.
+ * Owner preview frame (FR-ADMIN-03): the article layout inside the admin
+ * page, without the site header and footer. The frame is as tall as its
+ * content and supplies the bottom space the footer would.
  */
 .formal.preview-frame {
   min-height: auto;
 }
 
-.formal.preview-frame .site-head {
-  position: static;
+.formal.preview-frame .blog-main {
+  padding-bottom: 4rem;
 }

@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { BlogShell } from "@/components/layout/blog-shell";
-import { siteConfig } from "@/config/site";
 import { requireOwner } from "@/features/auth";
-import { homeContent } from "@/features/home";
 import { getMediaService } from "@/features/media";
 import {
   collectMediaReferences,
@@ -25,7 +22,7 @@ export const metadata: Metadata = {
 /**
  * Owner preview of the saved version (FR-ADMIN-03). The editor's top row
  * stays in place, so the Edit and Preview toggle never moves; below it, the
- * public blog shell renders the post through the public read path, so layout
+ * public article layout renders the post through the public read path, so layout
  * and table of contents match the published page.
  */
 export default async function PostPreviewPage({
@@ -52,13 +49,14 @@ export default async function PostPreviewPage({
 
       {/* `overflow-clip`, not `hidden`: the table of contents stays sticky. */}
       <div className="formal preview-frame mt-4 overflow-clip rounded-card shadow-sm ring-1 ring-border">
-        <BlogShell brand={homeContent.identity?.name ?? siteConfig.name}>
+        {/* The article area only: site header and footer add nothing here. */}
+        <div className="blog-main">
           <PostArticle
             mediaById={mediaById}
             post={post}
             showDraftNotice={false}
           />
-        </BlogShell>
+        </div>
       </div>
     </div>
   );
