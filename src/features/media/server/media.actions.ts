@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { requireOwner } from "@/features/auth";
 
 import {
+  getEditorBackgroundService,
+  type EditorBackgroundView,
+} from "./editor-background.service";
+import {
   getMediaService,
   type MediaLibraryItem,
   type MediaReference,
@@ -73,4 +77,45 @@ export async function listMediaForPickerAction(): Promise<MediaPickerItem[]> {
     width,
     height,
   }));
+}
+
+export type EditorBackgroundActionResult =
+  | { ok: true; background: EditorBackgroundView }
+  | { ok: false; message: string };
+
+const BACKGROUND_MESSAGES = {
+  invalid_opacity: "That visibility level is not available.",
+  media_not_found: "That image is no longer in the library.",
+} as const;
+
+/**
+ * Saves the editor background (FR-ADMIN-26). The argument comes from the
+ * client and is untrusted; the service validates the tier and the image. No
+ * path is revalidated: the editor already shows the result, and a refresh
+ * would re-render the open post form.
+ */
+export async function updateEditorBackgroundAction(update: {
+  mediaId?: string | null;
+  opacity?: number;
+}): Promise<EditorBackgroundActionResult> {
+  const session = await requireOwner();
+  const service = await getEditorBackgroundService();
+
+  try {
+    const result = await service.update(session, {
+      mediaId: update.mediaId,
+      opacity: update.opacity,
+    });
+    return result.ok
+      ? result
+      : { ok: false, message: BACKGROUND_MESSAGES[result.reason] };
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        event: "media.background_failed",
+        error: String(error),
+      }),
+    );
+    return { ok: false, message: "The background was not saved. Try again." };
+  }
 }

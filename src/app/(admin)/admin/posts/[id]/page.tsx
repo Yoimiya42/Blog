@@ -2,9 +2,12 @@ import { notFound } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
 import {
+  EDITOR_BACKGROUND_OPACITIES,
+  getEditorBackgroundService,
   getMediaService,
   listMediaForPickerAction,
   MEDIA_UPLOAD_CONFIG,
+  updateEditorBackgroundAction,
 } from "@/features/media";
 import {
   collectMediaReferences,
@@ -28,9 +31,12 @@ export default async function EditPostPage({
   const service = await getPostService();
   const post = await service.getById(session, id);
   if (!post) notFound();
-  const [tags, library] = await Promise.all([
+  const [tags, library, background] = await Promise.all([
     service.listTags(session, post.id),
     service.listAllTags(session),
+    getEditorBackgroundService().then((backgrounds) =>
+      backgrounds.get(session),
+    ),
   ]);
 
   // The editor opens only a document that is valid for the current schema
@@ -59,6 +65,11 @@ export default async function EditPostPage({
 
   return (
     <PostForm
+      background={{
+        initial: background,
+        opacities: EDITOR_BACKGROUND_OPACITIES,
+        save: updateEditorBackgroundAction,
+      }}
       focusTitle={post.status === "DRAFT" && isBlankDraftIdentity(post)}
       headerActions={<DeletePostButton postId={post.id} title={post.title} />}
       imageUpload={{

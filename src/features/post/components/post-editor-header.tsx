@@ -55,7 +55,7 @@ export function PostEditorHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1" data-glass="bar">
       <Link
         aria-label="Back to posts"
         className={buttonVariants({

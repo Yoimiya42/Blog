@@ -1,4 +1,4 @@
-import type { ImageUploadConfig } from "../image-upload";
+import type { ImageUploadConfig } from "./image-upload";
 
 export type { ImageUploadConfig };
 

@@ -42,6 +42,12 @@ import {
   type PostFormValues,
 } from "../server/post.actions";
 import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
+import {
+  EditorBackdrop,
+  EditorBackgroundControl,
+  useEditorBackground,
+  type EditorBackgroundConfig,
+} from "./editor-background";
 import { PostEditorHeader } from "./post-editor-header";
 import { SubmitButton } from "./submit-button";
 import { TagPicker } from "./tag-picker";
@@ -86,7 +92,16 @@ interface PostFormProps {
   headerActions?: ReactNode;
   /** Opens with the title selected, for a blank draft (ADR-0030). */
   focusTitle?: boolean;
+  /** Edit-view background (FR-ADMIN-26); absent hides the control. */
+  background?: EditorBackgroundConfig;
 }
+
+/** Stands in when the page passes no background, so the hook always runs. */
+const NO_BACKGROUND: EditorBackgroundConfig = {
+  initial: { opacity: 0, image: null },
+  opacities: [],
+  save: async () => ({ ok: false, message: "Backgrounds are unavailable." }),
+};
 
 // A dynamic import keeps the TipTap runtime out of the statically imported
 // module graph, so nothing that imports the post module bundles the editor.
@@ -142,7 +157,9 @@ export function PostForm({
   tagSuggestions = [],
   headerActions,
   focusTitle = false,
+  background: backgroundConfig,
 }: PostFormProps) {
+  const background = useEditorBackground(backgroundConfig ?? NO_BACKGROUND);
   const initialState: PostFormState = {
     values: initialValues,
     fieldErrors: {},
@@ -377,9 +394,23 @@ export function PostForm({
 
   return (
     <>
+      <EditorBackdrop state={background.state} />
       {postId !== null && status !== null ? (
         <PostEditorHeader
-          actions={headerActions}
+          actions={
+            <>
+              {backgroundConfig ? (
+                <EditorBackgroundControl
+                  apply={background.apply}
+                  imageUpload={imageUpload}
+                  opacities={backgroundConfig.opacities}
+                  pending={background.pending}
+                  state={background.state}
+                />
+              ) : null}
+              {headerActions}
+            </>
+          }
           meta={<EditorMeta save={saveView} stats={stats} />}
           mode="edit"
           postId={postId}
@@ -403,7 +434,10 @@ export function PostForm({
           save={postId !== null ? saveBeforeLeaving : undefined}
           saveOnLeave={status === "DRAFT"}
         />
-        <div className="min-w-0 rounded-card bg-card px-5 py-8 shadow-sm ring-1 ring-border md:px-12 md:py-12">
+        <div
+          className="min-w-0 rounded-card bg-card px-5 py-8 shadow-sm ring-1 ring-border md:px-12 md:py-12"
+          data-glass
+        >
           <textarea
             aria-describedby={
               fieldErrors.title ? "post-title-error" : undefined
@@ -467,6 +501,7 @@ export function PostForm({
         <aside
           className="divide-y divide-border rounded-card bg-card ring-1 ring-border lg:sticky lg:top-20"
           data-focus-hide
+          data-glass
         >
           <div className="space-y-2 p-4">
             <div className="flex gap-2">

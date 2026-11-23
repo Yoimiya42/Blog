@@ -46,3 +46,4 @@ Template: `template.md`.
 | [0028](0028-cpp-code-blocks.md) | C++ code blocks with the C grammar | Add `cpp` to schema v1 as an additive language value, highlighted with the C grammar | Accepted | 2026-11-22 |
 | [0029](0029-design-tokens.md) | Design tokens | One token vocabulary in `globals.css` for colour, radius, motion, and type; shells override values; a test bans raw palette classes | Accepted | 2026-11-22 |
 | [0030](0030-blank-draft-on-new-post.md) | Blank draft on New post | New post creates or reuses a placeholder draft so autosave starts at once; publishing needs a real slug | Accepted | 2026-11-23 |
+| [0031](0031-editor-background.md) | Editor background preference | Store one background and opacity tier per owner in D1; render it server-side with `:has()` glass whose opacity rises with the tier | Accepted | 2026-11-23 |

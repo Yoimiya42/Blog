@@ -73,6 +73,7 @@ describe("migration replay", () => {
 
     expect(results.map((row) => row.name)).toEqual([
       "account",
+      "editor_background",
       "media",
       "post",
       "post_tag",

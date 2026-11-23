@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Cloudflare Images serves fixed widths (ADR-0021). */
 
-import { ExternalLink, ImageOff, MapPinOff } from "lucide-react";
+import { ExternalLink, ImageOff, MapPinOff, Wallpaper } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -32,7 +32,14 @@ function formatSize(bytes: number): string {
  * Owner-only thumbnail grid, newest first (FR-ADMIN-21). Opening an item shows
  * its details and actions. Coordinates appear only as a flag.
  */
-export function MediaLibrary({ items }: { items: MediaLibraryItem[] }) {
+export function MediaLibrary({
+  items,
+  backgroundMediaId = null,
+}: {
+  items: MediaLibraryItem[];
+  /** The editor background, flagged in its detail view (FR-ADMIN-26). */
+  backgroundMediaId?: string | null;
+}) {
   const [openId, setOpenId] = useState<string | null>(null);
   const close = useCallback(() => setOpenId(null), []);
   const selected = items.find((item) => item.id === openId) ?? null;
@@ -84,7 +91,11 @@ export function MediaLibrary({ items }: { items: MediaLibraryItem[] }) {
       >
         {selected ? (
           <DialogContent className="max-w-2xl overflow-hidden p-0">
-            <MediaDetail item={selected} onDeleted={close} />
+            <MediaDetail
+              isBackground={selected.id === backgroundMediaId}
+              item={selected}
+              onDeleted={close}
+            />
           </DialogContent>
         ) : null}
       </Dialog>
@@ -94,9 +105,11 @@ export function MediaLibrary({ items }: { items: MediaLibraryItem[] }) {
 
 function MediaDetail({
   item,
+  isBackground,
   onDeleted,
 }: {
   item: MediaLibraryItem;
+  isBackground: boolean;
   onDeleted: () => void;
 }) {
   return (
@@ -139,6 +152,13 @@ function MediaDetail({
           <dd className="font-mono text-xs leading-5 break-all">{item.url}</dd>
         </dl>
 
+        {isBackground ? (
+          <p className="flex items-start gap-2 text-xs text-muted-foreground">
+            <Wallpaper aria-hidden className="mt-0.5 size-3.5 shrink-0" />
+            Editor background
+          </p>
+        ) : null}
+
         {item.hadLocation ? (
           <p className="flex items-start gap-2 text-xs text-muted-foreground">
             <MapPinOff aria-hidden className="mt-0.5 size-3.5 shrink-0" />
@@ -160,7 +180,11 @@ function MediaDetail({
           </a>
         </div>
         <div className="border-t border-border pt-3">
-          <DeleteMediaButton mediaId={item.id} onDeleted={onDeleted} />
+          <DeleteMediaButton
+            isBackground={isBackground}
+            mediaId={item.id}
+            onDeleted={onDeleted}
+          />
         </div>
       </div>
     </div>

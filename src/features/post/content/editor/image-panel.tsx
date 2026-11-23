@@ -17,7 +17,7 @@ import {
 } from "react";
 
 import type { LibraryImage } from "../image-upload";
-import { ACCEPTED_IMAGE_TYPES } from "./upload-image";
+import { ACCEPTED_IMAGE_TYPES } from "../upload-image";
 
 export type ImageUploadStatus =
   | { kind: "idle" }
