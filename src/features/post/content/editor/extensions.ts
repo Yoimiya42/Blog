@@ -6,6 +6,7 @@ import { ArticleCodeBlock } from "./code-block";
 import { ArticleCodeHighlight } from "./code-highlight";
 import { ArticleHeading } from "./heading";
 import { ArticleImage } from "./image";
+import { ArticleLinkTools } from "./link";
 import { ArticleListItem } from "./list-item";
 
 /**
@@ -37,6 +38,7 @@ const baseExtensions = [
   ArticleCodeBlock,
   ArticleCodeHighlight,
   ArticleListItem,
+  ArticleLinkTools,
 ];
 
 /**

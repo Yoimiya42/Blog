@@ -79,6 +79,9 @@ export function AdminCommandPalette({
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
+      // The article editor claims Ctrl or Cmd+K for links while its text has
+      // focus (FR-ADMIN-24); it marks the event handled.
+      if (event.defaultPrevented) return;
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         changeOpen(!open);

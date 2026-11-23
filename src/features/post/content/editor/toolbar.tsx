@@ -3,7 +3,6 @@
 import { useEditorState, type Editor } from "@tiptap/react";
 import {
   Bold,
-  Check,
   Code,
   Heading2,
   Heading3,
@@ -12,10 +11,9 @@ import {
   Link2,
   List,
   ListOrdered,
-  Unlink,
   type LucideIcon,
 } from "lucide-react";
-import { useId, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, type MouseEvent, type ReactNode } from "react";
 
 import {
   Tooltip,
@@ -28,9 +26,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { isSafeHref } from "../schema";
 import type { HeadingLevel } from "../types";
 import { CodeLanguageMenuContent } from "./code-language-menu";
+import { LINK_PROMPT, type LinkPromptMeta } from "./link";
+import {
+  LinkPopover,
+  readLinkTarget,
+  readPastedTarget,
+  useLinkPair,
+} from "./link-popover";
 
 const HEADING_LEVELS: readonly HeadingLevel[] = [2, 3, 4];
 
@@ -56,6 +60,8 @@ function keepEditorSelection(event: MouseEvent) {
 
 interface ToolbarButtonProps {
   label: string;
+  /** Shown in the tooltip only; the accessible name stays `label`. */
+  shortcut?: string;
   pressed?: boolean;
   disabled?: boolean;
   onPress: () => void;
@@ -64,6 +70,7 @@ interface ToolbarButtonProps {
 
 function ToolbarButton({
   label,
+  shortcut,
   pressed,
   disabled,
   onPress,
@@ -86,7 +93,12 @@ function ToolbarButton({
           {children}
         </button>
       </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipContent>
+        {label}
+        {shortcut ? (
+          <kbd className="ml-2 font-sans opacity-70">{shortcut}</kbd>
+        ) : null}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -109,10 +121,32 @@ export function EditorToolbar({
   /** Omitted when uploads are unavailable; the image control is hidden. */
   image?: ToolbarImageControl;
 }) {
-  const linkFieldId = useId();
-  // Null while the link field is closed.
-  const [linkDraft, setLinkDraft] = useState<string | null>(null);
-  const [linkError, setLinkError] = useState<string | null>(null);
+  const linkPair = useLinkPair(editor);
+  const openLinkPair = linkPair.open;
+
+  // Ctrl or Cmd+K and a pasted address ask for the pair through a
+  // transaction, so the editor never needs a reference to this component.
+  useEffect(() => {
+    function onTransaction({
+      transaction,
+    }: {
+      transaction: { getMeta: (key: string) => unknown };
+    }) {
+      const meta = transaction.getMeta(LINK_PROMPT) as
+        LinkPromptMeta | undefined;
+      if (!meta) return;
+      openLinkPair(
+        meta.pasted
+          ? readPastedTarget(editor, meta.pasted)
+          : readLinkTarget(editor),
+      );
+    }
+
+    editor.on("transaction", onTransaction);
+    return () => {
+      editor.off("transaction", onTransaction);
+    };
+  }, [editor, openLinkPair]);
 
   const state = useEditorState({
     editor,
@@ -127,39 +161,11 @@ export function EditorToolbar({
       orderedList: current.isActive("orderedList"),
       codeBlock: current.isActive("codeBlock"),
       link: current.isActive("link"),
-      href: (current.getAttributes("link").href as string | undefined) ?? "",
-      // A link needs text to attach to: a selection, or an existing link.
-      canLink:
-        current.isActive("link") ||
-        (!current.state.selection.empty &&
-          current.can().setLink({ href: "/" })),
+      // Anywhere a link mark is allowed; without a selection the pair
+      // inserts its text.
+      canLink: current.isActive("link") || current.can().setLink({ href: "/" }),
     }),
   });
-
-  function closeLinkField() {
-    setLinkDraft(null);
-    setLinkError(null);
-  }
-
-  function applyLink() {
-    if (linkDraft === null) return;
-    const href = linkDraft.trim();
-
-    if (href === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      closeLinkField();
-      return;
-    }
-    // The same predicate the server validates with.
-    if (!isSafeHref(href)) {
-      setLinkError("Use a relative, https, http, or mailto address.");
-      return;
-    }
-
-    // focus() restores the selection the editor held before the field opened.
-    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
-    closeLinkField();
-  }
 
   return (
     // Sticks under the admin header so formatting stays in reach while writing.
@@ -197,11 +203,9 @@ export function EditorToolbar({
           <ToolbarButton
             disabled={!state.canLink}
             label="Link"
-            onPress={() => {
-              if (linkDraft === null) setLinkDraft(state.href);
-              else closeLinkField();
-            }}
+            onPress={() => openLinkPair(readLinkTarget(editor))}
             pressed={state.link}
+            shortcut="Ctrl K"
           >
             <Link2 />
           </ToolbarButton>
@@ -267,76 +271,9 @@ export function EditorToolbar({
           ) : null}
         </div>
 
-        {linkDraft !== null ? (
-          <div className="mt-1 border-t border-border py-1">
-            <label className="sr-only" htmlFor={linkFieldId}>
-              Link address
-            </label>
-            <div className="flex items-center gap-1">
-              <input
-                aria-describedby={
-                  linkError ? `${linkFieldId}-error` : undefined
-                }
-                aria-invalid={linkError ? true : undefined}
-                autoCapitalize="none"
-                autoCorrect="off"
-                // Opening the field is an explicit request to type an address.
-                autoFocus
-                className="h-9 min-w-0 flex-1 rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-faint aria-invalid:border-destructive"
-                id={linkFieldId}
-                onChange={(event) => {
-                  setLinkDraft(event.target.value);
-                  setLinkError(null);
-                }}
-                onKeyDown={(event) => {
-                  // Enter would otherwise submit the surrounding post form.
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    applyLink();
-                  } else if (event.key === "Escape") {
-                    closeLinkField();
-                    editor.commands.focus();
-                  }
-                }}
-                placeholder="https://"
-                spellCheck={false}
-                type="text"
-                value={linkDraft}
-              />
-              <ToolbarButton label="Apply link" onPress={applyLink}>
-                <Check />
-              </ToolbarButton>
-              {state.link ? (
-                <ToolbarButton
-                  label="Remove link"
-                  onPress={() => {
-                    editor
-                      .chain()
-                      .focus()
-                      .extendMarkRange("link")
-                      .unsetLink()
-                      .run();
-                    closeLinkField();
-                  }}
-                >
-                  <Unlink />
-                </ToolbarButton>
-              ) : null}
-            </div>
-            {linkError ? (
-              <p
-                className="mt-2 text-sm text-destructive"
-                id={`${linkFieldId}-error`}
-                role="alert"
-              >
-                {linkError}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-
         {image?.open ? image.panel : null}
       </div>
+      <LinkPopover editor={editor} pair={linkPair} />
     </TooltipProvider>
   );
 }
