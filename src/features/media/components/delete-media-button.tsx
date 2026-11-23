@@ -38,9 +38,12 @@ function ErrorMessage({ message }: { message: string | null }) {
  */
 export function DeleteMediaButton({
   mediaId,
+  isBackground = false,
   onDeleted,
 }: {
   mediaId: string;
+  /** Adds a notice that the editor returns to the plain canvas. */
+  isBackground?: boolean;
   /** Called once the item is gone, e.g. to close the detail dialog. */
   onDeleted?: () => void;
 }) {
@@ -124,6 +127,9 @@ export function DeleteMediaButton({
     <form action={check} className="space-y-3">
       <p className="text-sm" role="alert">
         Delete this image? It cannot be restored.
+        {isBackground
+          ? " It is the editor background; the editor returns to the plain canvas."
+          : null}
       </p>
       <div className="flex flex-wrap gap-2">
         <ConfirmButton label="Confirm delete" />

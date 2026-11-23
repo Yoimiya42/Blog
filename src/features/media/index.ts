@@ -27,12 +27,19 @@ export {
 } from "./server/media.service";
 export {
   listMediaForPickerAction,
+  updateEditorBackgroundAction,
+  type EditorBackgroundActionResult,
   type MediaPickerItem,
 } from "./server/media.actions";
+export {
+  getEditorBackgroundService,
+  type EditorBackgroundView,
+} from "./server/editor-background.service";
 export { MediaLibrary } from "./components/media-library";
 export { MAX_UPLOAD_BYTES } from "./upload/process";
 export { MediaRejectedError, type MediaRejection } from "./upload/errors";
 export type { Media, MediaDisplay } from "./schema";
+export { EDITOR_BACKGROUND_OPACITIES } from "./schema";
 
 /** The upload contract the admin page hands to the post editor. */
 export const MEDIA_UPLOAD_CONFIG = {

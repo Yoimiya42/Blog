@@ -353,3 +353,83 @@
   max-width: 52rem;
   margin-inline: auto;
 }
+
+/*
+ * Editor background (FR-ADMIN-26, ADR-0031). The edit view renders a fixed
+ * `[data-editor-backdrop]` layer; while it exists the admin canvas turns
+ * transparent and `[data-glass]` panels become frosted glass. Panel opacity
+ * rises with the tier so that over a black image a panel still blends to at
+ * least 80% white (sRGB). Secondary and error text darken on glass, which
+ * keeps both above 4.5:1 there. Without `backdrop-filter`, or with reduced
+ * transparency, panels stay solid.
+ */
+:root {
+  --glass-alpha: 100%;
+  --glass-blur: 24px;
+  --glass-muted-foreground: oklch(0.4 0.011 58);
+  --glass-destructive: oklch(0.43 0.19 27.518);
+}
+
+:root:has([data-editor-backdrop="25"]) {
+  --glass-alpha: 55%;
+}
+
+:root:has([data-editor-backdrop="50"]) {
+  --glass-alpha: 62%;
+}
+
+:root:has([data-editor-backdrop="75"]) {
+  --glass-alpha: 74%;
+}
+
+:root:has([data-editor-backdrop="100"]) {
+  --glass-alpha: 80%;
+}
+
+:root:has([data-editor-backdrop]) [data-admin-canvas] {
+  background-color: transparent;
+}
+
+:root:has([data-editor-backdrop]) [data-glass] {
+  --muted-foreground: var(--glass-muted-foreground);
+  --destructive: var(--glass-destructive);
+  border-color: color-mix(in oklab, var(--border) 60%, transparent);
+  background-color: color-mix(
+    in oklab,
+    var(--card) var(--glass-alpha),
+    transparent
+  );
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+}
+
+/* The editor header row gains a panel so its status text stays readable. */
+:root:has([data-editor-backdrop]) [data-glass="bar"] {
+  margin-inline: -0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-card);
+}
+
+/*
+ * The toolbar sits inside the editor card, which is its backdrop root: it
+ * blurs only the card's text, so a light tint is enough.
+ */
+:root:has([data-editor-backdrop]) [data-glass="inset"] {
+  background-color: color-mix(in oklab, var(--card) 40%, transparent);
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  :root:has([data-editor-backdrop]) [data-glass] {
+    background-color: var(--card);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root:has([data-editor-backdrop]) [data-glass] {
+    background-color: var(--card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

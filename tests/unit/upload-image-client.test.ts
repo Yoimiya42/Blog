@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   firstImageFile,
   uploadImage,
-} from "@/features/post/content/editor/upload-image";
+} from "@/features/post/content/upload-image";
 
 const CONFIG = { path: "/api/media", altHeader: "X-Media-Alt", maxBytes: 100 };
 

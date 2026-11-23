@@ -14,7 +14,7 @@ import {
   firstImageFile,
   uploadImage,
   type ImageUploadConfig,
-} from "./upload-image";
+} from "../upload-image";
 
 interface ArticleEditorProps {
   /** A document that already passed schema validation. */

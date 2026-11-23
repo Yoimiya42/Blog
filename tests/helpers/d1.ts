@@ -64,6 +64,7 @@ export async function clearContentTables(db: D1Database): Promise<void> {
     db.prepare("DELETE FROM post_tag"),
     db.prepare("DELETE FROM post"),
     db.prepare("DELETE FROM tag"),
+    db.prepare("DELETE FROM editor_background"),
     db.prepare("DELETE FROM media"),
   ]);
 }

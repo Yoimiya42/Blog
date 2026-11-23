@@ -20,10 +20,11 @@ export function AdminShell({
   search?: ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-muted text-foreground">
+    <div className="min-h-dvh bg-muted text-foreground" data-admin-canvas>
       <header
         className="sticky top-0 z-20 border-b border-border bg-background"
         data-focus-hide
+        data-glass
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 md:px-8">
           <Link className="shrink-0 font-semibold" href="/admin">
