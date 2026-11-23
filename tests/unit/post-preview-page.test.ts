@@ -20,8 +20,8 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-import PostPreviewPage from "@/app/(site)/(blog)/preview/[id]/page";
-import { PostArticle } from "@/features/post";
+import PostPreviewPage from "@/app/(admin)/admin/posts/[id]/preview/page";
+import { PostArticle, PostEditorHeader } from "@/features/post";
 
 const SESSION = { user: { role: "OWNER" } };
 const PUBLIC_POST = {
@@ -59,7 +59,7 @@ function render() {
 beforeEach(() => {
   vi.clearAllMocks();
   requireOwner.mockResolvedValue(SESSION);
-  getById.mockResolvedValue({ id: "post-1", slug: "hello" });
+  getById.mockResolvedValue({ id: "post-1", slug: "hello", status: "DRAFT" });
   getBySlug.mockResolvedValue(PUBLIC_POST);
 });
 
@@ -93,12 +93,16 @@ describe("post preview page", () => {
     });
   });
 
-  it("links back to the editor", async () => {
+  it("keeps the editor header with the preview mode selected", async () => {
     const tree = await render();
-    const hrefs = collect(tree).map(
-      (element) => (element.props as { href?: string }).href,
+    const header = collect(tree).find(
+      (element) => element.type === PostEditorHeader,
     );
 
-    expect(hrefs).toContain("/admin/posts/post-1");
+    expect(header?.props).toEqual({
+      mode: "preview",
+      postId: "post-1",
+      status: "DRAFT",
+    });
   });
 });

@@ -274,3 +274,16 @@
     overflow-y: auto;
   }
 }
+
+/*
+ * Owner preview frame (FR-ADMIN-03): the blog shell inside the admin page.
+ * The admin header owns the top edge, so the site header scrolls with the
+ * page, and the frame is as tall as its content.
+ */
+.formal.preview-frame {
+  min-height: auto;
+}
+
+.formal.preview-frame .site-head {
+  position: static;
+}

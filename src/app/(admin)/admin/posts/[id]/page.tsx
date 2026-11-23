@@ -1,8 +1,5 @@
-import { ArrowLeft, Eye } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { buttonVariants } from "@/components/ui/button";
 import { requireOwner } from "@/features/auth";
 import {
   getMediaService,
@@ -15,24 +12,11 @@ import {
   DeletePostButton,
   formatTagNames,
   getPostService,
+  PostEditorHeader,
   PostForm,
   toPostVersion,
   validateArticleDocument,
 } from "@/features/post";
-
-const STATUS_LABELS = { DRAFT: "Draft", PUBLISHED: "Published" } as const;
-
-function Badge({ status }: { status: keyof typeof STATUS_LABELS }) {
-  return (
-    <span className="flex items-center gap-1.5 rounded-full px-2 text-xs font-medium text-muted-foreground">
-      <span
-        aria-hidden
-        className={`size-1.5 rounded-full ${status === "PUBLISHED" ? "bg-success" : "bg-faint"}`}
-      />
-      {STATUS_LABELS[status]}
-    </span>
-  );
-}
 
 export default async function EditPostPage({
   params,
@@ -75,39 +59,12 @@ export default async function EditPostPage({
 
   return (
     <div>
-      <div className="flex items-center gap-1">
-        <Link
-          aria-label="Back to posts"
-          className={buttonVariants({
-            variant: "ghost",
-            size: "icon",
-            className: "-ml-2 size-11 text-muted-foreground",
-          })}
-          href="/admin/posts"
-          title="Back to posts"
-        >
-          <ArrowLeft />
-        </Link>
-        <h1 className="sr-only">Edit post</h1>
-        <Badge status={post.status} />
-        <div className="ml-auto flex items-center">
-          {/* Same tab: the preview links back here, and the leave guard
-              covers unsaved changes (FR-ADMIN-03). */}
-          <Link
-            aria-label="Preview saved version"
-            className={buttonVariants({
-              variant: "ghost",
-              size: "icon",
-              className: "size-11 text-muted-foreground",
-            })}
-            href={`/preview/${post.id}`}
-            title="Preview saved version"
-          >
-            <Eye />
-          </Link>
-          <DeletePostButton postId={post.id} title={post.title} />
-        </div>
-      </div>
+      <PostEditorHeader
+        actions={<DeletePostButton postId={post.id} title={post.title} />}
+        mode="edit"
+        postId={post.id}
+        status={post.status}
+      />
 
       <div className="mt-4">
         <PostForm

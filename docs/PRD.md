@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.37 · 2026-11-23 · Draft
+> v0.38 · 2026-11-23 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -253,7 +253,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 |---|---|---|---|
 | FR-ADMIN-01 | Login and authorisation | v1 | Non-owner requests to `/admin/*` return 404 |
 | FR-ADMIN-02 | Post list grouped by state | v1 | Create, find, edit, and delete on a desktop browser. One-handed phone use in v1.5 |
-| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5. Preview shows the saved version in the public blog layout, with the table of contents, at an owner-only URL; a floating bar shows the state and returns to the editor |
+| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5. Preview shows the saved version in the public blog layout, with the table of contents, inside the admin. An Edit and Preview toggle sits at the same place on both views |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the article content of an existing draft only. A new post autosaves once it is created; a published post changes only through an explicit save. A save never overwrites a newer version |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
 | FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. HEIC and HEIF are not accepted: the owner uploads Lightroom JPEG exports, and the iOS photo picker already converts HEIF to JPEG. Reopen when HEIC files reach the desktop upload. See ADR-0021 |
@@ -697,3 +697,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-22 | v0.35 | Added FR-ADMIN-16 to FR-ADMIN-22: overview desk, command palette, keyboard save and leave guard, toasts, post search and live link, media grid, styled system pages |
 | 2026-11-22 | v0.36 | FR-ADMIN-03 preview uses the public post page; FR-ADMIN-18 confirms in an in-app dialog |
 | 2026-11-23 | v0.37 | FR-ADMIN-03 preview moves to an owner-only route in the blog layout with a return-to-editor bar |
+| 2026-11-23 | v0.38 | FR-ADMIN-03 preview returns to the admin; one Edit and Preview toggle in a fixed place replaces the eye button and the floating bar |

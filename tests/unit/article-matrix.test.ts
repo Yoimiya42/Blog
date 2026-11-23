@@ -103,6 +103,7 @@ describe("schema v1 matrix completeness", () => {
         "PostAccessDeniedError",
         "PostForm",
         "PostArticle",
+        "PostEditorHeader",
         "PostIndex",
         "PostList",
         "PUBLIC_POSTS_PER_PAGE",
