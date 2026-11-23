@@ -46,17 +46,17 @@ export function EditorSkeleton() {
   return (
     <div aria-busy="true" aria-label="Opening the editor" role="status">
       <div className="flex h-11 items-center">
-        <div className="h-4 w-24 animate-pulse rounded-mark bg-foreground/5" />
+        <div className="h-4 w-24 motion-safe:animate-pulse rounded-mark bg-foreground/5" />
       </div>
       <div className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
         <div className="space-y-4 rounded-card bg-card px-5 py-8 ring-1 ring-border md:px-12 md:py-12">
-          <div className="h-9 w-2/3 animate-pulse rounded-control bg-foreground/5" />
+          <div className="h-9 w-2/3 motion-safe:animate-pulse rounded-control bg-foreground/5" />
           <div className="h-px bg-border" />
-          <div className="h-4 w-full animate-pulse rounded-mark bg-foreground/5" />
-          <div className="h-4 w-11/12 animate-pulse rounded-mark bg-foreground/5" />
-          <div className="h-4 w-4/5 animate-pulse rounded-mark bg-foreground/5" />
+          <div className="h-4 w-full motion-safe:animate-pulse rounded-mark bg-foreground/5" />
+          <div className="h-4 w-11/12 motion-safe:animate-pulse rounded-mark bg-foreground/5" />
+          <div className="h-4 w-4/5 motion-safe:animate-pulse rounded-mark bg-foreground/5" />
         </div>
-        <div className="hidden h-48 animate-pulse rounded-card bg-card ring-1 ring-border lg:block" />
+        <div className="hidden h-48 motion-safe:animate-pulse rounded-card bg-card ring-1 ring-border lg:block" />
       </div>
     </div>
   );

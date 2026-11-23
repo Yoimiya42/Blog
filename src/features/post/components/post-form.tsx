@@ -103,9 +103,9 @@ const ArticleEditor = dynamic(
         className="min-h-[60vh] space-y-3 pt-14"
         role="status"
       >
-        <div className="h-4 w-full animate-pulse rounded-mark bg-foreground/5" />
-        <div className="h-4 w-11/12 animate-pulse rounded-mark bg-foreground/5" />
-        <div className="h-4 w-4/5 animate-pulse rounded-mark bg-foreground/5" />
+        <div className="h-4 w-full motion-safe:animate-pulse rounded-mark bg-foreground/5" />
+        <div className="h-4 w-11/12 motion-safe:animate-pulse rounded-mark bg-foreground/5" />
+        <div className="h-4 w-4/5 motion-safe:animate-pulse rounded-mark bg-foreground/5" />
       </div>
     ),
   },
