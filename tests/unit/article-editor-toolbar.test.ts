@@ -166,6 +166,7 @@ describe("editor toolbar", () => {
       "Link",
       "Bulleted list",
       "Numbered list",
+      "Quote",
       "Code block",
     ]);
   });
@@ -445,5 +446,27 @@ describe("editor toolbar", () => {
     // Not handled: ProseMirror inserts the text itself instead of dropping it.
     expect(handled).toBeFalsy();
     expect(submittedDocument()).toEqual(STORED);
+  });
+
+  it("wraps the paragraph in a quote and unwraps it again", async () => {
+    await select({ from: 10, to: 10 });
+    await press("Quote");
+
+    expect(control("Quote").getAttribute("aria-pressed")).toBe("true");
+    expect(submittedDocument().content[1]).toEqual({
+      type: "blockquote",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Body." }] },
+      ],
+    });
+
+    await press("Quote");
+    expect(submittedDocument()).toEqual(STORED);
+  });
+
+  it("refuses to quote a heading, which schema v1 keeps out of quotes", async () => {
+    await select({ from: 3, to: 3 });
+
+    expect(control("Quote").disabled).toBe(true);
   });
 });

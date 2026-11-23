@@ -11,6 +11,7 @@ import {
   Link2,
   List,
   ListOrdered,
+  TextQuote,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, type MouseEvent, type ReactNode } from "react";
@@ -159,6 +160,11 @@ export function EditorToolbar({
       canBold: current.can().toggleBold(),
       bulletList: current.isActive("bulletList"),
       orderedList: current.isActive("orderedList"),
+      blockquote: current.isActive("blockquote"),
+      // Schema v1 keeps headings and images out of quotes, so wrapping them
+      // is refused rather than producing content the save would reject.
+      canQuote:
+        current.isActive("blockquote") || current.can().toggleBlockquote(),
       codeBlock: current.isActive("codeBlock"),
       link: current.isActive("link"),
       // Anywhere a link mark is allowed; without a selection the pair
@@ -223,6 +229,17 @@ export function EditorToolbar({
             pressed={state.orderedList}
           >
             <ListOrdered />
+          </ToolbarButton>
+          {/* Blocks set apart from prose: quote, code, image. */}
+          <span aria-hidden className="mx-1 h-5 w-px bg-foreground/5" />
+          <ToolbarButton
+            disabled={!state.canQuote}
+            label="Quote"
+            onPress={() => editor.chain().focus().toggleBlockquote().run()}
+            pressed={state.blockquote}
+            shortcut="Ctrl Shift B"
+          >
+            <TextQuote />
           </ToolbarButton>
           {state.codeBlock ? (
             // Inside a code block the control turns it back into a paragraph.

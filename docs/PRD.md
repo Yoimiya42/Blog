@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.44 · 2026-11-23 · Draft
+> v0.45 · 2026-11-23 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -253,7 +253,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 |---|---|---|---|
 | FR-ADMIN-01 | Login and authorisation | v1 | Non-owner requests to `/admin/*` return 404 |
 | FR-ADMIN-02 | Post list grouped by state | v1 | Create, find, edit, and delete on a desktop browser. One-handed phone use in v1.5 |
-| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5. Preview shows the saved version in the public article layout, with the table of contents and without the site header and footer, inside the admin. An Edit and Preview toggle sits at the same place on both views |
+| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5. Preview shows the saved version in the public article layout, with the table of contents and without the site header and footer, inside the admin. An Edit and Preview toggle sits at the same place on both views. The toolbar offers headings, bold, link, lists, quote, code block, and image; a quote renders as an accent-barred panel in both the editor and the public page |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the article content of an existing draft only. A new post autosaves once it is created; a published post changes only through an explicit save. A save never overwrites a newer version |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
 | FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. HEIC and HEIF are not accepted: the owner uploads Lightroom JPEG exports, and the iOS photo picker already converts HEIF to JPEG. Reopen when HEIC files reach the desktop upload. See ADR-0021 |
@@ -706,3 +706,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-23 | v0.42 | FR-ADMIN-18 saves a draft before leaving the editor instead of asking |
 | 2026-11-23 | v0.43 | Added FR-ADMIN-24 link text and address |
 | 2026-11-23 | v0.44 | FR-ADMIN-18 covers command palette navigation |
+| 2026-11-23 | v0.45 | FR-ADMIN-03 adds the quote control and quote styling |
