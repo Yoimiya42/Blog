@@ -19,6 +19,7 @@ Personal site: homepage, technical blog, mobile-first admin. Milestones are unda
 | Where we compromised | `docs/tech-debt.md` |
 | What ships when | `docs/ROADMAP.md` |
 | Git, Issue, PR workflow | `CONTRIBUTING.md` |
+| How to run the site locally | `docs/runbooks/local-development.md` |
 
 Revise a settled decision with a new ADR, never by editing an old one.
 Use the ADR index to select records. Do not preload every ADR.

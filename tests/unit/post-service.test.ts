@@ -840,3 +840,52 @@ describe("tags", () => {
     );
   });
 });
+
+describe("blank draft", () => {
+  it("rejects a non-owner", async () => {
+    await expect(service.createBlankDraft(VISITOR)).rejects.toBeInstanceOf(
+      PostAccessDeniedError,
+    );
+  });
+
+  it("creates an untitled draft with a placeholder slug", async () => {
+    const post = await service.createBlankDraft(OWNER);
+
+    expect(post).toMatchObject({
+      title: "Untitled",
+      status: "DRAFT",
+      publishedAt: null,
+    });
+    expect(post.slug).toMatch(/^untitled-[0-9a-f]{6}$/);
+  });
+
+  it("reuses an untouched blank draft", async () => {
+    const first = await service.createBlankDraft(OWNER);
+    const second = await service.createBlankDraft(OWNER);
+
+    expect(second.id).toBe(first.id);
+    expect(await countRows()).toBe(1);
+  });
+
+  it("creates a new draft once the blank one has content", async () => {
+    const first = await service.createBlankDraft(OWNER);
+    await service.autosave(OWNER, first.id, SAMPLE_DOCUMENT, first.updatedAt);
+
+    const second = await service.createBlankDraft(OWNER);
+
+    expect(second.id).not.toBe(first.id);
+    expect(await countRows()).toBe(2);
+  });
+
+  it("refuses to publish while the slug is a placeholder", async () => {
+    const post = await service.createBlankDraft(OWNER);
+
+    const result = await service.publish(OWNER, post.id);
+
+    expect(result).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { slug: expect.any(String) },
+    });
+  });
+});

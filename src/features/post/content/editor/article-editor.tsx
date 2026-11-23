@@ -41,12 +41,33 @@ interface ArticleEditorProps {
 // The box around the editing area. Fluid by design: no fixed widths. Prose
 // styles are shared with the rendered article.
 const CONTENT_CLASS = [
-  "min-h-64 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none",
-  "focus:border-stone-900 focus:ring-4 focus:ring-black/5",
+  // Borderless, with the published typography (`.article-type`), so the
+  // page reads like the article it becomes.
+  "article-type min-h-[60vh] w-full outline-none",
   // An atom such as an image has no cursor, so its selection must be visible.
-  "[&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-stone-900",
+  "[&_.ProseMirror-selectednode]:outline-2 [&_.ProseMirror-selectednode]:outline-ring",
   ARTICLE_PROSE_CLASS,
 ].join(" ");
+
+// Drawn by CSS on the first empty paragraph: no extension, and nothing is
+// added to the document.
+const PLACEHOLDER_CLASS = [
+  "[&_.ProseMirror>p:first-child]:before:pointer-events-none",
+  "[&_.ProseMirror>p:first-child]:before:float-left",
+  "[&_.ProseMirror>p:first-child]:before:h-0",
+  "[&_.ProseMirror>p:first-child]:before:text-faint",
+  "[&_.ProseMirror>p:first-child]:before:content-['Start_writing…']",
+].join(" ");
+
+/** One empty paragraph: what a blank draft stores. */
+function isEmptyDocument(document: ArticleDocument): boolean {
+  const [first, ...rest] = document.content;
+  return (
+    rest.length === 0 &&
+    first?.type === "paragraph" &&
+    (first.content?.length ?? 0) === 0
+  );
+}
 
 /**
  * Default export so the form can load it with a dynamic import: the editor
@@ -84,6 +105,7 @@ export default function ArticleEditor({
   const [serialized, setSerialized] = useState(() =>
     JSON.stringify(initialDocument),
   );
+  const [empty, setEmpty] = useState(() => isEmptyDocument(initialDocument));
 
   // Paste and drop handlers are fixed when the editor is created; they reach
   // the current upload function through this ref.
@@ -126,6 +148,7 @@ export default function ArticleEditor({
     onUpdate: ({ editor: current }) => {
       const next = JSON.stringify(normalizeEditorDocument(current.getJSON()));
       setSerialized(next);
+      setEmpty(current.isEmpty);
       onChange?.(next);
     },
     onBlur: () => onBlur?.(),
@@ -244,7 +267,10 @@ export default function ArticleEditor({
           }
         />
       ) : null}
-      <EditorContent editor={editor} />
+      <EditorContent
+        className={empty ? PLACEHOLDER_CLASS : undefined}
+        editor={editor}
+      />
       <input name={name} readOnly type="hidden" value={serialized} />
     </div>
   );

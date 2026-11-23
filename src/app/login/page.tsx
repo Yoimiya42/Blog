@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <main className="grid min-h-dvh place-items-center bg-stone-100 px-5 py-10">
+    <main className="grid min-h-dvh place-items-center bg-muted px-5 py-10">
       <LoginPanel />
     </main>
   );

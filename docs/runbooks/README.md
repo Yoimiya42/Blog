@@ -4,6 +4,7 @@ Use only procedures rehearsed against the live service named in each runbook.
 
 | Procedure | Scope |
 |---|---|
+| [Local development](local-development.md) | Start the local Workers-runtime server, prepare the local database, and fix common startup failures |
 | [Cloudflare Workers preview and rollback](cloudflare-workers-preview.md) | Primary procedure for versioned Workers previews and code rollback |
 | [Cloudflare Workers Builds](cloudflare-workers-builds.md) | GitHub-connected build pipeline configuration and log access |
 | [Production domain and DNS](production-domain.md) | DNS records, `www` redirect, HTTPS enforcement, and mail records for `fangmingluan.com` |

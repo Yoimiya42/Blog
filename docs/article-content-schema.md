@@ -31,7 +31,7 @@ The root is a `doc` node with one or more block nodes. A blank draft contains on
 | Node | `hardBreak` | No content or attributes |
 | Node | `text` | UTF-8 text |
 | Node | `image` | Atomic block; required `mediaId` and `alt`; optional `caption` |
-| Node | `codeBlock` | Text only; `language` is `plaintext`, `python`, `typescript`, `java`, `c`, or `go` |
+| Node | `codeBlock` | Text only; `language` is `plaintext`, `python`, `typescript`, `java`, `c`, `cpp`, or `go`. `cpp` highlights with the C grammar (ADR-0028) |
 | Mark | `bold` | No attributes |
 | Mark | `italic` | No attributes |
 | Mark | `strike` | No attributes |
@@ -71,6 +71,8 @@ Adding or changing a persisted node requires:
 3. A deterministic migration from the previous version.
 4. Validator, editor, renderer, and export updates.
 5. Migration and round-trip fixtures.
+
+Adding an allowed attribute value that reinterprets no stored value is additive and needs only step 4 and an ADR; see ADR-0028.
 
 Migrations operate on JSON trees and preserve the previous version until all stored articles pass verification. Never silently reinterpret an existing node name or attribute.
 

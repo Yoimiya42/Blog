@@ -41,3 +41,8 @@ Template: `template.md`.
 | [0023](0023-worker-entry-serves-media.md) | A custom Worker entry serves `/media` before vinext | `worker/index.ts` answers `/media` with year-long browser caching and delegates everything else to vinext | Accepted | 2026-11-17 |
 | [0024](0024-image-upload-endpoint.md) | Image upload through the Worker entry | `POST /api/media` checks origin and owner before reading a raw body, then strips GPS in place | Accepted | 2026-11-17 |
 | [0025](0025-media-deletion.md) | Media deletion and reference safety | Scan posts for references at delete time; confirm twice for referenced items; keep the row so saves still pass; publishing needs live media | Accepted | 2026-11-18 |
+| [0026](0026-admin-component-kit.md) | Admin component kit | Build admin UI from shadcn/ui in `src/components/ui` with Radix, cmdk, and Lucide; icon-first controls | Accepted | 2026-11-22 |
+| [0027](0027-editor-side-code-highlighting.md) | Editor-side code highlighting with Shiki | Highlight editor code blocks in the browser with the server's Shiki theme and grammars, loaded per language | Accepted | 2026-11-22 |
+| [0028](0028-cpp-code-blocks.md) | C++ code blocks with the C grammar | Add `cpp` to schema v1 as an additive language value, highlighted with the C grammar | Accepted | 2026-11-22 |
+| [0029](0029-design-tokens.md) | Design tokens | One token vocabulary in `globals.css` for colour, radius, motion, and type; shells override values; a test bans raw palette classes | Accepted | 2026-11-22 |
+| [0030](0030-blank-draft-on-new-post.md) | Blank draft on New post | New post creates or reuses a placeholder draft so autosave starts at once; publishing needs a real slug | Accepted | 2026-11-23 |

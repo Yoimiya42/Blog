@@ -5,6 +5,7 @@ import {
   parseArticleDocument,
   type ArticleDocument,
 } from "@/features/post";
+import { deriveArticleStats } from "@/features/post/content/derive";
 
 describe("article derived data", () => {
   it.each([
@@ -248,5 +249,33 @@ describe("article derived data", () => {
       plainText: "",
       readingMinutes: 1,
     });
+  });
+});
+
+describe("article stats", () => {
+  it("counts CJK characters and Latin words for the editor header", () => {
+    const document = parseArticleDocument({
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: `${"中".repeat(10)} one two three` }],
+        },
+      ],
+    });
+
+    expect(deriveArticleStats(document)).toEqual({
+      words: 13,
+      readingMinutes: 1,
+    });
+  });
+
+  it("reports zero words for an empty document", () => {
+    const document = parseArticleDocument({
+      type: "doc",
+      content: [{ type: "paragraph" }],
+    });
+
+    expect(deriveArticleStats(document).words).toBe(0);
   });
 });

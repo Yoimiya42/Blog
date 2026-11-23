@@ -2,8 +2,11 @@ import { StarterKit } from "@tiptap/starter-kit";
 
 import { isSafeHref } from "../schema";
 import { ArticleBlockquote } from "./blockquote";
+import { ArticleCodeBlock } from "./code-block";
+import { ArticleCodeHighlight } from "./code-highlight";
 import { ArticleHeading } from "./heading";
 import { ArticleImage } from "./image";
+import { ArticleLinkTools } from "./link";
 import { ArticleListItem } from "./list-item";
 
 /**
@@ -19,8 +22,8 @@ const baseExtensions = [
     listItem: false,
     // Schema v1 has no underline mark; on the web underline reads as a link.
     underline: false,
-    // The bundled default is null, which schema v1 rejects.
-    codeBlock: { defaultLanguage: "plaintext" },
+    // Replaced by ArticleCodeBlock, which adds the editing header.
+    codeBlock: false,
     link: {
       openOnClick: false,
       defaultProtocol: "https",
@@ -32,7 +35,10 @@ const baseExtensions = [
   }),
   ArticleHeading.configure({ levels: [2, 3, 4] }),
   ArticleBlockquote,
+  ArticleCodeBlock,
+  ArticleCodeHighlight,
   ArticleListItem,
+  ArticleLinkTools,
 ];
 
 /**

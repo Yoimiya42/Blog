@@ -17,6 +17,9 @@ import {
   type MediaReferenceRule,
 } from "../content/validate";
 import {
+  BLANK_DRAFT_TITLE,
+  BLANK_DRAFT_SLUG_PATTERN,
+  isBlankDraftIdentity,
   POST_STATUSES,
   PostAccessDeniedError,
   PostSlugTakenError,
@@ -38,6 +41,15 @@ export type PostActor = { user: { role?: unknown } } | null | undefined;
 
 const SLUG_TAKEN = "This slug is already used by another post.";
 const SLUG_FROZEN = "The slug cannot change after the post is published.";
+const SLUG_PLACEHOLDER = "Choose a slug before publishing.";
+
+function randomHex(bytes: number): string {
+  const values = new Uint8Array(bytes);
+  crypto.getRandomValues(values);
+  return Array.from(values, (value) =>
+    value.toString(16).padStart(2, "0"),
+  ).join("");
+}
 
 /**
  * Why a conditional update matched no row. The post existed just before the
@@ -191,6 +203,13 @@ export function createPostService({
   }
 
   return {
+    /** Every tag in the library, for the edit form's tag picker. */
+    async listAllTags(actor: PostActor): Promise<Tag[]> {
+      assertOwner(actor);
+
+      return tags.list();
+    },
+
     /** Tags of one post, for the edit form. */
     async listTags(actor: PostActor, postId: string): Promise<Tag[]> {
       assertOwner(actor);
@@ -213,6 +232,55 @@ export function createPostService({
       assertOwner(actor);
 
       return posts.findById(id);
+    },
+
+    /**
+     * New post (ADR-0030): reuses an untouched blank draft, otherwise stores a
+     * new one with placeholder title and slug, so autosave has a row at once.
+     */
+    async createBlankDraft(actor: PostActor): Promise<Post> {
+      assertOwner(actor);
+
+      for (const summary of await posts.listAll()) {
+        if (summary.status !== "DRAFT" || !isBlankDraftIdentity(summary)) {
+          continue;
+        }
+        const post = await posts.findById(summary.id);
+        const postTags = (await tags.listByPostIds([summary.id])).get(
+          summary.id,
+        );
+        if (
+          post &&
+          (postTags?.length ?? 0) === 0 &&
+          JSON.stringify(post.content) ===
+            JSON.stringify(EMPTY_ARTICLE_DOCUMENT)
+        ) {
+          return post;
+        }
+      }
+
+      // A clash on six random hex characters is unlikely; retry a few times.
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          return await posts.insert(
+            {
+              id: newId(),
+              title: BLANK_DRAFT_TITLE,
+              slug: `untitled-${randomHex(3)}`,
+              summary: null,
+              content: EMPTY_ARTICLE_DOCUMENT,
+              contentSchemaVersion: CONTENT_SCHEMA_VERSION,
+              status: "DRAFT",
+              publishedAt: null,
+            },
+            now(),
+          );
+        } catch (error) {
+          if (!(error instanceof PostSlugTakenError)) throw error;
+        }
+      }
+
+      throw new Error("Could not allocate a blank draft slug.");
     },
 
     /** Always creates a draft. Publishing is a separate transition. */
@@ -378,6 +446,15 @@ export function createPostService({
 
       const current = await posts.findById(id);
       if (!current) return { ok: false, reason: "not_found" };
+
+      // A placeholder slug would become the permanent public URL (ADR-0030).
+      if (BLANK_DRAFT_SLUG_PATTERN.test(current.slug)) {
+        return {
+          ok: false,
+          reason: "invalid",
+          fieldErrors: { slug: SLUG_PLACEHOLDER },
+        };
+      }
 
       // The public renderer accepts only the current schema version.
       const invalidContent =

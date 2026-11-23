@@ -17,7 +17,7 @@ describe("highlighter initialization", () => {
           .map((line) => line.map((token) => token.content).join(""))
           .join("\n"),
       ).toBe("value\nnext");
-      expect(result.themeName).toBe("github-light");
+      expect(result.themeName).toBe("github-dark");
     }
     await highlightCode("again", "python");
     expect(createHighlighterCore).toHaveBeenCalledTimes(1);
@@ -39,6 +39,6 @@ describe("highlighter initialization", () => {
         "mts",
       ].sort(),
     );
-    expect(highlighter.getLoadedThemes()).toEqual(["github-light"]);
+    expect(highlighter.getLoadedThemes()).toEqual(["github-dark"]);
   });
 });

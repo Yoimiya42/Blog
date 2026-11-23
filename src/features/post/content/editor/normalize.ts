@@ -78,5 +78,30 @@ function normalizeNode(node: unknown): unknown {
  * a trust boundary.
  */
 export function normalizeEditorDocument(input: unknown): unknown {
-  return normalizeNode(input);
+  return dropTrailingParagraph(normalizeNode(input));
+}
+
+function isEmptyParagraph(node: unknown): boolean {
+  return (
+    isRecord(node) &&
+    node.type === "paragraph" &&
+    (!Array.isArray(node.content) || node.content.length === 0)
+  );
+}
+
+/**
+ * StarterKit's trailing node appends an empty paragraph after a final code
+ * block or image so the cursor can leave it. That paragraph is editor-only
+ * (article-content-schema.md); persisting it would make every such document
+ * differ from its stored form the moment it opens. A blank draft keeps its
+ * single paragraph.
+ */
+function dropTrailingParagraph(doc: unknown): unknown {
+  if (!isRecord(doc) || doc.type !== "doc" || !Array.isArray(doc.content)) {
+    return doc;
+  }
+  const { content } = doc;
+  if (content.length < 2 || !isEmptyParagraph(content.at(-1))) return doc;
+
+  return { ...doc, content: content.slice(0, -1) };
 }

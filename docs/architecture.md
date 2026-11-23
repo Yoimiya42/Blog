@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.22 · 2026-11-21
+> v0.26 · 2026-11-23
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -107,7 +107,7 @@ The six `*` entries are the project's only extension points.
 ### Public presentation boundary
 
 - Content and business modules remain independent of the public visual system.
-- Formal and personal pages use separate layout shells, design tokens, and style entry points.
+- Formal and personal pages use separate layout shells, token values, and style entry points. The token vocabulary and scales are shared in `globals.css`; see ADR-0029.
 - Content components expose semantic structure and contain no opening-sequence or ambient-motion logic.
 - Layout shells own page transitions and decorative motion. Effects cannot own navigation, data loading, or content visibility.
 - The formal shell stays restrained and has no background animation. The personal shell may add expressive colour and richer motion later.
@@ -120,12 +120,13 @@ This boundary allows visual redesigns to remain inside layouts, public component
 
 - Next.js 16 App Router and strict TypeScript form the application runtime.
 - Tailwind CSS v4 is the styling base. shadcn/ui and Radix are limited to admin primitives. Public pages may use custom CSS and components.
+  - Admin UI MUST use the components in `src/components/ui` and icon-first controls. Packages and rules: ADR-0026.
 - Cloudflare D1 is the relational source of truth. Handwritten SQLite migrations and typed prepared statements own data access. See ADR-0009 and ADR-0012.
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.
 - Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
 - Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal, and Workers Builds now deploys `main`. OpenNext remains a fallback only for a documented blocker. Vercel serves pull request previews only since Issue #29 closed.
-- Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. Production stays on Workers Free after the public blog ships although measured requests exceed the free CPU limit; an exceeded-CPU outcome or public promotion triggers Workers Paid or cached public HTML. See ADR-0011 and ADR-0019.
+- Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. The admin editor also highlights in the browser with the same theme and grammars, loaded per language (ADR-0027). Production stays on Workers Free after the public blog ships although measured requests exceed the free CPU limit; an exceeded-CPU outcome or public promotion triggers Workers Paid or cached public HTML. See ADR-0011 and ADR-0019.
 - Images: the Worker entry accepts owner uploads at `POST /api/media`, strips GPS in place, and stores GPS-clean originals in R2; Cloudflare Images resizes on delivery at `/media`. See ADR-0021, ADR-0022, ADR-0023, and ADR-0024. `/admin/media` lists, copies, and deletes media; deletion scans post content for references (ADR-0025). Article images list every allowed width up to the one that covers the original in `srcset`; the enlarged view uses that covering width.
 
 ---
@@ -300,3 +301,7 @@ Any failing row is an architectural defect.
 | 2026-11-15 | v0.20 | Kept production on Workers Free after the public blog release; see ADR-0019 |
 | 2026-11-17 | v0.21 | Narrowed the storage adapter to upload and delete; recorded the image upload and delivery paths; see ADR-0024 |
 | 2026-11-21 | v0.22 | Recorded responsive article image sources and the enlarged-view width |
+| 2026-11-22 | v0.23 | Shared one design-token vocabulary across shells; shells override values only; see ADR-0029 |
+| 2026-11-23 | v0.24 | Added the owner-only post preview route to the blog shell |
+| 2026-11-23 | v0.25 | Moved the post preview into the admin; it frames the blog shell under the editor's header row |
+| 2026-11-23 | v0.26 | The post preview frames the article layout only, without the site header and footer |

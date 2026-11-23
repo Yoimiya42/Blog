@@ -1,69 +1,62 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireOwner } from "@/features/auth";
 import { getMediaService } from "@/features/media";
 import {
-  ARTICLE_PROSE_CLASS,
-  ArticleContent,
   collectMediaReferences,
-  CONTENT_SCHEMA_VERSION,
   getPostService,
-  validateArticleDocument,
+  getPublicPostService,
+  PostArticle,
+  PostEditorHeader,
 } from "@/features/post";
 
+import "@/styles/formal.css";
+import "@/styles/blog.css";
+
+export const metadata: Metadata = {
+  title: "Preview",
+  robots: { index: false, follow: false },
+};
+
 /**
- * Renders the saved document with the public renderer, so the preview and the
- * published article cannot diverge. Unsaved edits are not shown.
+ * Owner preview of the saved version (FR-ADMIN-03). The editor's top row
+ * stays in place, so the Edit and Preview toggle never moves; below it, the
+ * public article layout renders the post through the public read path, so layout
+ * and table of contents match the published page.
  */
-export default async function PreviewPostPage({
+export default async function PostPreviewPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const session = await requireOwner();
   const { id } = await params;
-  const service = await getPostService();
-  const post = await service.getById(session, id);
+  const stored = await (await getPostService()).getById(session, id);
+  if (!stored) notFound();
+  const post = await (await getPublicPostService()).getBySlug(stored.slug);
   if (!post) notFound();
 
-  const stored =
-    post.contentSchemaVersion === CONTENT_SCHEMA_VERSION
-      ? validateArticleDocument(post.content)
-      : null;
-  const mediaIds = stored?.ok ? collectMediaReferences(stored.document) : [];
+  const mediaIds = post.document ? collectMediaReferences(post.document) : [];
   const mediaById =
     mediaIds.length > 0
       ? await (await getMediaService()).resolveForArticle(mediaIds)
       : {};
 
   return (
-    <div className="max-w-2xl">
-      <Link
-        className="inline-flex min-h-11 items-center rounded-xl text-sm font-medium text-stone-600 hover:text-stone-900"
-        href={`/admin/posts/${post.id}`}
-      >
-        Back to editing
-      </Link>
-      <p className="mt-4 text-sm text-stone-600">
-        Preview of the last saved version.
-      </p>
+    <div>
+      <PostEditorHeader mode="preview" postId={id} status={stored.status} />
 
-      <h1 className="mt-6 text-3xl font-semibold tracking-tight">
-        {post.title}
-      </h1>
-      {post.summary ? (
-        <p className="mt-3 text-stone-600">{post.summary}</p>
-      ) : null}
-
-      <div className={`mt-8 ${ARTICLE_PROSE_CLASS}`}>
-        {stored?.ok ? (
-          <ArticleContent document={stored.document} mediaById={mediaById} />
-        ) : (
-          <p className="text-sm text-red-700" role="alert">
-            The stored content is not valid schema v1 and cannot be previewed.
-          </p>
-        )}
+      {/* `overflow-clip`, not `hidden`: the table of contents stays sticky. */}
+      <div className="formal preview-frame mt-4 overflow-clip rounded-card shadow-sm ring-1 ring-border">
+        {/* The article area only: site header and footer add nothing here. */}
+        <div className="blog-main">
+          <PostArticle
+            mediaById={mediaById}
+            post={post}
+            showDraftNotice={false}
+          />
+        </div>
       </div>
     </div>
   );

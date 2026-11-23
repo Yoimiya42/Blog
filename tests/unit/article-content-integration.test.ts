@@ -160,6 +160,40 @@ describe("article content integration", () => {
     }
   });
 
+  it("opens a document ending in a code block without changing it", () => {
+    const stored = {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Intro" }] },
+        {
+          type: "codeBlock",
+          attrs: { language: "plaintext" },
+          content: [{ type: "text", text: "plain output" }],
+        },
+      ],
+    };
+    const editor = new Editor({
+      extensions: articleEditorExtensions,
+      content: stored,
+    });
+    try {
+      // The trailing node appends on the next transaction; in the browser
+      // the code highlighter's first repaint is one.
+      editor.view.dispatch(editor.state.tr);
+      // The cursor now has a paragraph below the block.
+      expect(editor.getJSON().content?.at(-1)?.type).toBe("paragraph");
+      expect(normalizeEditorDocument(editor.getJSON())).toEqual(stored);
+    } finally {
+      editor.destroy();
+    }
+  });
+
+  it("keeps the single paragraph of a blank draft", () => {
+    const blank = { type: "doc", content: [{ type: "paragraph" }] };
+
+    expect(normalizeEditorDocument(blank)).toEqual(blank);
+  });
+
   it("derives metadata and media references through the public API", () => {
     expect(validateArticleDocument(completeArticle)).toEqual({
       ok: true,
@@ -209,7 +243,7 @@ describe("article content integration", () => {
       '<figure data-media-id="med_architecture"><a aria-label="Enlarge image: System architecture diagram" data-image-zoom="" href="/media/architecture.webp"><img alt="System architecture diagram" decoding="async" height="900" loading="lazy" src="/media/architecture.webp" width="1600"/></a><dialog aria-label="System architecture diagram" data-image-zoom-dialog=""><button aria-label="Close enlarged image" data-image-zoom-close="" type="button">Close</button></dialog><figcaption>System architecture</figcaption></figure>',
     );
     expect(markup).toContain('<figure data-code-block="">');
-    expect(markup).toContain("<span>typescript</span>");
+    expect(markup).toContain("<span>TypeScript</span>");
     expect(markup).toContain("Copy code");
     expect(markup).toContain('data-code-line=""');
     expect(markup).not.toContain("<main>safe</main>");

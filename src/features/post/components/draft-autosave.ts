@@ -83,6 +83,11 @@ export function createDraftAutosave({
   }
 
   return {
+    /** True while the editor document differs from the last stored one. */
+    hasUnsavedContent(): boolean {
+      return content !== savedContent;
+    },
+
     /** Records the latest editor document. Does not save. */
     change(next: string): void {
       content = next;

@@ -6,7 +6,7 @@ Decisions: ADR-0009, ADR-0015. Procedures: `../runbooks/`.
 
 | Environment | Runs on | D1 database | Secrets |
 |---|---|---|---|
-| Local | `wrangler dev` or `vinext dev` | Local SQLite | `.env` |
+| Local | `npm run dev` (`vinext dev`); see `../runbooks/local-development.md` | Local SQLite | `.env` |
 | Preview | Worker Preview per branch | `blog-preview` | Previews base configuration |
 | Production | Worker `personal-site` on `fangmingluan.com` | `blog-production` | Worker secrets |
 

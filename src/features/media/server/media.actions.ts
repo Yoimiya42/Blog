@@ -14,6 +14,7 @@ const MEDIA_PATH = "/admin/media";
 
 export type DeleteMediaState =
   | { kind: "idle" }
+  | { kind: "deleted" }
   | { kind: "referenced"; posts: MediaReference[] }
   | { kind: "error"; message: string };
 
@@ -56,7 +57,7 @@ export async function deleteMediaAction(
     revalidatePath("/");
     revalidatePath("/blog", "layout");
   }
-  return { kind: "idle" };
+  return { kind: "deleted" };
 }
 
 /** Library contents for the editor's image picker. */

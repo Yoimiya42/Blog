@@ -59,14 +59,61 @@ function control<T extends HTMLElement = HTMLButtonElement>(label: string): T {
   return element;
 }
 
-/** The address field is named by a label element, not aria-label. */
-function linkField() {
-  return container.querySelector<HTMLInputElement>('input[type="text"]');
+/** The link pair renders in a portal on document.body. */
+function pairField(label: "Link text" | "Link address") {
+  return document.body.querySelector<HTMLInputElement>(
+    `[aria-label="${label}"]`,
+  );
+}
+
+async function pressInPair(label: string) {
+  const button = document.body.querySelector<HTMLButtonElement>(
+    `[aria-label="${label}"]`,
+  );
+  if (!button) throw new Error(`no pair control labelled ${label}`);
+  await act(async () => button.click());
+}
+
+function bodyParagraph() {
+  return submittedDocument().content[1];
+}
+
+/** Inline content of the body paragraph. */
+function bodyInline() {
+  const paragraph = bodyParagraph();
+  if (paragraph?.type !== "paragraph") throw new Error("no body paragraph");
+
+  return paragraph.content ?? [];
 }
 
 async function select(range: { from: number; to: number }) {
   await act(async () => {
     editor.commands.setTextSelection(range);
+  });
+}
+
+/** Popover menus render in a portal on document.body. */
+function menuItem(label: string): HTMLButtonElement {
+  const item = [
+    ...document.body.querySelectorAll<HTMLButtonElement>(
+      '[role="menuitemradio"]',
+    ),
+  ].find((element) => element.textContent === label);
+  if (!item) throw new Error(`no menu item ${label}`);
+
+  return item;
+}
+
+/** Radix menus open on a primary pointer press, not on a synthetic click. */
+async function openMenu(label: string) {
+  await act(async () => {
+    control(label).dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        button: 0,
+        pointerType: "mouse",
+      }),
+    );
   });
 }
 
@@ -119,6 +166,7 @@ describe("editor toolbar", () => {
       "Link",
       "Bulleted list",
       "Numbered list",
+      "Quote",
       "Code block",
     ]);
   });
@@ -171,23 +219,25 @@ describe("editor toolbar", () => {
     expect(control("Numbered list").getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("creates a code block and sets its language", async () => {
+  it("creates a code block in the picked language and changes it from the header", async () => {
     await select({ from: 10, to: 10 });
-    expect(container.querySelector('[aria-label="Code language"]')).toBeNull();
 
-    await press("Code block");
+    // The language is picked before the block exists.
+    await openMenu("Code block");
+    expect(submittedDocument().content[1]).toMatchObject({
+      type: "paragraph",
+    });
+    await act(async () => menuItem("TypeScript").click());
+
     expect(submittedDocument().content[1]).toMatchObject({
       type: "codeBlock",
-      attrs: { language: "plaintext" },
+      attrs: { language: "typescript" },
     });
     // Marks are not allowed inside a code block.
     expect(control("Bold").disabled).toBe(true);
 
-    const language = container.querySelector("select")!;
-    await act(async () => {
-      language.value = "python";
-      language.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    await openMenu("Code language: TypeScript");
+    await act(async () => menuItem("Python").click());
 
     expect(submittedDocument().content[1]).toMatchObject({
       type: "codeBlock",
@@ -195,21 +245,63 @@ describe("editor toolbar", () => {
     });
   });
 
-  it("disables the link control without a selection", async () => {
-    await select({ from: 10, to: 10 });
+  it("enables the link control without a selection", async () => {
+    await select({ from: 13, to: 13 });
 
-    expect(control("Link").disabled).toBe(true);
+    expect(control("Link").disabled).toBe(false);
   });
 
-  it("links the selection and restores it after the address is applied", async () => {
+  it("inserts a named link at the cursor and adds https to a bare domain", async () => {
+    await select({ from: 13, to: 13 });
+    await press("Link");
+    await type(pairField("Link text")!, "Google");
+    await type(pairField("Link address")!, "www.google.com");
+    await pressInPair("Apply link");
+
+    expect(pairField("Link text")).toBeNull();
+    expect(bodyParagraph()).toEqual({
+      type: "paragraph",
+      content: [
+        { type: "text", text: "Body." },
+        {
+          type: "text",
+          text: "Google",
+          marks: [{ type: "link", attrs: { href: "https://www.google.com" } }],
+        },
+      ],
+    });
+    // Typing on after the link stays plain text.
+    await act(async () => {
+      editor.commands.insertContent("!");
+    });
+    expect(bodyInline().at(-1)).toEqual({
+      type: "text",
+      text: "!",
+    });
+  });
+
+  it("uses the address as the text when the text is empty", async () => {
+    await select({ from: 13, to: 13 });
+    await press("Link");
+    await type(pairField("Link address")!, "https://example.com");
+    await pressInPair("Apply link");
+
+    expect(bodyInline().at(-1)).toEqual({
+      type: "text",
+      text: "https://example.com",
+      marks: [{ type: "link", attrs: { href: "https://example.com" } }],
+    });
+  });
+
+  it("links the selection under its own text", async () => {
     await select(BODY);
     await press("Link");
-    await type(linkField()!, "https://example.com/a");
-    await press("Apply link");
+    expect(pairField("Link text")!.value).toBe("Body.");
+    await type(pairField("Link address")!, "https://example.com/a");
+    await pressInPair("Apply link");
 
-    expect(selection()).toEqual(BODY);
-    expect(linkField()).toBeNull();
-    expect(submittedDocument().content[1]).toEqual({
+    expect(selection()).toEqual({ from: BODY.to, to: BODY.to });
+    expect(bodyParagraph()).toEqual({
       type: "paragraph",
       content: [
         {
@@ -221,13 +313,37 @@ describe("editor toolbar", () => {
     });
   });
 
+  it("renames an existing link from a cursor inside it", async () => {
+    await select(BODY);
+    await press("Link");
+    await type(pairField("Link address")!, "/about");
+    await pressInPair("Apply link");
+
+    await select({ from: 10, to: 10 });
+    await press("Link");
+    expect(pairField("Link address")!.value).toBe("/about");
+    await type(pairField("Link text")!, "About");
+    await pressInPair("Apply link");
+
+    expect(bodyParagraph()).toEqual({
+      type: "paragraph",
+      content: [
+        {
+          type: "text",
+          text: "About",
+          marks: [{ type: "link", attrs: { href: "/about" } }],
+        },
+      ],
+    });
+  });
+
   it("rejects an unsafe link address and leaves the document unchanged", async () => {
     await select(BODY);
     await press("Link");
-    await type(linkField()!, "javascript:alert(1)");
-    await press("Apply link");
+    await type(pairField("Link address")!, "javascript:alert(1)");
+    await pressInPair("Apply link");
 
-    expect(container.querySelector('[role="alert"]')?.textContent).toMatch(
+    expect(document.body.querySelector('[role="alert"]')?.textContent).toMatch(
       /relative, https, http, or mailto/,
     );
     expect(submittedDocument()).toEqual(STORED);
@@ -236,15 +352,121 @@ describe("editor toolbar", () => {
   it("removes an existing link from the whole linked range", async () => {
     await select(BODY);
     await press("Link");
-    await type(linkField()!, "/about");
-    await press("Apply link");
+    await type(pairField("Link address")!, "/about");
+    await pressInPair("Apply link");
 
     // A cursor inside the link is enough to reach the whole range.
     await select({ from: 10, to: 10 });
     await press("Link");
-    expect(linkField()!.value).toBe("/about");
-    await press("Remove link");
+    await pressInPair("Remove link");
 
     expect(submittedDocument()).toEqual(STORED);
+  });
+
+  it("opens the pair with Ctrl or Cmd+K", async () => {
+    await select({ from: 13, to: 13 });
+    // A real key event: TipTap's keyboardShortcut command keeps only the
+    // steps of what the handler dispatches, and the prompt is meta.
+    const mac = /Mac/.test(navigator.platform);
+    await act(async () => {
+      editor.view.dom.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "k",
+          ctrlKey: !mac,
+          metaKey: mac,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+
+    expect(pairField("Link text")).not.toBeNull();
+  });
+
+  it("links a pasted address and opens the pair with the text empty", async () => {
+    await select({ from: 13, to: 13 });
+    await act(async () => {
+      editor.view.pasteText("https://example.com/x");
+    });
+
+    expect(bodyInline().at(-1)).toEqual({
+      type: "text",
+      text: "https://example.com/x",
+      marks: [{ type: "link", attrs: { href: "https://example.com/x" } }],
+    });
+    expect(pairField("Link text")!.value).toBe("");
+    expect(pairField("Link address")!.value).toBe("https://example.com/x");
+
+    await type(pairField("Link text")!, "Example");
+    await pressInPair("Apply link");
+    expect(bodyInline().at(-1)).toEqual({
+      type: "text",
+      text: "Example",
+      marks: [{ type: "link", attrs: { href: "https://example.com/x" } }],
+    });
+  });
+
+  it("leaves pasted prose alone", async () => {
+    await select({ from: 13, to: 13 });
+    await act(async () => {
+      editor.view.pasteText("see example.com");
+    });
+
+    expect(pairField("Link text")).toBeNull();
+  });
+
+  it("converts typed Markdown link syntax", async () => {
+    await select({ from: 13, to: 13 });
+    await act(async () => {
+      editor.commands.insertContent("[Google](www.google.com");
+    });
+    const at = editor.state.selection.from;
+    await act(async () => {
+      editor.view.someProp("handleTextInput", (handler) =>
+        handler(editor.view, at, at, ")", () => editor.state.tr),
+      );
+    });
+
+    expect(bodyInline().at(-1)).toEqual({
+      type: "text",
+      text: "Google",
+      marks: [{ type: "link", attrs: { href: "https://www.google.com" } }],
+    });
+  });
+
+  it("leaves Markdown syntax that arrives in one input to plain insertion", async () => {
+    await select({ from: 13, to: 13 });
+    let handled: boolean | void | undefined;
+    await act(async () => {
+      handled = editor.view.someProp("handleTextInput", (handler) =>
+        handler(editor.view, 13, 13, " [Docs](a.com)", () => editor.state.tr),
+      );
+    });
+
+    // Not handled: ProseMirror inserts the text itself instead of dropping it.
+    expect(handled).toBeFalsy();
+    expect(submittedDocument()).toEqual(STORED);
+  });
+
+  it("wraps the paragraph in a quote and unwraps it again", async () => {
+    await select({ from: 10, to: 10 });
+    await press("Quote");
+
+    expect(control("Quote").getAttribute("aria-pressed")).toBe("true");
+    expect(submittedDocument().content[1]).toEqual({
+      type: "blockquote",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Body." }] },
+      ],
+    });
+
+    await press("Quote");
+    expect(submittedDocument()).toEqual(STORED);
+  });
+
+  it("refuses to quote a heading, which schema v1 keeps out of quotes", async () => {
+    await select({ from: 3, to: 3 });
+
+    expect(control("Quote").disabled).toBe(true);
   });
 });

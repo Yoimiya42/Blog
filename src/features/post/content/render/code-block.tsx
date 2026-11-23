@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import type { ThemedToken } from "shiki/core";
 import type { CodeBlockNode } from "../types";
+import { codeLanguageLabel } from "../code-languages";
+import { LanguageIcon } from "../language-icons";
 import { highlightCode } from "./highlight";
 import { CopyCodeButton } from "./copy-code-button";
 
@@ -45,18 +47,16 @@ export async function CodeBlock({ node }: CodeBlockProps) {
   const highlighted = await highlightCode(code, node.attrs.language);
 
   return (
+    // Styled by `[data-code-block]` in globals.css, shared with the editor.
     <figure data-code-block="">
-      <figcaption>
-        <span>{node.attrs.language}</span>
+      <figcaption data-code-header="">
+        <LanguageIcon language={node.attrs.language} mono />
+        <span>{codeLanguageLabel(node.attrs.language)}</span>
         <CopyCodeButton code={code} />
       </figcaption>
 
-      <pre
-        style={{
-          backgroundColor: highlighted.bg,
-          color: highlighted.fg,
-        }}
-      >
+      {/* The card supplies the background; the theme supplies text colours. */}
+      <pre style={{ color: highlighted.fg }}>
         <code>{renderHighlightedLines(highlighted.tokens)}</code>
       </pre>
     </figure>

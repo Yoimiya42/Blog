@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.33 · 2026-11-22 · Draft
+> v0.45 · 2026-11-23 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -167,7 +167,7 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 |---|---|---|---|
 | FR-BLOG-01 | Post list, reverse-chronological, paginated | v1 | 10 per page; title, summary, date, tags, reading time |
 | FR-BLOG-02 | Post detail | v1 | CJK typography at line-height 1.75+, 17–18px |
-| FR-BLOG-03 | Code highlighting | v1 | Python, TS, Java, C, Go; language label, copy button |
+| FR-BLOG-03 | Code highlighting | v1 | Python, TS, Java, C, C++, Go; language label, copy button. C++ uses the C grammar (ADR-0028) |
 | FR-BLOG-04 | Tags and tag archive | v1 | Many tags per post, at most 10. The owner enters comma-separated tag names in the post form; an unknown name creates the tag. Archives list published posts only |
 | FR-BLOG-05 | Table of contents | v1 | Sidebar with scroll spy; collapsed on mobile |
 | FR-BLOG-06 | Draft and published states | v1 | Drafts hidden from lists, reachable by preview link |
@@ -253,7 +253,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 |---|---|---|---|
 | FR-ADMIN-01 | Login and authorisation | v1 | Non-owner requests to `/admin/*` return 404 |
 | FR-ADMIN-02 | Post list grouped by state | v1 | Create, find, edit, and delete on a desktop browser. One-handed phone use in v1.5 |
-| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5 |
+| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5. Preview shows the saved version in the public article layout, with the table of contents and without the site header and footer, inside the admin. An Edit and Preview toggle sits at the same place on both views. The toolbar offers headings, bold, link, lists, quote, code block, and image; a quote renders as an accent-barred panel in both the editor and the public page |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the article content of an existing draft only. A new post autosaves once it is created; a published post changes only through an explicit save. A save never overwrites a newer version |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
 | FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. HEIC and HEIF are not accepted: the owner uploads Lightroom JPEG exports, and the iOS photo picker already converts HEIF to JPEG. Reopen when HEIC files reach the desktop upload. See ADR-0021 |
@@ -266,6 +266,15 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-13 | Batch photo upload with EXIF extraction | v2.5 | |
 | FR-ADMIN-14 | Comment and whisper moderation | v2.5 | |
 | FR-ADMIN-15 | Installable as a PWA | v1.5 | Add to home screen |
+| FR-ADMIN-16 | Admin overview desk | v1 | `/admin` shows draft and published counts, the most recently updated drafts to resume, recent posts, and New post and Media actions |
+| FR-ADMIN-17 | Command palette | v1 | Ctrl or Cmd+K opens a search over admin pages, actions, and post titles; Enter navigates |
+| FR-ADMIN-18 | Editor keyboard save and save on leave | v1 | Ctrl or Cmd+S saves the post. An in-app link or command palette entry that leaves a draft with unsaved changes, including Back and Preview, saves first and stays on the page if the save fails. A published post asks in an in-app dialog: keep editing, leave without saving, or save and leave, which updates the live post. Closing or reloading the tab uses the browser's own prompt; browser back and forward are not intercepted |
+| FR-ADMIN-19 | Action feedback | v1 | Save, create, publish, unpublish, delete, and copy outcomes show a transient toast, including after a redirect |
+| FR-ADMIN-20 | Post list search and live link | v1 | The post list filters by title or slug as the owner types; a published post links to its public page. Rows show title, summary, and last update; the row opens the editor; icon actions preview the post and open its public page |
+| FR-ADMIN-21 | Media grid | v1 | The library shows a thumbnail grid; opening an item shows its details, copy link, and delete |
+| FR-ADMIN-22 | Styled system pages | v1 | Not-found, error, and loading states use the site tokens. A non-owner `/admin` request gets the same not-found page as any unknown URL |
+| FR-ADMIN-23 | Writing comfort | v1 | New post opens a stored blank draft, so autosave starts at once (ADR-0030). The editor body uses the public article typography and shows a placeholder when empty. The title field wraps. The editor header shows save state, word count, and reading time. Ctrl or Cmd+. toggles a focus mode that hides the admin navigation and the settings sidebar |
+| FR-ADMIN-24 | Link text and address | v1 | The Link control, Ctrl or Cmd+K, opens a text and address pair at the cursor, written as `[text](address)`, with or without a selection. Editing a link changes both. Pasting a bare address inserts it as a link and opens the pair with the text empty. Empty text keeps the address as the text. A bare domain gains `https://`. Typing `[text](address)` converts to a link |
 
 ---
 
@@ -686,3 +695,15 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-17 | v0.31 | Fixed the image transform call and protected the image source domain; recorded the cache rule for non-public media. See ADR-0022. No functional requirement changed |
 | 2026-11-17 | v0.32 | Added `Media` to the v1 field contract. Uploads go through a dedicated owner endpoint (ADR-0024). No functional requirement changed |
 | 2026-11-22 | v0.33 | Deferred HEIC input indefinitely under FR-ADMIN-06; Issue #65 closed as not planned |
+| 2026-11-22 | v0.34 | Added C++ to FR-BLOG-03, highlighted with the C grammar; see ADR-0028 |
+| 2026-11-22 | v0.35 | Added FR-ADMIN-16 to FR-ADMIN-22: overview desk, command palette, keyboard save and leave guard, toasts, post search and live link, media grid, styled system pages |
+| 2026-11-22 | v0.36 | FR-ADMIN-03 preview uses the public post page; FR-ADMIN-18 confirms in an in-app dialog |
+| 2026-11-23 | v0.37 | FR-ADMIN-03 preview moves to an owner-only route in the blog layout with a return-to-editor bar |
+| 2026-11-23 | v0.38 | FR-ADMIN-03 preview returns to the admin; one Edit and Preview toggle in a fixed place replaces the eye button and the floating bar |
+| 2026-11-23 | v0.39 | FR-ADMIN-03 preview drops the site header and footer |
+| 2026-11-23 | v0.40 | FR-ADMIN-20 rows show the summary instead of the slug and share one icon action style |
+| 2026-11-23 | v0.41 | Added FR-ADMIN-23 writing comfort; see ADR-0030 |
+| 2026-11-23 | v0.42 | FR-ADMIN-18 saves a draft before leaving the editor instead of asking |
+| 2026-11-23 | v0.43 | Added FR-ADMIN-24 link text and address |
+| 2026-11-23 | v0.44 | FR-ADMIN-18 covers command palette navigation |
+| 2026-11-23 | v0.45 | FR-ADMIN-03 adds the quote control and quote styling |

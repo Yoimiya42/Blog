@@ -294,6 +294,11 @@ export const validArticleFixtures = {
       },
       {
         type: "codeBlock",
+        attrs: { language: "cpp" },
+        content: [{ type: "text", text: "std::vector<int> a;" }],
+      },
+      {
+        type: "codeBlock",
         attrs: { language: "go" },
         content: [{ type: "text", text: "a := 1" }],
       },

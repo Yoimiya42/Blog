@@ -32,9 +32,35 @@ export function CopyCodeButton({ code }: CopyCodeButtonProps) {
     }
   }
 
+  // Icon only; the visually hidden text is the accessible name and the
+  // live announcement.
   return (
-    <button aria-live="polite" onClick={handleCopy} type="button">
-      {copied ? "Copied" : "Copy code"}
+    <button
+      aria-live="polite"
+      data-code-copy=""
+      onClick={handleCopy}
+      title={copied ? "Copied" : "Copy code"}
+      type="button"
+    >
+      <svg
+        aria-hidden
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        viewBox="0 0 24 24"
+      >
+        {copied ? (
+          <path d="M20 6 9 17l-5-5" />
+        ) : (
+          <>
+            <rect height="14" rx="2" width="14" x="8" y="8" />
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+          </>
+        )}
+      </svg>
+      <span className="sr-only">{copied ? "Copied" : "Copy code"}</span>
     </button>
   );
 }

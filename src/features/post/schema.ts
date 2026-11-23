@@ -6,6 +6,20 @@ import type { Tag } from "@/features/tag";
 
 export const POST_STATUSES = ["DRAFT", "PUBLISHED"] as const;
 
+/** Placeholder identity of a blank draft from New post (ADR-0030). */
+export const BLANK_DRAFT_TITLE = "Untitled";
+export const BLANK_DRAFT_SLUG_PATTERN = /^untitled-[0-9a-f]{6}$/;
+
+/** True while a draft still carries the New post placeholders. */
+export function isBlankDraftIdentity(post: {
+  title: string;
+  slug: string;
+}): boolean {
+  return (
+    post.title === BLANK_DRAFT_TITLE && BLANK_DRAFT_SLUG_PATTERN.test(post.slug)
+  );
+}
+
 export type PostStatus = (typeof POST_STATUSES)[number];
 
 /** A post without its body. List queries never load `content`. */
