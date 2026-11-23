@@ -48,7 +48,7 @@ export function PostArticle({
         </aside>
       ) : null}
 
-      <div className={`post-body ${ARTICLE_PROSE_CLASS}`}>
+      <div className={`post-body article-type ${ARTICLE_PROSE_CLASS}`}>
         {post.document ? (
           <ArticleContent document={post.document} mediaById={mediaById} />
         ) : (

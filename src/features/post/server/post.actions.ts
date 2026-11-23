@@ -243,6 +243,15 @@ export async function autosavePostAction(
     : { ok: false, reason: result.reason };
 }
 
+/** New post (ADR-0030): opens a stored blank draft in the editor. */
+export async function createBlankDraftAction(): Promise<void> {
+  const session = await requireOwner();
+  const post = await (await getPostService()).createBlankDraft(session);
+
+  revalidatePath(POSTS_PATH);
+  redirect(`${POSTS_PATH}/${post.id}`);
+}
+
 export async function deletePostAction(postId: string): Promise<void> {
   const session = await requireOwner();
   const service = await getPostService();

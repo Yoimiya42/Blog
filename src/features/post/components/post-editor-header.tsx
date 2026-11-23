@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import type { PostStatus } from "../schema";
+import { FocusModeToggle } from "./focus-mode-toggle";
 
 export type PostEditorMode = "edit" | "preview";
 
@@ -37,17 +38,20 @@ const MODES: {
 /**
  * Top row shared by the editor and its preview (FR-ADMIN-03). The mode toggle
  * is always the last item, so switching modes never moves it under the
- * pointer; page-specific actions sit to its left.
+ * pointer; page-specific actions and status sit to its left.
  */
 export function PostEditorHeader({
   postId,
   status,
   mode,
+  meta,
   actions,
 }: {
   postId: string;
   status: PostStatus;
   mode: PostEditorMode;
+  /** Save state and statistics, left of the actions. */
+  meta?: ReactNode;
   actions?: ReactNode;
 }) {
   return (
@@ -79,7 +83,9 @@ export function PostEditorHeader({
       </span>
 
       <div className="ml-auto flex items-center gap-2">
+        {meta}
         {actions}
+        <FocusModeToggle />
         <nav
           aria-label="Post view"
           className="flex items-center rounded-control bg-foreground/5 p-0.5"

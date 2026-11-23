@@ -45,3 +45,4 @@ Template: `template.md`.
 | [0027](0027-editor-side-code-highlighting.md) | Editor-side code highlighting with Shiki | Highlight editor code blocks in the browser with the server's Shiki theme and grammars, loaded per language | Accepted | 2026-11-22 |
 | [0028](0028-cpp-code-blocks.md) | C++ code blocks with the C grammar | Add `cpp` to schema v1 as an additive language value, highlighted with the C grammar | Accepted | 2026-11-22 |
 | [0029](0029-design-tokens.md) | Design tokens | One token vocabulary in `globals.css` for colour, radius, motion, and type; shells override values; a test bans raw palette classes | Accepted | 2026-11-22 |
+| [0030](0030-blank-draft-on-new-post.md) | Blank draft on New post | New post creates or reuses a placeholder draft so autosave starts at once; publishing needs a real slug | Accepted | 2026-11-23 |

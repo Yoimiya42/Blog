@@ -1,10 +1,21 @@
 "use client";
 
-import { ExternalLink, Search } from "lucide-react";
+import {
+  Eye,
+  Search,
+  SquareArrowOutUpRight,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import {
   POST_STATUSES,
@@ -18,6 +29,15 @@ const GROUP_LABELS: Record<PostStatus, { heading: string; empty: string }> = {
   PUBLISHED: { heading: "Published", empty: "No published posts." },
 };
 
+// A fixed zone keeps server and client output identical.
+const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "Europe/London",
+});
+
+/** Title and slug both match: the slug is the post's public URL. */
 function matches(post: PostSummary, query: string): boolean {
   return (
     post.title.toLowerCase().includes(query) ||
@@ -25,13 +45,13 @@ function matches(post: PostSummary, query: string): boolean {
   );
 }
 
-/** Grouped by state; filters by title or slug as the owner types (FR-ADMIN-20). */
+/** Grouped by state; filters as the owner types (FR-ADMIN-20). */
 export function PostList({ groups }: { groups: PostsByStatus }) {
   const [query, setQuery] = useState("");
   const needle = query.trim().toLowerCase();
 
   return (
-    <div>
+    <TooltipProvider>
       <label className="relative block max-w-sm">
         <span className="sr-only">Filter posts</span>
         <Search
@@ -41,7 +61,7 @@ export function PostList({ groups }: { groups: PostsByStatus }) {
         <input
           className="h-9 w-full rounded-control border border-border bg-background pr-3 pl-9 text-sm outline-none placeholder:text-faint focus:border-ring"
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Filter by title or slug"
+          placeholder="Filter posts"
           type="search"
           value={query}
         />
@@ -67,7 +87,7 @@ export function PostList({ groups }: { groups: PostsByStatus }) {
                   {needle ? "No matches." : GROUP_LABELS[status].empty}
                 </p>
               ) : (
-                <ul className="mt-3 divide-y divide-border rounded-card border border-border bg-card">
+                <ul className="mt-3 divide-y divide-border overflow-hidden rounded-card border border-border bg-card">
                   {posts.map((post) => (
                     <PostRow key={post.id} post={post} />
                   ))}
@@ -77,51 +97,100 @@ export function PostList({ groups }: { groups: PostsByStatus }) {
           );
         })}
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
+/**
+ * The whole row opens the editor: the title link stretches over it. Actions
+ * sit above that layer, share one icon style, and keep their column for a
+ * draft, which has no public page yet.
+ */
 function PostRow({ post }: { post: PostSummary }) {
-  const href = `/admin/posts/${post.id}`;
-  const updated = post.updatedAt.toISOString();
+  const updated = post.updatedAt;
 
   return (
-    <li className="flex items-center gap-2 px-4 py-3">
+    <li className="relative flex items-center gap-4 py-3 pr-2 pl-4 transition-colors focus-within:bg-muted/50 hover:bg-muted/50">
       <div className="min-w-0 flex-1">
-        <Link className="font-medium break-words hover:underline" href={href}>
+        <Link
+          className="block truncate font-medium outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
+          href={`/admin/posts/${post.id}`}
+        >
           {post.title || "Untitled"}
         </Link>
-        <p className="mt-1 text-sm break-all text-muted-foreground">
-          <span className="font-mono">{post.slug}</span>
-          {" · updated "}
-          <time dateTime={updated}>{updated.slice(0, 10)}</time>
-        </p>
+        {post.summary ? (
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">
+            {post.summary}
+          </p>
+        ) : null}
       </div>
 
-      {/* Always visible: the list has no hover-only actions. */}
-      {post.status === "PUBLISHED" ? (
-        <a
-          aria-label={`View ${post.title} on the site`}
-          className={buttonVariants({
-            variant: "ghost",
-            size: "icon",
-            className: "size-11 text-muted-foreground",
-          })}
-          href={`/blog/${post.slug}`}
-          rel="noreferrer"
-          target="_blank"
-          title="View on the site"
-        >
-          <ExternalLink />
-        </a>
-      ) : null}
-      <Link
-        aria-label={`Edit ${post.title}`}
-        className={buttonVariants({ variant: "outline" })}
-        href={href}
+      <time
+        className="hidden shrink-0 text-sm text-muted-foreground tabular-nums sm:block"
+        dateTime={updated.toISOString()}
+        title="Last updated"
       >
-        Edit
-      </Link>
+        {DATE_FORMAT.format(updated)}
+      </time>
+
+      <div className="relative z-10 flex shrink-0 items-center">
+        <RowAction
+          href={`/admin/posts/${post.id}/preview`}
+          icon={Eye}
+          label="Preview"
+        />
+        {post.status === "PUBLISHED" ? (
+          <RowAction
+            external
+            href={`/blog/${post.slug}`}
+            icon={SquareArrowOutUpRight}
+            label="View on site"
+          />
+        ) : (
+          <span aria-hidden className="size-9" />
+        )}
+      </div>
     </li>
+  );
+}
+
+function RowAction({
+  href,
+  icon: Icon,
+  label,
+  external = false,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  external?: boolean;
+}) {
+  const className = buttonVariants({
+    variant: "ghost",
+    size: "icon",
+    className: "text-muted-foreground hover:text-foreground",
+  });
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {external ? (
+          <a
+            aria-label={label}
+            className={className}
+            href={href}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <Icon />
+          </a>
+        ) : (
+          <Link aria-label={label} className={className} href={href}>
+            <Icon />
+          </Link>
+        )}
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }

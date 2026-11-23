@@ -8,6 +8,7 @@ const service = {
   publish: vi.fn(),
   unpublish: vi.fn(),
   autosave: vi.fn(),
+  createBlankDraft: vi.fn(),
 };
 const getPostService = vi.fn();
 const revalidatePath = vi.fn();
@@ -35,6 +36,7 @@ vi.mock("next/navigation", () => ({
 
 import {
   autosavePostAction,
+  createBlankDraftAction,
   deletePostAction,
   savePostAction,
   type PostFormState,
@@ -496,5 +498,28 @@ describe("deletePostAction", () => {
     expect(service.remove).toHaveBeenCalledWith(SESSION, "post-1");
     expect(revalidatePath).toHaveBeenCalledWith("/admin/posts");
     expectPublicRevalidation();
+  });
+});
+
+describe("createBlankDraftAction", () => {
+  it("stops a visitor before the service is reached", async () => {
+    requireOwner.mockRejectedValue(new NotFoundSignal());
+
+    await expect(createBlankDraftAction()).rejects.toBeInstanceOf(
+      NotFoundSignal,
+    );
+    expect(getPostService).not.toHaveBeenCalled();
+  });
+
+  it("opens the editor on the blank draft", async () => {
+    service.createBlankDraft.mockResolvedValue(STORED);
+
+    await expect(createBlankDraftAction()).rejects.toMatchObject({
+      path: "/admin/posts/post-1",
+    });
+
+    expect(service.createBlankDraft).toHaveBeenCalledWith(SESSION);
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/posts");
+    expectNoPublicRevalidation();
   });
 });

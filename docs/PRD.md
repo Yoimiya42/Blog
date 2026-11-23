@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.39 · 2026-11-23 · Draft
+> v0.41 · 2026-11-23 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -270,9 +270,10 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-17 | Command palette | v1 | Ctrl or Cmd+K opens a search over admin pages, actions, and post titles; Enter navigates |
 | FR-ADMIN-18 | Editor keyboard save and leave guard | v1 | Ctrl or Cmd+S saves the post. Leaving the editor with unsaved title, field, or content changes asks for confirmation. In-app links confirm through an in-app dialog; the browser's own prompt covers only closing or reloading the tab |
 | FR-ADMIN-19 | Action feedback | v1 | Save, create, publish, unpublish, delete, and copy outcomes show a transient toast, including after a redirect |
-| FR-ADMIN-20 | Post list search and live link | v1 | The post list filters by title or slug as the owner types; a published post links to its public page |
+| FR-ADMIN-20 | Post list search and live link | v1 | The post list filters by title or slug as the owner types; a published post links to its public page. Rows show title, summary, and last update; the row opens the editor; icon actions preview the post and open its public page |
 | FR-ADMIN-21 | Media grid | v1 | The library shows a thumbnail grid; opening an item shows its details, copy link, and delete |
 | FR-ADMIN-22 | Styled system pages | v1 | Not-found, error, and loading states use the site tokens. A non-owner `/admin` request gets the same not-found page as any unknown URL |
+| FR-ADMIN-23 | Writing comfort | v1 | New post opens a stored blank draft, so autosave starts at once (ADR-0030). The editor body uses the public article typography and shows a placeholder when empty. The title field wraps. The editor header shows save state, word count, and reading time. Ctrl or Cmd+. toggles a focus mode that hides the admin navigation and the settings sidebar |
 
 ---
 
@@ -699,3 +700,5 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-23 | v0.37 | FR-ADMIN-03 preview moves to an owner-only route in the blog layout with a return-to-editor bar |
 | 2026-11-23 | v0.38 | FR-ADMIN-03 preview returns to the admin; one Edit and Preview toggle in a fixed place replaces the eye button and the floating bar |
 | 2026-11-23 | v0.39 | FR-ADMIN-03 preview drops the site header and footer |
+| 2026-11-23 | v0.40 | FR-ADMIN-20 rows show the summary instead of the slug and share one icon action style |
+| 2026-11-23 | v0.41 | Added FR-ADMIN-23 writing comfort; see ADR-0030 |

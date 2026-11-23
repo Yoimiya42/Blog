@@ -21,7 +21,10 @@ export function AdminShell({
 }) {
   return (
     <div className="min-h-dvh bg-muted text-foreground">
-      <header className="sticky top-0 z-20 border-b border-border bg-background">
+      <header
+        className="sticky top-0 z-20 border-b border-border bg-background"
+        data-focus-hide
+      >
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4 md:px-8">
           <Link className="shrink-0 font-semibold" href="/admin">
             Admin

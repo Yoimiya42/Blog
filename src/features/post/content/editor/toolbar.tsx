@@ -164,7 +164,7 @@ export function EditorToolbar({
   return (
     // Sticks under the admin header so formatting stays in reach while writing.
     <TooltipProvider>
-      <div className="sticky top-14 z-10 -mx-1 mb-4 border-b border-border bg-background/95 px-1 py-1 backdrop-blur">
+      <div className="sticky top-(--admin-head) z-10 -mx-1 mb-4 border-b border-border bg-background/95 px-1 py-1 backdrop-blur">
         <div
           aria-label="Formatting"
           className="flex flex-wrap items-center gap-0.5"

@@ -164,37 +164,11 @@
   font-size: var(--text-sm);
 }
 
-/*
- * FR-BLOG-02 CJK typography: 17px on phones, 18px from tablet width,
- * line height 1.8. `line-break: strict` keeps closing punctuation off the
- * start of a line; `overflow-wrap` breaks long URLs and identifiers instead
- * of widening the page. `text-autospace` adds CJK–Latin spacing where
- * supported and is ignored elsewhere.
- */
-.formal .post-body {
-  font-size: 1.0625rem;
-  line-height: 1.8;
-  line-break: strict;
-  overflow-wrap: break-word;
-  text-autospace: normal;
-}
-
-@media (min-width: 48rem) {
-  .formal .post-body {
-    font-size: var(--text-lg);
-  }
-}
+/* Body typography is the shared `.article-type` in `globals.css`. */
 
 /* Anchor targets clear the sticky header. */
 .formal .post-body :is(h2, h3, h4) {
-  line-height: 1.4;
   scroll-margin-top: calc(var(--head-height) + 1rem);
-}
-
-/* Code keeps a tighter rhythm than prose. */
-.formal .post-body pre {
-  font-size: var(--text-sm);
-  line-height: 1.6;
 }
 
 /* The enlarged copy sizes to the viewport instead; see `globals.css`, which

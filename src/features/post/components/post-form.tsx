@@ -24,7 +24,9 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { toast } from "@/components/ui/toast";
+import { cn } from "@/lib/utils";
 
+import { deriveArticleStats } from "../content/derive";
 import type { ImageUploadConfig } from "../content/image-upload";
 import type { ArticleDocument } from "../content/types";
 import {
@@ -40,11 +42,13 @@ import {
   type PostFormValues,
 } from "../server/post.actions";
 import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
+import { PostEditorHeader } from "./post-editor-header";
 import { SubmitButton } from "./submit-button";
 import { TagPicker } from "./tag-picker";
 import { UnsavedChangesGuard } from "./unsaved-guard";
 
 const AUTOSAVE_INTERVAL_MS = 10_000;
+const STATS_DELAY_MS = 400;
 
 /** Fields compared against the last save; content is tracked by autosave. */
 const TRACKED_FIELDS = ["title", "slug", "summary", "tags"] as const;
@@ -78,6 +82,10 @@ interface PostFormProps {
   deletedMediaIds?: readonly string[];
   /** Every tag name in the library, offered by the tag picker. */
   tagSuggestions?: readonly string[];
+  /** Page actions for the header row, such as Delete. */
+  headerActions?: ReactNode;
+  /** Opens with the title selected, for a blank draft (ADR-0030). */
+  focusTitle?: boolean;
 }
 
 // A dynamic import keeps the TipTap runtime out of the statically imported
@@ -87,14 +95,39 @@ const ArticleEditor = dynamic(
   () => import("../content/editor/article-editor"),
   {
     ssr: false,
+    // The editor's shape, so nothing jumps when it arrives.
     loading: () => (
-      <p className="text-sm text-muted-foreground">Loading editor…</p>
+      <div
+        aria-busy="true"
+        aria-label="Loading editor"
+        className="min-h-[60vh] space-y-3 pt-14"
+        role="status"
+      >
+        <div className="h-4 w-full animate-pulse rounded-mark bg-foreground/5" />
+        <div className="h-4 w-11/12 animate-pulse rounded-mark bg-foreground/5" />
+        <div className="h-4 w-4/5 animate-pulse rounded-mark bg-foreground/5" />
+      </div>
     ),
   },
 );
 
 const INPUT_CLASS =
   "mt-1.5 w-full rounded-control border border-border bg-background px-3 py-2 text-sm outline-none focus:border-faint aria-invalid:border-destructive";
+
+/** Grows with its content; no scrollbar inside a one-line field. */
+function fitHeight(element: HTMLTextAreaElement | null): void {
+  if (!element) return;
+  element.style.height = "auto";
+  element.style.height = `${element.scrollHeight}px`;
+}
+
+function readStats(content: string) {
+  try {
+    return deriveArticleStats(JSON.parse(content) as ArticleDocument);
+  } catch {
+    return null;
+  }
+}
 
 export function PostForm({
   postId,
@@ -107,6 +140,8 @@ export function PostForm({
   initialMediaUrls,
   deletedMediaIds,
   tagSuggestions = [],
+  headerActions,
+  focusTitle = false,
 }: PostFormProps) {
   const initialState: PostFormState = {
     values: initialValues,
@@ -155,6 +190,7 @@ export function PostForm({
   const saveOnBlur = useCallback(() => void autosave.flush(), [autosave]);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
   const saving = useRef(false);
   const savedFields = useRef<string | null>(null);
 
@@ -174,6 +210,48 @@ export function PostForm({
     () => readFields() !== savedFields.current || autosave.hasUnsavedContent(),
     [autosave, readFields],
   );
+
+  // The header shows the dirty state, so it is mirrored into React state.
+  // Checked after the current task: hidden inputs (tags, content) update on
+  // render. A timeout, not a frame: frames pause in background tabs.
+  const [dirty, setDirty] = useState(false);
+  const checkDirty = useCallback(() => {
+    setTimeout(() => setDirty(isDirty()), 0);
+  }, [isDirty]);
+
+  // Word count follows the document, a little behind the typing.
+  const [stats, setStats] = useState(() =>
+    initialDocument ? deriveArticleStats(initialDocument) : null,
+  );
+  const statsTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  useEffect(() => () => clearTimeout(statsTimer.current), []);
+
+  const onContentChange = useCallback(
+    (content: string) => {
+      autosave.change(content);
+      checkDirty();
+      clearTimeout(statsTimer.current);
+      statsTimer.current = setTimeout(
+        () => setStats(readStats(content)),
+        STATS_DELAY_MS,
+      );
+    },
+    [autosave, checkDirty],
+  );
+
+  // A save in progress, manual or automatic, for the header indicator.
+  const [manualSaving, setManualSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  useEffect(() => {
+    if (autosaveStatus.kind === "saved") {
+      // The autosave callback is outside React; mirror it once per change.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSavedAt(autosaveStatus.at);
+      checkDirty();
+    }
+  }, [autosaveStatus, checkDirty]);
 
   // Ctrl or Cmd+S saves from anywhere on the page (FR-ADMIN-18).
   useEffect(() => {
@@ -195,9 +273,21 @@ export function PostForm({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  // A blank draft opens with its placeholder title selected, so typing
+  // replaces it (ADR-0030).
+  useEffect(() => {
+    const title = titleRef.current;
+    fitHeight(title);
+    if (focusTitle && title) {
+      title.focus();
+      title.select();
+    }
+  }, [focusTitle]);
+
   const [state, formAction] = useActionState(
     (previous: PostFormState, formData: FormData) => {
       saving.current = true;
+      setManualSaving(true);
       // Queued behind any autosave in flight, and sent with the token that
       // save produced.
       return autosave
@@ -223,6 +313,7 @@ export function PostForm({
         })
         .finally(() => {
           saving.current = false;
+          setManualSaving(false);
         });
     },
     initialState,
@@ -233,174 +324,325 @@ export function PostForm({
   useEffect(() => {
     if (state.saved) {
       savedFields.current = readFields();
+      // Mirrors the action's outcome for the header indicator.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSavedAt(new Date());
+      checkDirty();
       toast("Saved");
     } else if (state.formError) {
       toast(state.formError, "error");
     }
-  }, [readFields, state]);
+  }, [checkDirty, readFields, state]);
+
+  const saveView = describeSave({
+    autosave: autosaveStatus,
+    saving: manualSaving || autosaveStatus.kind === "saving",
+    dirty,
+    savedAt,
+  });
 
   return (
-    // The max lengths mirror the server rules; the server remains the authority.
-    <form
-      action={formAction}
-      ref={formRef}
-      className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]"
-      noValidate
-    >
-      <UnsavedChangesGuard isDirty={isDirty} />
-      <div className="min-w-0 rounded-card bg-card px-5 py-8 shadow-sm ring-1 ring-border md:px-12 md:py-12">
-        <input
-          aria-describedby={fieldErrors.title ? "post-title-error" : undefined}
-          aria-invalid={fieldErrors.title ? true : undefined}
-          aria-label="Title"
-          className="w-full bg-transparent text-3xl leading-tight font-semibold tracking-tight outline-none placeholder:text-faint"
-          defaultValue={values.title}
-          id="post-title"
-          maxLength={POST_TITLE_MAX_LENGTH}
-          name="title"
-          placeholder="Title"
-          type="text"
+    <>
+      {postId !== null && status !== null ? (
+        <PostEditorHeader
+          actions={headerActions}
+          meta={<EditorMeta save={saveView} stats={stats} />}
+          mode="edit"
+          postId={postId}
+          status={status}
         />
-        <FieldError id="post-title-error" message={fieldErrors.title} />
+      ) : null}
 
-        <hr className="my-6 border-border" />
-
-        <p className="sr-only" id="post-content-label">
-          Content
-        </p>
-        {initialDocument ? (
-          <ArticleEditor
-            imageUpload={imageUpload}
-            initialDocument={initialDocument}
-            deletedMediaIds={deletedMediaIds}
-            initialMediaUrls={initialMediaUrls}
-            labelledBy="post-content-label"
-            name="content"
-            onBlur={saveOnBlur}
-            onChange={autosave.change}
-          />
-        ) : (
-          <p className="text-sm text-destructive" role="alert">
-            The stored content is not valid schema v1 and cannot be opened.
-            Saving keeps it unchanged.
-          </p>
-        )}
-        <FieldError id="post-content-error" message={fieldErrors.content} />
-      </div>
-
-      <aside className="divide-y divide-border rounded-card bg-card ring-1 ring-border lg:sticky lg:top-20">
-        <div className="space-y-2 p-4">
-          <div className="flex gap-2">
-            <SubmitButton
-              label={postId === null ? "Create draft" : "Save"}
-              pendingLabel="Saving…"
-            />
-            {status === "DRAFT" ? (
-              <SubmitButton
-                intent="publish"
-                label="Publish"
-                pendingLabel="Publishing…"
-                tone="secondary"
-              />
-            ) : null}
-            {status === "PUBLISHED" ? (
-              <SubmitButton
-                intent="unpublish"
-                label="Unpublish"
-                pendingLabel="Unpublishing…"
-                tone="secondary"
-              />
-            ) : null}
-          </div>
-
-          {state.formError ? (
-            <p className="text-sm text-destructive" role="alert">
-              {state.formError}
-            </p>
-          ) : null}
-          {initialDocument ? (
-            <AutosaveNote
-              enabled={autosaveEnabled}
-              status={autosaveStatus}
-              postStatus={status}
-            />
-          ) : null}
-        </div>
-
-        <div className="flex gap-3 p-4">
-          <TagIcon aria-hidden className="mt-1.5 size-4 shrink-0 text-faint" />
-          <div className="min-w-0 flex-1">
-            <TagPicker
-              describedBy={fieldErrors.tags ? "post-tags-error" : undefined}
-              defaultValue={values.tags}
-              invalid={fieldErrors.tags ? true : undefined}
-              limit={TAG_LIMIT_HINT}
-              name="tags"
-              suggestions={tagSuggestions}
-            />
-            <FieldError id="post-tags-error" message={fieldErrors.tags} />
-          </div>
-        </div>
-
-        <SidebarSection
-          icon={slugFrozen ? Lock : Link2}
-          invalid={Boolean(fieldErrors.slug)}
-          label="Slug"
-        >
-          <input
-            aria-describedby={
-              fieldErrors.slug ? "post-slug-error" : "post-slug-hint"
-            }
-            aria-invalid={fieldErrors.slug ? true : undefined}
-            aria-label="Slug"
-            autoCapitalize="none"
-            autoCorrect="off"
-            className={`${INPUT_CLASS} font-mono read-only:text-muted-foreground`}
-            defaultValue={values.slug}
-            id="post-slug"
-            maxLength={POST_SLUG_MAX_LENGTH}
-            name="slug"
-            placeholder="post-address"
-            readOnly={slugFrozen}
-            spellCheck={false}
-            title={
-              slugFrozen
-                ? "Frozen since first publication"
-                : "Lowercase letters, numbers, hyphens"
-            }
-            type="text"
-          />
-          <p className="sr-only" id="post-slug-hint">
-            {slugFrozen
-              ? "Frozen since first publication."
-              : "Lowercase letters, numbers, and hyphens. Frozen once published."}
-          </p>
-          <FieldError id="post-slug-error" message={fieldErrors.slug} />
-        </SidebarSection>
-
-        <SidebarSection
-          icon={AlignLeft}
-          invalid={Boolean(fieldErrors.summary)}
-          label="Summary"
-        >
+      {/* The max lengths mirror the server rules; the server remains the authority. */}
+      <form
+        action={formAction}
+        className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]"
+        data-focus-layout
+        noValidate
+        onClick={checkDirty}
+        onInput={checkDirty}
+        onKeyUp={checkDirty}
+        ref={formRef}
+      >
+        <UnsavedChangesGuard isDirty={isDirty} />
+        <div className="min-w-0 rounded-card bg-card px-5 py-8 shadow-sm ring-1 ring-border md:px-12 md:py-12">
           <textarea
             aria-describedby={
-              fieldErrors.summary ? "post-summary-error" : undefined
+              fieldErrors.title ? "post-title-error" : undefined
             }
-            aria-invalid={fieldErrors.summary ? true : undefined}
-            aria-label="Summary, optional"
-            className={INPUT_CLASS}
-            defaultValue={values.summary}
-            id="post-summary"
-            maxLength={POST_SUMMARY_MAX_LENGTH}
-            name="summary"
-            placeholder="Optional"
-            rows={4}
+            aria-invalid={fieldErrors.title ? true : undefined}
+            aria-label="Title"
+            className="block w-full resize-none overflow-hidden bg-transparent text-3xl leading-tight font-semibold tracking-tight outline-none placeholder:text-faint"
+            defaultValue={values.title}
+            id="post-title"
+            maxLength={POST_TITLE_MAX_LENGTH}
+            name="title"
+            onInput={(event) => {
+              const field = event.currentTarget;
+              // A title is one line; pasted line breaks become spaces.
+              if (/[\r\n]/.test(field.value)) {
+                field.value = field.value.replace(/[\r\n]+/g, " ");
+              }
+              fitHeight(field);
+            }}
+            onKeyDown={(event) => {
+              // Enter moves to the body, like leaving a heading.
+              if (event.key !== "Enter" || event.nativeEvent.isComposing) {
+                return;
+              }
+              event.preventDefault();
+              formRef.current
+                ?.querySelector<HTMLElement>(".ProseMirror")
+                ?.focus();
+            }}
+            placeholder="Title"
+            ref={titleRef}
+            rows={1}
           />
-          <FieldError id="post-summary-error" message={fieldErrors.summary} />
-        </SidebarSection>
-      </aside>
-    </form>
+          <FieldError id="post-title-error" message={fieldErrors.title} />
+
+          <hr className="my-6 border-border" />
+
+          <p className="sr-only" id="post-content-label">
+            Content
+          </p>
+          {initialDocument ? (
+            <ArticleEditor
+              imageUpload={imageUpload}
+              initialDocument={initialDocument}
+              deletedMediaIds={deletedMediaIds}
+              initialMediaUrls={initialMediaUrls}
+              labelledBy="post-content-label"
+              name="content"
+              onBlur={saveOnBlur}
+              onChange={onContentChange}
+            />
+          ) : (
+            <p className="text-sm text-destructive" role="alert">
+              The stored content is not valid schema v1 and cannot be opened.
+              Saving keeps it unchanged.
+            </p>
+          )}
+          <FieldError id="post-content-error" message={fieldErrors.content} />
+        </div>
+
+        <aside
+          className="divide-y divide-border rounded-card bg-card ring-1 ring-border lg:sticky lg:top-20"
+          data-focus-hide
+        >
+          <div className="space-y-2 p-4">
+            <div className="flex gap-2">
+              <SubmitButton
+                label={postId === null ? "Create draft" : "Save"}
+                pendingLabel="Saving…"
+              />
+              {status === "DRAFT" ? (
+                <SubmitButton
+                  intent="publish"
+                  label="Publish"
+                  pendingLabel="Publishing…"
+                  tone="secondary"
+                />
+              ) : null}
+              {status === "PUBLISHED" ? (
+                <SubmitButton
+                  intent="unpublish"
+                  label="Unpublish"
+                  pendingLabel="Unpublishing…"
+                  tone="secondary"
+                />
+              ) : null}
+            </div>
+
+            {state.formError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {state.formError}
+              </p>
+            ) : null}
+            {autosaveStatus.kind === "stopped" ? (
+              <p className="text-sm text-destructive" role="alert">
+                {STOPPED_MESSAGES[autosaveStatus.reason]}
+              </p>
+            ) : status === "PUBLISHED" ? (
+              <p className="text-xs text-muted-foreground">
+                Saving updates the live post.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex gap-3 p-4">
+            <TagIcon
+              aria-hidden
+              className="mt-1.5 size-4 shrink-0 text-faint"
+            />
+            <div className="min-w-0 flex-1">
+              <TagPicker
+                describedBy={fieldErrors.tags ? "post-tags-error" : undefined}
+                defaultValue={values.tags}
+                invalid={fieldErrors.tags ? true : undefined}
+                limit={TAG_LIMIT_HINT}
+                name="tags"
+                suggestions={tagSuggestions}
+              />
+              <FieldError id="post-tags-error" message={fieldErrors.tags} />
+            </div>
+          </div>
+
+          <SidebarSection
+            icon={slugFrozen ? Lock : Link2}
+            invalid={Boolean(fieldErrors.slug)}
+            label="Slug"
+          >
+            <input
+              aria-describedby={
+                fieldErrors.slug ? "post-slug-error" : "post-slug-hint"
+              }
+              aria-invalid={fieldErrors.slug ? true : undefined}
+              aria-label="Slug"
+              autoCapitalize="none"
+              autoCorrect="off"
+              className={`${INPUT_CLASS} font-mono read-only:text-muted-foreground`}
+              defaultValue={values.slug}
+              id="post-slug"
+              maxLength={POST_SLUG_MAX_LENGTH}
+              name="slug"
+              placeholder="post-address"
+              readOnly={slugFrozen}
+              spellCheck={false}
+              title={
+                slugFrozen
+                  ? "Frozen since first publication"
+                  : "Lowercase letters, numbers, hyphens"
+              }
+              type="text"
+            />
+            <p className="sr-only" id="post-slug-hint">
+              {slugFrozen
+                ? "Frozen since first publication."
+                : "Lowercase letters, numbers, and hyphens. Frozen once published."}
+            </p>
+            <FieldError id="post-slug-error" message={fieldErrors.slug} />
+          </SidebarSection>
+
+          <SidebarSection
+            icon={AlignLeft}
+            invalid={Boolean(fieldErrors.summary)}
+            label="Summary"
+          >
+            <textarea
+              aria-describedby={
+                fieldErrors.summary ? "post-summary-error" : undefined
+              }
+              aria-invalid={fieldErrors.summary ? true : undefined}
+              aria-label="Summary, optional"
+              className={INPUT_CLASS}
+              defaultValue={values.summary}
+              id="post-summary"
+              maxLength={POST_SUMMARY_MAX_LENGTH}
+              name="summary"
+              placeholder="Optional"
+              rows={4}
+            />
+            <FieldError id="post-summary-error" message={fieldErrors.summary} />
+          </SidebarSection>
+        </aside>
+      </form>
+    </>
+  );
+}
+
+const STOPPED_MESSAGES = {
+  conflict:
+    "Autosave stopped: this post changed in another tab or window. Reload the page to continue.",
+  not_found: "Autosave stopped: this post no longer exists.",
+} as const;
+
+interface SaveView {
+  tone: string;
+  label: string;
+  detail: string;
+}
+
+const TIME_FORMAT: Intl.DateTimeFormatOptions = {
+  hour: "2-digit",
+  minute: "2-digit",
+};
+
+/** One line of save state for the header (FR-ADMIN-23). */
+function describeSave({
+  autosave,
+  saving,
+  dirty,
+  savedAt,
+}: {
+  autosave: AutosaveStatus;
+  saving: boolean;
+  dirty: boolean;
+  savedAt: Date | null;
+}): SaveView {
+  if (autosave.kind === "stopped") {
+    return {
+      tone: "bg-destructive",
+      label: "Autosave stopped",
+      detail: STOPPED_MESSAGES[autosave.reason],
+    };
+  }
+  if (saving) {
+    return { tone: "bg-warning", label: "Saving…", detail: "Saving" };
+  }
+  if (autosave.kind === "error") {
+    return {
+      tone: "bg-destructive",
+      label: "Retrying…",
+      detail: "Autosave failed; it retries every 10 seconds.",
+    };
+  }
+  if (dirty) {
+    return {
+      tone: "bg-warning",
+      label: "Unsaved",
+      detail: "Ctrl or Cmd+S saves. Drafts also autosave their text.",
+    };
+  }
+
+  return {
+    tone: "bg-success",
+    label: savedAt
+      ? `Saved ${savedAt.toLocaleTimeString([], TIME_FORMAT)}`
+      : "Saved",
+    detail: "All changes are saved.",
+  };
+}
+
+const NUMBER_FORMAT = new Intl.NumberFormat("en-GB");
+
+function EditorMeta({
+  save,
+  stats,
+}: {
+  save: SaveView;
+  stats: { words: number; readingMinutes: number } | null;
+}) {
+  return (
+    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+      {stats ? (
+        <span
+          className="hidden tabular-nums md:inline"
+          title="CJK characters count as words"
+        >
+          {NUMBER_FORMAT.format(stats.words)} words
+          {stats.words > 0 ? ` · ${stats.readingMinutes} min` : null}
+        </span>
+      ) : null}
+      <span
+        className="flex items-center gap-1.5 whitespace-nowrap"
+        role="status"
+        title={save.detail}
+      >
+        <span aria-hidden className={cn("size-1.5 rounded-full", save.tone)} />
+        {save.label}
+      </span>
+    </div>
   );
 }
 
@@ -437,60 +679,6 @@ function SidebarSection({
         {children}
       </CollapsibleContent>
     </Collapsible>
-  );
-}
-
-function AutosaveNote({
-  enabled,
-  status,
-  postStatus,
-}: {
-  enabled: boolean;
-  status: AutosaveStatus;
-  postStatus: PostStatus | null;
-}) {
-  if (status.kind === "stopped") {
-    return (
-      <p className="text-sm text-destructive" role="alert">
-        {status.reason === "conflict"
-          ? "Autosave stopped: this post changed in another tab or window. Reload the page to continue."
-          : "Autosave stopped: this post no longer exists."}
-      </p>
-    );
-  }
-
-  let message: string;
-  let tone = "bg-faint";
-  if (!enabled) {
-    if (postStatus === "PUBLISHED") {
-      message = "Published: save to update";
-    } else if (postStatus === null) {
-      message = "Autosave starts after create";
-    } else {
-      return null;
-    }
-  } else if (status.kind === "saving") {
-    message = "Saving…";
-    tone = "bg-warning";
-  } else if (status.kind === "saved") {
-    message = `Saved ${status.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-    tone = "bg-success";
-  } else if (status.kind === "error") {
-    message = "Autosave failed, retrying";
-    tone = "bg-destructive";
-  } else {
-    message = "Autosave on";
-  }
-
-  return (
-    <p
-      className="flex items-center gap-1.5 text-xs text-muted-foreground"
-      role="status"
-      title="Autosaves drafts every 10 seconds and when the editor loses focus."
-    >
-      <span aria-hidden className={`size-1.5 rounded-full ${tone}`} />
-      {message}
-    </p>
   );
 }
 

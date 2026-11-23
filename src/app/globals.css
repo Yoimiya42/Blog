@@ -298,3 +298,58 @@
   outline: 2px solid var(--overlay-foreground);
   outline-offset: 2px;
 }
+
+/*
+ * Article body typography (FR-BLOG-02), shared by the public article and the
+ * editor so the owner writes in the published rhythm (FR-ADMIN-23).
+ * 17px on phones, 18px from tablet width, line height 1.8.
+ * `line-break: strict` keeps closing punctuation off the start of a line;
+ * `overflow-wrap` breaks long URLs and identifiers instead of widening the
+ * page. `text-autospace` adds CJK–Latin spacing where supported.
+ */
+.article-type {
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  line-break: strict;
+  overflow-wrap: break-word;
+  text-autospace: normal;
+}
+
+@media (min-width: 48rem) {
+  .article-type {
+    font-size: var(--text-lg);
+  }
+}
+
+.article-type :is(h2, h3, h4) {
+  line-height: 1.4;
+}
+
+/* Code keeps a tighter rhythm than prose. */
+.article-type pre {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+/*
+ * Editor focus mode (FR-ADMIN-23). The editor sets `data-focus-mode` on the
+ * root element; the admin header and the settings sidebar step aside, and the
+ * sticky toolbar follows the header height through `--admin-head`.
+ */
+:root {
+  --admin-head: 3.5rem;
+}
+
+:root[data-focus-mode] {
+  --admin-head: 0rem;
+}
+
+:root[data-focus-mode] [data-focus-hide] {
+  display: none;
+}
+
+:root[data-focus-mode] [data-focus-layout] {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 52rem;
+  margin-inline: auto;
+}

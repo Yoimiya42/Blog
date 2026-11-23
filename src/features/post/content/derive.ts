@@ -110,13 +110,36 @@ const CJK_CHARACTER_PATTERN =
   /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu;
 const NON_CJK_WORD_PATTERN = /[\p{L}\p{N}]+/gu;
 
-function calculateReadingMinutes(plainText: string): number {
+function countWords(plainText: string) {
   const cjkCharacterCount = plainText.match(CJK_CHARACTER_PATTERN)?.length ?? 0;
   const nonCjkText = plainText.replace(CJK_CHARACTER_PATTERN, " ");
   const nonCjkWordCount = nonCjkText.match(NON_CJK_WORD_PATTERN)?.length ?? 0;
+
+  return { cjkCharacterCount, nonCjkWordCount };
+}
+
+function calculateReadingMinutes(plainText: string): number {
+  const { cjkCharacterCount, nonCjkWordCount } = countWords(plainText);
   const readingMinutes = cjkCharacterCount / 300 + nonCjkWordCount / 200;
 
   return Math.max(1, Math.ceil(readingMinutes));
+}
+
+/**
+ * Editor statistics (FR-ADMIN-23). A CJK character counts as one word, the
+ * same unit the reading time uses.
+ */
+export function deriveArticleStats(document: ArticleDocument): {
+  words: number;
+  readingMinutes: number;
+} {
+  const plainText = derivePlainText(document);
+  const { cjkCharacterCount, nonCjkWordCount } = countWords(plainText);
+
+  return {
+    words: cjkCharacterCount + nonCjkWordCount,
+    readingMinutes: calculateReadingMinutes(plainText),
+  };
 }
 
 export function deriveArticleContent(

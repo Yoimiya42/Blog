@@ -12,7 +12,7 @@ import {
   DeletePostButton,
   formatTagNames,
   getPostService,
-  PostEditorHeader,
+  isBlankDraftIdentity,
   PostForm,
   toPostVersion,
   validateArticleDocument,
@@ -58,36 +58,27 @@ export default async function EditPostPage({
       : [];
 
   return (
-    <div>
-      <PostEditorHeader
-        actions={<DeletePostButton postId={post.id} title={post.title} />}
-        mode="edit"
-        postId={post.id}
-        status={post.status}
-      />
-
-      <div className="mt-4">
-        <PostForm
-          imageUpload={{
-            ...MEDIA_UPLOAD_CONFIG,
-            loadLibrary: listMediaForPickerAction,
-          }}
-          initialDocument={initialDocument}
-          deletedMediaIds={deletedMediaIds}
-          initialMediaUrls={initialMediaUrls}
-          initialValues={{
-            title: post.title,
-            slug: post.slug,
-            summary: post.summary ?? "",
-            tags: formatTagNames(tags),
-          }}
-          postId={post.id}
-          slugFrozen={post.publishedAt !== null}
-          status={post.status}
-          tagSuggestions={library.map((tag) => tag.name)}
-          version={toPostVersion(post.updatedAt)}
-        />
-      </div>
-    </div>
+    <PostForm
+      focusTitle={post.status === "DRAFT" && isBlankDraftIdentity(post)}
+      headerActions={<DeletePostButton postId={post.id} title={post.title} />}
+      imageUpload={{
+        ...MEDIA_UPLOAD_CONFIG,
+        loadLibrary: listMediaForPickerAction,
+      }}
+      initialDocument={initialDocument}
+      deletedMediaIds={deletedMediaIds}
+      initialMediaUrls={initialMediaUrls}
+      initialValues={{
+        title: post.title,
+        slug: post.slug,
+        summary: post.summary ?? "",
+        tags: formatTagNames(tags),
+      }}
+      postId={post.id}
+      slugFrozen={post.publishedAt !== null}
+      status={post.status}
+      tagSuggestions={library.map((tag) => tag.name)}
+      version={toPostVersion(post.updatedAt)}
+    />
   );
 }
