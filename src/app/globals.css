@@ -333,8 +333,9 @@
 
 /*
  * Editor focus mode (FR-ADMIN-23). The editor sets `data-focus-mode` on the
- * root element; the admin header and the settings sidebar step aside, and the
- * sticky toolbar follows the header height through `--admin-head`.
+ * root element; the admin header and the settings sidebar step aside, the
+ * writing card takes the full editor header width, and the sticky toolbar
+ * follows the header height through `--admin-head`.
  */
 :root {
   --admin-head: 3.5rem;
@@ -350,8 +351,6 @@
 
 :root[data-focus-mode] [data-focus-layout] {
   grid-template-columns: minmax(0, 1fr);
-  max-width: 52rem;
-  margin-inline: auto;
 }
 
 /*
@@ -403,10 +402,12 @@
   backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
 }
 
-/* The editor header row gains a panel so its status text stays readable. */
+/*
+ * The editor header row gains a panel so its status text stays readable. It
+ * keeps the content width, so its edges line up with the card below.
+ */
 :root:has([data-editor-backdrop]) [data-glass="bar"] {
-  margin-inline: -0.5rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   border-radius: var(--radius-card);
 }
 
