@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.41 · 2026-11-23 · Draft
+> v0.42 · 2026-11-23 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -268,7 +268,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-15 | Installable as a PWA | v1.5 | Add to home screen |
 | FR-ADMIN-16 | Admin overview desk | v1 | `/admin` shows draft and published counts, the most recently updated drafts to resume, recent posts, and New post and Media actions |
 | FR-ADMIN-17 | Command palette | v1 | Ctrl or Cmd+K opens a search over admin pages, actions, and post titles; Enter navigates |
-| FR-ADMIN-18 | Editor keyboard save and leave guard | v1 | Ctrl or Cmd+S saves the post. Leaving the editor with unsaved title, field, or content changes asks for confirmation. In-app links confirm through an in-app dialog; the browser's own prompt covers only closing or reloading the tab |
+| FR-ADMIN-18 | Editor keyboard save and save on leave | v1 | Ctrl or Cmd+S saves the post. An in-app link that leaves a draft with unsaved changes, including Back and Preview, saves first and stays on the page if the save fails. A published post asks in an in-app dialog: keep editing, leave without saving, or save and leave, which updates the live post. Closing or reloading the tab uses the browser's own prompt; browser back and forward are not intercepted |
 | FR-ADMIN-19 | Action feedback | v1 | Save, create, publish, unpublish, delete, and copy outcomes show a transient toast, including after a redirect |
 | FR-ADMIN-20 | Post list search and live link | v1 | The post list filters by title or slug as the owner types; a published post links to its public page. Rows show title, summary, and last update; the row opens the editor; icon actions preview the post and open its public page |
 | FR-ADMIN-21 | Media grid | v1 | The library shows a thumbnail grid; opening an item shows its details, copy link, and delete |
@@ -702,3 +702,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-23 | v0.39 | FR-ADMIN-03 preview drops the site header and footer |
 | 2026-11-23 | v0.40 | FR-ADMIN-20 rows show the summary instead of the slug and share one icon action style |
 | 2026-11-23 | v0.41 | Added FR-ADMIN-23 writing comfort; see ADR-0030 |
+| 2026-11-23 | v0.42 | FR-ADMIN-18 saves a draft before leaving the editor instead of asking |

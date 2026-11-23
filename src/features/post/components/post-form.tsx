@@ -320,8 +320,36 @@ export function PostForm({
   );
   const { values, fieldErrors } = state;
 
+  // Leaving the editor saves through the form's own path, so a failure shows
+  // its field errors here (FR-ADMIN-18). Resolved by the next new state.
+  const leaveSave = useRef<{
+    from: PostFormState;
+    resolve: (saved: boolean) => void;
+  } | null>(null);
+  const saveBeforeLeaving = useCallback(
+    () =>
+      new Promise<boolean>((resolve) => {
+        const form = formRef.current;
+        if (!form) {
+          resolve(false);
+          return;
+        }
+        leaveSave.current?.resolve(false);
+        leaveSave.current = { from: state, resolve };
+        // No submitter: a plain save, never publish.
+        form.requestSubmit();
+      }),
+    [state],
+  );
+
   // Each submission yields a new state object; report its outcome once.
   useEffect(() => {
+    const waiting = leaveSave.current;
+    if (waiting && waiting.from !== state) {
+      leaveSave.current = null;
+      waiting.resolve(state.saved === true);
+    }
+
     if (state.saved) {
       savedFields.current = readFields();
       // Mirrors the action's outcome for the header indicator.
@@ -364,7 +392,11 @@ export function PostForm({
         onKeyUp={checkDirty}
         ref={formRef}
       >
-        <UnsavedChangesGuard isDirty={isDirty} />
+        <UnsavedChangesGuard
+          isDirty={isDirty}
+          save={postId !== null ? saveBeforeLeaving : undefined}
+          saveOnLeave={status === "DRAFT"}
+        />
         <div className="min-w-0 rounded-card bg-card px-5 py-8 shadow-sm ring-1 ring-border md:px-12 md:py-12">
           <textarea
             aria-describedby={
