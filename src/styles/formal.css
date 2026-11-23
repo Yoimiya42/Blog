@@ -35,16 +35,20 @@
   -webkit-text-size-adjust: 100%;
 }
 
-.formal a {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--border);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-}
+/* Base layer: component rules below and kit utilities, such as a button
+   rendered as a link, override the default link look. */
+@layer base {
+  .formal a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
 
-.formal a:hover {
-  text-decoration-color: currentColor;
+  .formal a:hover {
+    text-decoration-color: currentColor;
+  }
 }
 
 .formal :focus-visible {

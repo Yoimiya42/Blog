@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.23 · 2026-11-22
+> v0.24 · 2026-11-23
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -60,6 +60,7 @@ src/
         blog/page.tsx         #   ?page=N, 10 per page
         blog/[slug]/page.tsx  #   Draft at this URL is the owner-only preview
         blog/tags/[slug]/page.tsx
+        preview/[id]/page.tsx #   Owner-only preview with a return-to-editor bar
       moments/page.tsx
       life/[type]/page.tsx
       gallery/page.tsx
@@ -302,3 +303,4 @@ Any failing row is an architectural defect.
 | 2026-11-17 | v0.21 | Narrowed the storage adapter to upload and delete; recorded the image upload and delivery paths; see ADR-0024 |
 | 2026-11-21 | v0.22 | Recorded responsive article image sources and the enlarged-view width |
 | 2026-11-22 | v0.23 | Shared one design-token vocabulary across shells; shells override values only; see ADR-0029 |
+| 2026-11-23 | v0.24 | Added the owner-only post preview route to the blog shell |

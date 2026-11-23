@@ -160,6 +160,40 @@ describe("article content integration", () => {
     }
   });
 
+  it("opens a document ending in a code block without changing it", () => {
+    const stored = {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Intro" }] },
+        {
+          type: "codeBlock",
+          attrs: { language: "plaintext" },
+          content: [{ type: "text", text: "plain output" }],
+        },
+      ],
+    };
+    const editor = new Editor({
+      extensions: articleEditorExtensions,
+      content: stored,
+    });
+    try {
+      // The trailing node appends on the next transaction; in the browser
+      // the code highlighter's first repaint is one.
+      editor.view.dispatch(editor.state.tr);
+      // The cursor now has a paragraph below the block.
+      expect(editor.getJSON().content?.at(-1)?.type).toBe("paragraph");
+      expect(normalizeEditorDocument(editor.getJSON())).toEqual(stored);
+    } finally {
+      editor.destroy();
+    }
+  });
+
+  it("keeps the single paragraph of a blank draft", () => {
+    const blank = { type: "doc", content: [{ type: "paragraph" }] };
+
+    expect(normalizeEditorDocument(blank)).toEqual(blank);
+  });
+
   it("derives metadata and media references through the public API", () => {
     expect(validateArticleDocument(completeArticle)).toEqual({
       ok: true,

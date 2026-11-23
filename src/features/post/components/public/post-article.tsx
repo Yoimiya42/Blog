@@ -13,9 +13,12 @@ const MIN_TOC_ITEMS = 2;
 export function PostArticle({
   post,
   mediaById,
+  showDraftNotice = true,
 }: {
   post: PublicPost;
   mediaById: ArticleMediaMap;
+  /** Off where the page shows the post's state itself, as the preview does. */
+  showDraftNotice?: boolean;
 }) {
   const toc = post.document
     ? deriveArticleContent(post.document).tableOfContents
@@ -25,7 +28,7 @@ export function PostArticle({
   return (
     <div className={showToc ? "post-layout post-layout--toc" : "post-layout"}>
       <header className="post-head">
-        {post.isDraft ? (
+        {post.isDraft && showDraftNotice ? (
           <p className="post-head__draft" role="status">
             Draft preview. Visitors cannot see this post.
           </p>
