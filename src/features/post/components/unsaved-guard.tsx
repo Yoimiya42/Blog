@@ -11,6 +11,10 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  NAVIGATION_REQUEST,
+  type NavigationRequestDetail,
+} from "@/lib/navigation-request";
 
 interface UnsavedChangesGuardProps {
   isDirty: () => boolean;
@@ -28,9 +32,10 @@ interface UnsavedChangesGuardProps {
  * Router has no navigation-blocking API, so links are intercepted in the
  * capture phase, before Next's own handler. A draft saves and then follows
  * the link; otherwise an in-app dialog asks, because embedded browsers may
- * suppress `window.confirm`, which then cancels silently. Closing or
- * reloading the tab can only use the browser's own prompt. Browser back and
- * forward are not intercepted.
+ * suppress `window.confirm`, which then cancels silently. Navigation from
+ * code arrives as an `announceNavigation` request and is treated the same.
+ * Closing or reloading the tab can only use the browser's own prompt.
+ * Browser back and forward are not intercepted.
  */
 export function UnsavedChangesGuard({
   isDirty,
@@ -95,7 +100,21 @@ export function UnsavedChangesGuard({
 
       event.preventDefault();
       event.stopPropagation();
+      takeOver(next);
+    }
 
+    // Navigation from code, such as the command palette.
+    function onNavigationRequest(event: Event) {
+      const { href } = (event as CustomEvent<NavigationRequestDetail>).detail;
+      const next = new URL(href, window.location.href);
+      if (next.pathname === window.location.pathname || !isDirty()) return;
+
+      event.preventDefault();
+      takeOver(next);
+    }
+
+    /** Saves a draft and follows, or asks. */
+    function takeOver(next: URL) {
       const { save: saveNow, saveOnLeave: silent, go: follow } = latest.current;
       if (!saveNow || !silent) {
         setPending(next);
@@ -114,9 +133,11 @@ export function UnsavedChangesGuard({
     }
 
     window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener(NAVIGATION_REQUEST, onNavigationRequest);
     document.addEventListener("click", onClick, true);
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener(NAVIGATION_REQUEST, onNavigationRequest);
       document.removeEventListener("click", onClick, true);
     };
   }, [isDirty]);

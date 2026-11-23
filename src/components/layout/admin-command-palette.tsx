@@ -28,6 +28,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { announceNavigation } from "@/lib/navigation-request";
 
 export interface CommandPost {
   id: string;
@@ -94,7 +95,8 @@ export function AdminCommandPalette({
 
   function go(href: string) {
     changeOpen(false);
-    router.push(href);
+    // An editor with unsaved changes may save or ask first (FR-ADMIN-18).
+    if (announceNavigation(href)) router.push(href);
   }
 
   return (

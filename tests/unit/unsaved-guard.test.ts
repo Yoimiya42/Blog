@@ -7,6 +7,7 @@ const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 import { UnsavedChangesGuard } from "@/features/post/components/unsaved-guard";
+import { announceNavigation } from "@/lib/navigation-request";
 
 let root: Root;
 let container: HTMLDivElement;
@@ -109,5 +110,41 @@ describe("UnsavedChangesGuard", () => {
 
     expect(push).not.toHaveBeenCalled();
     expect(dialogText()).toContain("Leave without saving?");
+  });
+
+  it("lets announced navigation through on a clean page", async () => {
+    const save = vi.fn();
+    await mount({ isDirty: () => false, save, saveOnLeave: true });
+
+    expect(announceNavigation("/admin/media")).toBe(true);
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("saves a draft before announced navigation, then follows it", async () => {
+    const save = vi.fn().mockResolvedValue(true);
+    await mount({ isDirty: () => true, save, saveOnLeave: true });
+
+    let proceed = true;
+    await act(async () => {
+      proceed = announceNavigation("/admin/media");
+    });
+    await act(async () => {});
+
+    expect(proceed).toBe(false);
+    expect(save).toHaveBeenCalledOnce();
+    expect(push).toHaveBeenCalledWith("/admin/media");
+  });
+
+  it("asks before announced navigation leaves a published post", async () => {
+    const save = vi.fn().mockResolvedValue(true);
+    await mount({ isDirty: () => true, save, saveOnLeave: false });
+
+    await act(async () => {
+      announceNavigation("/admin/media");
+    });
+
+    expect(save).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+    expect(dialogText()).toContain("Save and leave");
   });
 });

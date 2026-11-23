@@ -23,7 +23,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { toast } from "@/components/ui/toast";
+import { showFlash, toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 import { deriveArticleStats } from "../content/derive";
@@ -175,6 +175,12 @@ export function PostForm({
   useEffect(() => {
     if (version !== null) autosave.syncVersion(version);
   }, [autosave, version]);
+
+  // Those actions redirect back to this same path, which the toaster's path
+  // check misses; their flash message is read here instead.
+  useEffect(() => {
+    if (version !== null) showFlash();
+  }, [version]);
 
   useEffect(() => {
     if (!autosaveEnabled) return;

@@ -8,7 +8,8 @@ import { cookies } from "next/headers";
 export const FLASH_COOKIE = "admin-flash";
 
 export async function setFlash(message: string): Promise<void> {
-  (await cookies()).set(FLASH_COOKIE, encodeURIComponent(message), {
+  // The cookie serializer URI-encodes the value; the toaster decodes it.
+  (await cookies()).set(FLASH_COOKIE, message, {
     path: "/admin",
     maxAge: 30,
     sameSite: "strict",

@@ -59,6 +59,20 @@ function takeFlash(): string | null {
   }
 }
 
+/**
+ * Shows the message a redirecting Server Action left, once. Returns whether
+ * there was one. The toaster checks on every path change; a redirect back to
+ * the same path changes no path, so its page calls this when its server data
+ * changes.
+ */
+export function showFlash(): boolean {
+  const message = takeFlash();
+  if (!message) return false;
+  toast(message);
+
+  return true;
+}
+
 /** Mounted once in the admin shell. Also shows flashes left by redirects. */
 export function Toaster() {
   const list = useSyncExternalStore(
@@ -68,10 +82,9 @@ export function Toaster() {
   );
   const pathname = usePathname();
 
-  // A redirecting action lands on a new path; check for its message there.
+  // A redirecting action that lands on a new path leaves its message here.
   useEffect(() => {
-    const message = takeFlash();
-    if (message) toast(message);
+    showFlash();
   }, [pathname]);
 
   return (
