@@ -114,6 +114,11 @@ export function createDraftAutosave({
       return enqueue(() => task(version, content));
     },
 
+    /** The token of the stored version, after the latest known write. */
+    currentVersion(): string {
+      return version;
+    },
+
     /** Records a write made outside autosave, such as a manual save. */
     markSaved(nextVersion: string, saved?: string): void {
       version = nextVersion;

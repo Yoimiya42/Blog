@@ -432,6 +432,8 @@ export function PostForm({
           mode="edit"
           postId={postId}
           status={status}
+          // Read at render: saves and autosaves re-render through their status.
+          version={autosave.currentVersion() || undefined}
         />
       ) : null}
 

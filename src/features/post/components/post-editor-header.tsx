@@ -19,7 +19,7 @@ const MODES: {
   mode: PostEditorMode;
   label: string;
   icon: LucideIcon;
-  href: (postId: string) => string;
+  href: (postId: string, version?: string) => string;
 }[] = [
   {
     mode: "edit",
@@ -31,7 +31,10 @@ const MODES: {
     mode: "preview",
     label: "Preview",
     icon: Eye,
-    href: (id) => `/admin/posts/${id}/preview`,
+    // The version makes each saved state its own URL, so a prefetched preview
+    // is never older than the last save or autosave. The page ignores it.
+    href: (id, version) =>
+      `/admin/posts/${id}/preview${version ? `?v=${version}` : ""}`,
   },
 ];
 
@@ -48,10 +51,13 @@ export function PostEditorHeader({
   mode,
   meta,
   actions,
+  version,
 }: {
   postId: string;
   status: PostStatus;
   mode: PostEditorMode;
+  /** Token of the stored version, from the editor; keys the preview URL. */
+  version?: string;
   /** Save state, after the post status. */
   meta?: ReactNode;
   actions?: ReactNode;
@@ -114,8 +120,11 @@ export function PostEditorHeader({
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
               )}
-              href={item.href(postId)}
+              href={item.href(postId, version)}
               key={item.mode}
+              // The full payload, not only the loading shell: switching modes
+              // then renders from memory instead of waiting on the server.
+              prefetch
             >
               <Icon aria-hidden className="size-4" />
               <span className="hidden sm:inline">{item.label}</span>
