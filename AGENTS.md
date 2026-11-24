@@ -63,7 +63,7 @@ Branch names follow `CONTRIBUTING.md` and MUST NOT contain actor identity. AI MU
 ### 5.2 Serial execution
 
 1. Run `git status` before starting. Unrelated uncommitted changes: stop and notify the user.
-2. AI stages but never commits, and never creates or switches branches. See 5.6.
+2. AI commits, pulls, and creates and switches branches under 5.6. Before switching, the worktree MUST be clean: commit or stop, never discard.
 3. The worktree MUST be clean before handing off to another AI.
 4. No concurrent AI work sessions.
 
@@ -90,18 +90,17 @@ Naming, lifecycle, merge strategy, and commit format: `CONTRIBUTING.md`.
 
 ### 5.6 Workflow automation
 
-AI owns workflow bookkeeping and staging. The user owns branches and commits.
+AI owns the Git workflow except merge. The user owns merge.
 
-At task start, AI MUST create or select the relevant Issue and move the Project item to `In progress` when Project access is available. When a new branch is needed, AI MUST stop and present the branch name and a runnable `git switch` command. **AI MUST NOT create or switch branches.** The user runs the command.
+At task start, AI MUST create or select the relevant Issue and move the Project item to `In progress` when Project access is available. AI branches from the latest `main` with a name that follows `CONTRIBUTING.md`, or switches to the existing branch of that Issue and pulls.
 
-At each atomic, verified checkpoint, AI MUST run `git add .` and stop, presenting:
+At each atomic, verified checkpoint, AI commits: one Conventional Commit subject line and the co-author trailer, no body. AI then pushes the current branch, opens or updates the PR, and moves the Project item to `In review` once the PR is open.
 
-- the Issue and branch;
-- the staged file list;
+Every AI reply that changes the repository or GitHub ends with:
+
+- the Issue and PR it worked on;
+- a summary of the changes made in that reply;
 - validation results;
-- the next checkpoint;
-- a `git commit` command in a runnable shell block: one subject line and the co-author trailer, no body.
-
-**AI MUST NOT commit.** The user runs the command. Once the commit exists, AI MAY push the current branch, open or update the PR, and move the Project item to `In review`. AI MUST report every branch, Issue, and PR it creates.
+- every Issue, branch, commit, and PR it created.
 
 AI MUST NOT merge without explicit authorisation. After merge, AI SHOULD verify Issue closure, set the Project item to `Done`, and delete the branch.
