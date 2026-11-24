@@ -1,64 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { parseBlogView, safeBlogReturnPath } from "@/features/post/blog-view";
-import {
-  groupByYear,
-  planFullLayout,
-} from "@/features/post/components/public/full-layout";
-
-const covered = (slug: string) => ({ slug, cover: {} });
-const bare = (slug: string) => ({ slug, cover: null });
-
-/** Compact form of a plan: kind and slugs, with the row cover side. */
-function shape(posts: { slug: string; cover: unknown }[]) {
-  return planFullLayout(posts).map((block) => {
-    switch (block.kind) {
-      case "pair":
-        return `pair:${block.posts.map((post) => post.slug).join("+")}`;
-      case "row":
-        return `row:${block.post.slug}:${block.coverSide}`;
-      default:
-        return `${block.kind}:${block.post.slug}`;
-    }
-  });
-}
-
-describe("full view rotation (FR-BLOG-15)", () => {
-  it("leads, then cycles pair, row, row with alternating rows", () => {
-    const posts = ["a", "b", "c", "d", "e", "f", "g", "h"].map(covered);
-
-    expect(shape(posts)).toEqual([
-      "lead:a",
-      "pair:b+c",
-      "row:d:end",
-      "row:e:start",
-      "pair:f+g",
-      "row:h:end",
-    ]);
-  });
-
-  it("renders a coverless post as a quote without advancing the cycle", () => {
-    expect(
-      shape([bare("a"), covered("b"), covered("c"), bare("d"), covered("e")]),
-    ).toEqual(["quote:a", "pair:b+c", "quote:d", "row:e:end"]);
-  });
-
-  it("renders a pair left with one post as a row", () => {
-    expect(shape([covered("a"), covered("b"), bare("c")])).toEqual([
-      "lead:a",
-      "row:b:end",
-      "quote:c",
-    ]);
-    expect(shape([covered("a"), covered("b")])).toEqual([
-      "lead:a",
-      "row:b:end",
-    ]);
-  });
-
-  it("plans nothing for an empty page", () => {
-    expect(planFullLayout([])).toEqual([]);
-  });
-});
+import { groupByYear } from "@/features/post/components/public/group-by-year";
 
 describe("compact view grouping (FR-BLOG-16)", () => {
   it("groups by UTC publication year, keeping order", () => {

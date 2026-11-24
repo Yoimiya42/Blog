@@ -43,6 +43,7 @@ import {
   type PostFormValues,
 } from "../server/post.actions";
 import { CoverField, type CoverValue } from "./cover-field";
+import { PinField } from "./pin-field";
 import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
 import {
   EditorBackdrop,
@@ -59,7 +60,14 @@ const AUTOSAVE_INTERVAL_MS = 10_000;
 const STATS_DELAY_MS = 400;
 
 /** Fields compared against the last save; content is tracked by autosave. */
-const TRACKED_FIELDS = ["title", "slug", "summary", "tags", "coverId"] as const;
+const TRACKED_FIELDS = [
+  "title",
+  "slug",
+  "summary",
+  "tags",
+  "coverId",
+  "pinned",
+] as const;
 
 /**
  * Mirrors `TAGS_PER_POST_MAX` in the tag module, checked by a unit test. The
@@ -98,6 +106,8 @@ interface PostFormProps {
   background?: EditorBackgroundConfig;
   /** The stored list cover (FR-ADMIN-28). */
   initialCover?: CoverValue | null;
+  /** Whether the post is pinned (FR-ADMIN-29). */
+  initialPinned?: boolean;
 }
 
 /** Stands in when the page passes no background, so the hook always runs. */
@@ -163,6 +173,7 @@ export function PostForm({
   focusTitle = false,
   background: backgroundConfig,
   initialCover = null,
+  initialPinned = false,
 }: PostFormProps) {
   const background = useEditorBackground(backgroundConfig ?? NO_BACKGROUND);
   const initialState: PostFormState = {
@@ -555,6 +566,12 @@ export function PostForm({
             error={fieldErrors.coverId}
             imageUpload={imageUpload}
             initial={initialCover}
+            onChange={checkDirty}
+          />
+
+          <PinField
+            error={fieldErrors.pinned}
+            initial={initialPinned}
             onChange={checkDirty}
           />
 

@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.51 · 2026-11-24 · Draft
+> v0.52 · 2026-11-24 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -165,7 +165,7 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 
 | ID | Requirement | Version | Acceptance |
 |---|---|---|---|
-| FR-BLOG-01 | Post list, reverse-chronological, paginated | v1 | 10 per page; title, summary, date, tags, reading time. Visitors switch between the full view (FR-BLOG-15) and the compact view (FR-BLOG-16); the choice persists per browser and defaults to full. The page never renders one view and then swaps to the other. Tag archives use the same views |
+| FR-BLOG-01 | Post list, reverse-chronological, paginated | v1 | 10 per page; title, summary, date, tags, reading time. Visitors switch between the full view (FR-BLOG-15) and the compact view (FR-BLOG-16) with two icon buttons beside the page title, each with a tooltip and an accessible name; the choice persists per browser and defaults to full. The page never renders one view and then swaps to the other. Tag archives use the same views |
 | FR-BLOG-02 | Post detail | v1 | CJK typography at line-height 1.75+, 17–18px |
 | FR-BLOG-03 | Code highlighting | v1 | Python, TS, Java, C, C++, Go; language label, copy button. C++ uses the C grammar (ADR-0028) |
 | FR-BLOG-04 | Tags and tag archive | v1 | Many tags per post, at most 10. The owner enters comma-separated tag names in the post form; an unknown name creates the tag. Archives list published posts only |
@@ -179,9 +179,9 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 | FR-BLOG-12 | RSS | v1.5 | |
 | FR-BLOG-13 | Structured article content | v1 | Store only versioned TipTap JSON; validate it against `article-content-schema.md`; treat HTML and Markdown as derived exports |
 | FR-BLOG-14 | Post cover | v1 | One optional library image per post, set in FR-ADMIN-28. Rendered with explicit dimensions and the `Media` alt text. Used by the list views only; the post page is unchanged. A deleted image leaves the post without a cover |
-| FR-BLOG-15 | Full list view | v1 | Position sets the card type, not the post. The first post on each page is a lead card: wide cover, large title, summary, tags, date, reading time. Later posts cycle through a pair (two vertical cards, cover on top, title, date, tags, no summary) and two rows (small square cover beside title, date, and summary, the cover side alternating). A post without a cover renders as a quote card wherever it falls: the summary set large in the serif face, then title and date; without a summary, the title is set large. A pair left with one post renders it as a row. One column below the desktop breakpoint |
+| FR-BLOG-15 | Full list view | v1 | Posts in date order in a uniform card grid: two columns from the 40rem breakpoint, one below. Every card has the same structure inside a bordered container: a 16:9 cover, date and reading time, title, a summary clipped to two lines, and tags. A post without a cover shows a placeholder of the same size with its title in the serif face. The card is one link; tags remain separate links. On the blog index, pinned posts (FR-BLOG-17) appear above the grid on page 1 and are left out of the grid |
 | FR-BLOG-16 | Compact list view | v1 | Grouped by publication year, newest first, with the year shown once. Each row shows the `MM-DD` date close beside the title. One vertical line joins every row's dot within a year. Tags and reading time are hidden. Hover or keyboard focus highlights the row and reveals the summary under the title. On touch, the first tap reveals the summary and the second opens the post |
-| FR-BLOG-17 | Pinned posts | v1.5 | The owner pins up to 3 posts. Pinned posts show above page 1 of the full view in a treatment more prominent than the lead card, and leave the rotation below. The treatment and the pin field are designed when this is scheduled |
+| FR-BLOG-17 | Pinned posts | v1 | The owner pins up to 3 posts (FR-ADMIN-29); the most recently pinned comes first. Page 1 of the blog index full view shows published pinned posts above the grid as wide cards: cover beside the text, larger title, full summary, tags, and a pin mark. The grid and its pagination leave them out. The compact view and tag archives list them in date order. A pinned draft keeps its pin and is hidden from visitors |
 
 ### 4.3 Moments (FR-MOMENT)
 
@@ -282,6 +282,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-26 | Immersive editor background | v1 | A background image covers the viewport behind the edit view at one of five visibility tiers: Off, 25%, 50%, 75%, 100%. A post opens with the default from FR-ADMIN-27 unless it has its own choice. The editor control picks a library image or uploads one, sets the tier, or removes the image for this post only; it shows whether the post uses the default and resets the post to it. With a background active, the admin header, editor header row, editor card, toolbar, and settings sidebar render as frosted glass; text keeps WCAG AA contrast at every tier. Without `backdrop-filter` support or with reduced transparency, panels render solid. Choices render on first paint and are shared across devices; they never change a post's `updatedAt`. The preview and other admin pages are unchanged. A deleted image returns the editor to the plain canvas. See ADR-0031 and ADR-0032 |
 | FR-ADMIN-27 | Admin settings | v1 | `/admin/settings`, linked from the admin navigation and the command palette, holds owner defaults. Its Editor section sets the default editor background image and visibility tier used by every post without its own choice (FR-ADMIN-26). Later appearance options join this section |
 | FR-ADMIN-28 | Post cover selection | v1 | The editor settings sidebar shows the cover (FR-BLOG-14) and sets, replaces, or removes it from the library or a new upload. The cover is a post field and saves with the post. Post list rows (FR-ADMIN-20) show it as a small thumbnail when set |
+| FR-ADMIN-29 | Pin posts | v1 | The editor settings sidebar has a Pinned switch that saves with the post (FR-BLOG-17). Pinning a fourth post is refused with a field error that names the limit. Post list rows (FR-ADMIN-20) show a pin icon on pinned posts |
 
 ---
 
@@ -389,6 +390,7 @@ model Post {
   contentSchemaVersion Int @default(1)
   coverId     String?
   cover       Media?     @relation(fields: [coverId], references: [id])
+  pinnedAt    DateTime?
   status      PubStatus  @default(DRAFT)
   visibility  Visibility @default(PUBLIC)   // reserved; PUBLIC in v1
   publishedAt DateTime?
@@ -534,7 +536,7 @@ Issue #38 implements only these tables. Every other field in the logical model i
 
 | Table | Fields |
 |---|---|
-| `Post` | `id`, `slug`, `title`, `summary`, `content`, `contentSchemaVersion`, `coverId`, `status`, `publishedAt`, `createdAt`, `updatedAt`, `deletedAt` |
+| `Post` | `id`, `slug`, `title`, `summary`, `content`, `contentSchemaVersion`, `coverId`, `pinnedAt`, `status`, `publishedAt`, `createdAt`, `updatedAt`, `deletedAt` |
 | `Tag` | `id`, `slug`, `name` |
 | `PostTag` | `postId`, `tagId` |
 | `Media` | `id`, `storageKey`, `mimeType`, `width`, `height`, `sizeBytes`, `alt`, `gpsLatitude`, `gpsLongitude`, `createdAt`, `updatedAt`, `deletedAt` |
@@ -547,6 +549,7 @@ Issue #38 implements only these tables. Every other field in the logical model i
 - `Post` deletion is soft through `deletedAt`. A deleted post is hidden from every read and releases its slug.
 - `Tag` is a lookup table: no timestamps and no soft delete. Deleting a tag removes it from every post.
 - `coverId` references `Media` and is null for no cover (FR-BLOG-14). Unlike an image in the content, a deleted cover does not block publishing; the post renders without a cover.
+- `pinnedAt` is set when the owner pins the post and null otherwise. It orders pinned posts, most recent first. At most 3 non-deleted posts carry it (FR-BLOG-17).
 - Deferred `Post` fields: `visibility`, `readingMin`, `seriesId`, `viewCount`. Reading time is derived at render.
 - `Media.width` and `height` are the displayed dimensions after EXIF orientation. `alt` is empty for a decorative image. Coordinates are owner-only. Deletion is soft through `deletedAt`; a deleted image no longer resolves and blocks publishing a post that references it.
 - Deferred `Media` fields: `blurhash`, `exif`. `url` is derived from `storageKey`, not stored.
@@ -633,7 +636,7 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Framework | Next.js App Router | 16.x | Confirmed | One application for pages, server routes, and admin |
 | Language | TypeScript, strict mode | Current compatible | Confirmed | Required for all application code |
 | Styling | Tailwind CSS plus custom CSS | v4 | Confirmed | Utilities for admin; custom CSS is allowed for the public visual system |
-| Components | shadcn/ui and Radix | Current compatible | Confirmed | Admin primitives only; do not impose the library on public pages |
+| Components | shadcn/ui and Radix | Current compatible | Confirmed | Admin UI and public interactive controls; public content layout stays custom CSS. See ADR-0034 |
 | Database | Cloudflare D1 | Current managed service | Confirmed | Relational source of truth through a Workers binding; see ADR-0009 |
 | Data access | Handwritten SQL through the D1 binding | D1 Workers API | Confirmed | Use versioned SQLite migrations and typed prepared statements; see ADR-0012 |
 | Authentication | Better Auth with email OTP | Current compatible | Confirmed | Six-digit email codes and database sessions; see ADR-0004 |
@@ -724,3 +727,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-24 | v0.48 | FR-ADMIN-26 uses a default with a per-post override; added FR-ADMIN-27 admin settings and the `PostEditorBackground` table; see ADR-0032 |
 | 2026-11-24 | v0.49 | Removed Vercel from the hosting row; Worker Previews are the only preview target |
 | 2026-11-24 | v0.51 | Added FR-BLOG-14 post cover, FR-BLOG-15 full list view, FR-BLOG-16 compact list view, and FR-ADMIN-28 cover selection to v1; FR-BLOG-01 offers both views. Added FR-BLOG-17 pinned posts to v1.5. Moved `coverId` into the v1 `Post` contract |
+| 2026-11-24 | v0.52 | FR-BLOG-15 replaces the card rotation with a uniform card grid. FR-BLOG-17 pinned posts moves to v1 with its treatment; added FR-ADMIN-29 pin posts and `pinnedAt` in the v1 `Post` contract. FR-BLOG-01 switches views with icon buttons. Public controls may use the component kit; see ADR-0034 |

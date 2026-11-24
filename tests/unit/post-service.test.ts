@@ -242,6 +242,65 @@ describe("cover", () => {
   });
 });
 
+describe("pin (FR-ADMIN-29)", () => {
+  it("pins, keeps, and unpins a post", async () => {
+    const post = await createPost();
+    expect(post.pinnedAt).toBeNull();
+
+    const pinned = await service.update(
+      OWNER,
+      post.id,
+      input({ pinned: true }),
+    );
+    if (!pinned.ok) throw new Error("expected the pin to save");
+    const pinnedAt = pinned.post.pinnedAt;
+    expect(pinnedAt).toBeInstanceOf(Date);
+
+    // Omitted or repeated keeps the original pin time.
+    const kept = await service.update(OWNER, post.id, input({ pinned: true }));
+    expect(kept).toMatchObject({ ok: true, post: { pinnedAt } });
+    expect(await service.update(OWNER, post.id, input())).toMatchObject({
+      ok: true,
+      post: { pinnedAt },
+    });
+
+    const unpinned = await service.update(
+      OWNER,
+      post.id,
+      input({ pinned: false }),
+    );
+    expect(unpinned).toMatchObject({ ok: true, post: { pinnedAt: null } });
+  });
+
+  it("refuses a fourth pin and keeps the post unchanged", async () => {
+    for (const slug of ["one", "two", "three"]) {
+      await createPost({ slug, pinned: true });
+    }
+    const fourth = await createPost({ slug: "four" });
+
+    const result = await service.update(
+      OWNER,
+      fourth.id,
+      input({ slug: "four", pinned: true }),
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { pinned: "Up to 3 posts can be pinned. Unpin one first." },
+    });
+    expect((await service.getById(OWNER, fourth.id))?.pinnedAt).toBeNull();
+
+    // An already pinned post saves while the limit is full.
+    expect(
+      await service.update(
+        OWNER,
+        "post-1",
+        input({ slug: "one", pinned: true }),
+      ),
+    ).toMatchObject({ ok: true });
+  });
+});
+
 describe("create", () => {
   it("creates a draft with a valid empty document", async () => {
     const post = await createPost({ title: "  Hello  ", summary: "   " });

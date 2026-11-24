@@ -20,6 +20,7 @@ import {
   BLANK_DRAFT_TITLE,
   BLANK_DRAFT_SLUG_PATTERN,
   isBlankDraftIdentity,
+  MAX_PINNED_POSTS,
   POST_STATUSES,
   PostAccessDeniedError,
   PostSlugTakenError,
@@ -43,6 +44,8 @@ const SLUG_TAKEN = "This slug is already used by another post.";
 const SLUG_FROZEN = "The slug cannot change after the post is published.";
 const SLUG_PLACEHOLDER = "Choose a slug before publishing.";
 const COVER_UNKNOWN = "Choose a cover from the library.";
+const PIN_LIMIT = `Up to ${MAX_PINNED_POSTS} posts can be pinned. Unpin one first.`;
+const PIN_UNREADABLE = "Pinned could not be read.";
 
 function randomHex(bytes: number): string {
   const values = new Uint8Array(bytes);
@@ -214,6 +217,24 @@ export function createPostService({
     return names === undefined ? undefined : resolveTags(names);
   }
 
+  /**
+   * FR-BLOG-17 limit. Checked before the write, not inside it: with a single
+   * owner a concurrent pin is not a real case, and public reads cap the list.
+   */
+  async function pinError(
+    pinned: unknown,
+    alreadyPinned: boolean,
+    exceptId?: string,
+  ): Promise<string | undefined> {
+    if (pinned === undefined) return undefined;
+    if (typeof pinned !== "boolean") return PIN_UNREADABLE;
+    if (!pinned || alreadyPinned) return undefined;
+
+    return (await posts.countPinned(exceptId)) >= MAX_PINNED_POSTS
+      ? PIN_LIMIT
+      : undefined;
+  }
+
   function withTags(
     result: PostMutationResult,
     resolved: Tag[] | undefined,
@@ -314,7 +335,14 @@ export function createPostService({
       const invalidContent = await checkContent(content);
       const tagNames = parseTags(input);
       const invalidCover = await coverError(input.coverId, media);
-      if (!parsed.ok || invalidContent || !tagNames.ok || invalidCover) {
+      const invalidPin = await pinError(input.pinned, false);
+      if (
+        !parsed.ok ||
+        invalidContent ||
+        !tagNames.ok ||
+        invalidCover ||
+        invalidPin
+      ) {
         return {
           ok: false,
           reason: "invalid",
@@ -323,6 +351,7 @@ export function createPostService({
             ...(invalidContent ? { content: invalidContent } : {}),
             ...(tagNames.ok ? {} : { tags: tagNames.message }),
             ...(invalidCover ? { coverId: invalidCover } : {}),
+            ...(invalidPin ? { pinned: invalidPin } : {}),
           },
         };
       }
@@ -339,6 +368,7 @@ export function createPostService({
             content,
             contentSchemaVersion: CONTENT_SCHEMA_VERSION,
             coverId: input.coverId ?? null,
+            pinnedAt: input.pinned === true ? now() : null,
             status: "DRAFT",
             publishedAt: null,
           },
@@ -384,7 +414,18 @@ export function createPostService({
           : await checkContent(input.content);
       const tagNames = parseTags(input);
       const invalidCover = await coverError(input.coverId, media);
-      if (!parsed.ok || invalidContent || !tagNames.ok || invalidCover) {
+      const invalidPin = await pinError(
+        input.pinned,
+        current.pinnedAt !== null,
+        id,
+      );
+      if (
+        !parsed.ok ||
+        invalidContent ||
+        !tagNames.ok ||
+        invalidCover ||
+        invalidPin
+      ) {
         return {
           ok: false,
           reason: "invalid",
@@ -393,12 +434,19 @@ export function createPostService({
             ...(invalidContent ? { content: invalidContent } : {}),
             ...(tagNames.ok ? {} : { tags: tagNames.message }),
             ...(invalidCover ? { coverId: invalidCover } : {}),
+            ...(invalidPin ? { pinned: invalidPin } : {}),
           },
         };
       }
 
       const patch: PostPatch = { ...parsed.fields };
       if (input.coverId !== undefined) patch.coverId = input.coverId;
+      // A repeated pin keeps its original time, so the order stays stable.
+      if (input.pinned === true && current.pinnedAt === null) {
+        patch.pinnedAt = now();
+      } else if (input.pinned === false && current.pinnedAt !== null) {
+        patch.pinnedAt = null;
+      }
       if (input.content !== undefined) {
         patch.content = input.content;
         patch.contentSchemaVersion = CONTENT_SCHEMA_VERSION;

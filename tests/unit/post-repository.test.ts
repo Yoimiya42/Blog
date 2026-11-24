@@ -68,6 +68,7 @@ describe("post repository mapping", () => {
       title: "Hello",
       summary: null,
       coverId: null,
+      pinnedAt: null,
       content: SAMPLE_DOCUMENT,
       contentSchemaVersion: 1,
       status: "DRAFT",
@@ -273,8 +274,28 @@ describe("post repository lists", () => {
     });
 
     expect(list.map((post) => post.id)).toEqual(["b", "a"]);
-    expect(await posts.countPublished("t1")).toBe(2);
-    expect(await posts.countPublished("missing")).toBe(0);
+    expect(await posts.countPublished({ tagId: "t1" })).toBe(2);
+    expect(await posts.countPublished({ tagId: "missing" })).toBe(0);
+  });
+
+  it("lists pinned posts apart from the grid (FR-BLOG-17)", async () => {
+    await posts.update("a", { pinnedAt: CREATED }, LATER);
+    await posts.update("c", { pinnedAt: LATER }, LATER);
+    // A pinned draft counts toward the limit but is never listed.
+    await posts.update("d", { pinnedAt: LATER }, LATER);
+
+    const pinned = await posts.listPinnedPublishedWithContent();
+    expect(pinned.map((post) => post.id)).toEqual(["c", "a"]);
+
+    const grid = await posts.listPublished({
+      limit: 10,
+      offset: 0,
+      excludePinned: true,
+    });
+    expect(grid.map((post) => post.id)).toEqual(["b"]);
+    expect(await posts.countPublished({ excludePinned: true })).toBe(1);
+    expect(await posts.countPinned()).toBe(3);
+    expect(await posts.countPinned("d")).toBe(2);
   });
 });
 

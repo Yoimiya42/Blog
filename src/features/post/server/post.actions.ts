@@ -160,6 +160,10 @@ export async function savePostAction(
     ...(formData.has("coverId")
       ? { coverId: readText(formData, "coverId") || null }
       : {}),
+    // And for the pin: absent keeps it.
+    ...(formData.has("pinned")
+      ? { pinned: readText(formData, "pinned") === "true" }
+      : {}),
     ...(submitted.content === undefined ? {} : { content: submitted.content }),
   };
 

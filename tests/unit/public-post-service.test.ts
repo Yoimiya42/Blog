@@ -187,6 +187,36 @@ describe("public post list", () => {
   });
 });
 
+describe("pinned posts (FR-BLOG-17)", () => {
+  it("lifts published pins out of the full view and keeps them elsewhere", async () => {
+    await insertPublished(4);
+    await posts.update("p01", { pinnedAt: NOW }, NOW);
+    await posts.update("p03", { pinnedAt: new Date(NOW.getTime() + 1) }, NOW);
+    await posts.insert(
+      post({ id: "draft", status: "DRAFT", publishedAt: null, pinnedAt: NOW }),
+      NOW,
+    );
+
+    expect((await service.listPinned()).map((entry) => entry.slug)).toEqual([
+      "p03",
+      "p01",
+    ]);
+
+    const grid = await service.listPage(1, { excludePinned: true });
+    expect(grid?.posts.map((entry) => entry.slug)).toEqual(["p04", "p02"]);
+    expect(grid?.totalPosts).toBe(2);
+
+    // The compact view lists every published post in date order.
+    const all = await service.listPage(1);
+    expect(all?.posts.map((entry) => entry.slug)).toEqual([
+      "p04",
+      "p03",
+      "p02",
+      "p01",
+    ]);
+  });
+});
+
 describe("tag archive", () => {
   beforeEach(async () => {
     await tags.insert({ id: "t1", slug: "go", name: "Go" });

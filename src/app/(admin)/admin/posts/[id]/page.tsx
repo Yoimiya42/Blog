@@ -94,6 +94,7 @@ export default async function EditPostPage({
         loadLibrary: listMediaForPickerAction,
       }}
       initialCover={initialCover}
+      initialPinned={post.pinnedAt !== null}
       initialDocument={initialDocument}
       deletedMediaIds={deletedMediaIds}
       initialMediaUrls={initialMediaUrls}

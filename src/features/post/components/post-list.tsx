@@ -3,6 +3,7 @@
 
 import {
   Eye,
+  Pin,
   Search,
   SquareArrowOutUpRight,
   type LucideIcon,
@@ -151,12 +152,20 @@ function PostRow({
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <Link
-          className="block truncate font-medium outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
-          href={`/admin/posts/${post.id}`}
-        >
-          {post.title || "Untitled"}
-        </Link>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Link
+            className="block truncate font-medium outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
+            href={`/admin/posts/${post.id}`}
+          >
+            {post.title || "Untitled"}
+          </Link>
+          {post.pinnedAt ? (
+            <>
+              <Pin aria-hidden className="size-3.5 shrink-0 text-faint" />
+              <span className="sr-only">Pinned</span>
+            </>
+          ) : null}
+        </div>
         {post.summary ? (
           <p className="mt-0.5 truncate text-sm text-muted-foreground">
             {post.summary}

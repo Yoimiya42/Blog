@@ -132,11 +132,11 @@ export function createPublicPostService({
   /** Null when `page` is beyond the last page. Page 1 always exists. */
   async function listPage(
     page: number,
-    tagId?: string,
+    filter: { tagId?: string; excludePinned?: boolean },
   ): Promise<PublicPostPage | null> {
     if (!Number.isSafeInteger(page) || page < 1) return null;
 
-    const totalPosts = await posts.countPublished(tagId);
+    const totalPosts = await posts.countPublished(filter);
     const totalPages = Math.max(
       1,
       Math.ceil(totalPosts / PUBLIC_POSTS_PER_PAGE),
@@ -146,7 +146,7 @@ export function createPublicPostService({
     const rows = await posts.listPublishedWithContent({
       limit: PUBLIC_POSTS_PER_PAGE,
       offset: (page - 1) * PUBLIC_POSTS_PER_PAGE,
-      tagId,
+      ...filter,
     });
 
     return {
@@ -158,8 +158,22 @@ export function createPublicPostService({
   }
 
   return {
-    listPage(page: number): Promise<PublicPostPage | null> {
-      return listPage(page);
+    /**
+     * The blog index. The full view passes `excludePinned`: its pinned posts
+     * sit above the grid instead (FR-BLOG-17), so pages count without them.
+     */
+    listPage(
+      page: number,
+      { excludePinned = false }: { excludePinned?: boolean } = {},
+    ): Promise<PublicPostPage | null> {
+      return listPage(page, { excludePinned });
+    },
+
+    /** FR-BLOG-17: published pinned posts with covers, most recent pin first. */
+    async listPinned(): Promise<PublicPostSummary[]> {
+      return summarise(await posts.listPinnedPublishedWithContent(), {
+        withCovers: true,
+      });
     },
 
     /** Null when the tag does not exist or `page` is out of range. */
@@ -170,7 +184,7 @@ export function createPublicPostService({
       const tag = await tags.findBySlug(tagSlug);
       if (!tag) return null;
 
-      const result = await listPage(page, tag.id);
+      const result = await listPage(page, { tagId: tag.id });
 
       return result ? { ...result, tag } : null;
     },

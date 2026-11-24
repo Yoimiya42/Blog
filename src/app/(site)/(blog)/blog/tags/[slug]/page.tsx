@@ -27,11 +27,15 @@ export default async function TagArchivePage({ params, searchParams }: Props) {
 
   return (
     <div className="blog-page">
-      <p className="blog-page__eyebrow">Tag</p>
-      <h1 className="blog-page__title">{result.tag.name}</h1>
       <PostIndex
         basePath={`/blog/tags/${result.tag.slug}`}
         emptyMessage="No published posts with this tag."
+        heading={
+          <>
+            <p className="blog-page__eyebrow">Tag</p>
+            <h1 className="blog-page__title">{result.tag.name}</h1>
+          </>
+        }
         result={result}
         view={await getBlogView()}
       />

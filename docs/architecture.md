@@ -119,7 +119,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 ### Technology baseline
 
 - Next.js 16 App Router and strict TypeScript form the application runtime.
-- Tailwind CSS v4 is the styling base. shadcn/ui and Radix are limited to admin primitives. Public pages may use custom CSS and components.
+- Tailwind CSS v4 is the styling base. shadcn/ui and Radix build the admin and public interactive controls (ADR-0034). Public content layout and typography stay in custom CSS.
   - Admin UI MUST use the components in `src/components/ui` and icon-first controls. Packages and rules: ADR-0026.
 - Cloudflare D1 is the relational source of truth. Handwritten SQLite migrations and typed prepared statements own data access. See ADR-0009 and ADR-0012.
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.

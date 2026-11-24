@@ -1,20 +1,16 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
-import { BLOG_VIEWS, type BlogView } from "../../blog-view";
-import { setBlogViewAction } from "../../server/blog-view.actions";
+import type { BlogView } from "../../blog-view";
 import type {
   PublicPostPage,
   PublicPostSummary,
 } from "../../server/public-post.service";
 import { CompactPostList, type CompactYear } from "./compact-post-list";
-import { groupByYear } from "./full-layout";
-import { FullPostList } from "./post-cards";
+import { groupByYear } from "./group-by-year";
+import { FullPostList, PinnedPosts } from "./post-cards";
 import { toCalendarDate } from "./post-meta";
-
-const VIEW_LABELS: Record<BlogView, string> = {
-  full: "Full",
-  compact: "Compact",
-};
+import { ViewSwitch } from "./view-switch";
 
 function pageHref(basePath: string, page: number): string {
   // Page 1 has one canonical URL without a query string.
@@ -55,32 +51,6 @@ function Pagination({
   );
 }
 
-/**
- * Full or compact (FR-BLOG-01). A form, so it works before scripts load; the
- * action stores the choice and returns to this page.
- */
-function ViewSwitch({ view, returnTo }: { view: BlogView; returnTo: string }) {
-  return (
-    <form action={setBlogViewAction} className="view-switch">
-      <input name="returnTo" type="hidden" value={returnTo} />
-      <div aria-label="List view" className="view-switch__group" role="group">
-        {BLOG_VIEWS.map((option) => (
-          <button
-            aria-pressed={option === view}
-            className="view-switch__option"
-            key={option}
-            name="view"
-            type="submit"
-            value={option}
-          >
-            {VIEW_LABELS[option]}
-          </button>
-        ))}
-      </div>
-    </form>
-  );
-}
-
 function toCompactYears(posts: PublicPostSummary[]): CompactYear[] {
   return groupByYear(posts).map(({ year, posts: entries }) => ({
     year,
@@ -95,28 +65,45 @@ function toCompactYears(posts: PublicPostSummary[]): CompactYear[] {
 
 /** FR-BLOG-01 list body, shared by the blog index and tag archives. */
 export function PostIndex({
+  heading,
   result,
+  pinned = [],
   basePath,
   emptyMessage,
   view,
 }: {
+  /** The page title block; the view switch sits beside it. */
+  heading: ReactNode;
   result: PublicPostPage;
+  /** FR-BLOG-17 pinned posts, full view on page 1 of the index only. */
+  pinned?: PublicPostSummary[];
   basePath: string;
   emptyMessage: string;
   view: BlogView;
 }) {
+  const empty = result.posts.length === 0 && pinned.length === 0;
+
   return (
     <>
-      {result.posts.length === 0 ? (
+      <header className="blog-page__header">
+        <div>{heading}</div>
+        {empty ? null : (
+          <ViewSwitch returnTo={pageHref(basePath, result.page)} view={view} />
+        )}
+      </header>
+      {empty ? (
         <p className="post-index__empty">{emptyMessage}</p>
+      ) : view === "compact" ? (
+        <CompactPostList years={toCompactYears(result.posts)} />
       ) : (
         <>
-          <ViewSwitch returnTo={pageHref(basePath, result.page)} view={view} />
-          {view === "compact" ? (
-            <CompactPostList years={toCompactYears(result.posts)} />
-          ) : (
-            <FullPostList posts={result.posts} />
-          )}
+          {pinned.length > 0 ? <PinnedPosts posts={pinned} /> : null}
+          {result.posts.length > 0 ? (
+            <FullPostList
+              eagerFirst={pinned.length === 0}
+              posts={result.posts}
+            />
+          ) : null}
         </>
       )}
       <Pagination
