@@ -1,4 +1,11 @@
-# Cloudflare Workers preview and rollback
+# Workers foundation rehearsal (historical)
+
+> **Historical record. Do not run these commands.** The generated `dist/server/wrangler.json` now binds `blog-production`, R2, and production secrets, so `wrangler versions upload` and `versions deploy` below would attach a branch build to production data or replace the live site. ADR-0015 replaced this procedure.
+>
+> - Branch preview: push the branch; Workers Builds runs `wrangler preview`. See [Workers Builds](cloudflare-workers-builds.md).
+> - Rollback: [Production recovery](production-recovery.md).
+
+This file keeps the Issue #29 and Issue #9 evidence. The original procedure follows unchanged.
 
 Build a committed feature branch, upload a version-addressable Workers preview, and prove that the active deployment can be restored. Use `dist/server/wrangler.json` for remote commands because vinext generates that deployment config from the repository configuration.
 

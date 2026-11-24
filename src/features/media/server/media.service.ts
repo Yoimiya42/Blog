@@ -232,8 +232,10 @@ export function createMediaService({
 
     /**
      * Deletes an item unless a post shows it and the owner has not confirmed.
-     * The row is marked first, so a failed object delete leaves an orphan
-     * object, never a live row without its object.
+     * The object goes first (ADR-0033): `/media` reads R2 without D1, so a
+     * marked row over a surviving object would leave the image public. R2
+     * deletes are idempotent, so either failure throws and leaves a live row
+     * that the same request deletes on retry.
      */
     async remove(
       actor: MediaActor,
@@ -242,26 +244,17 @@ export function createMediaService({
     ): Promise<MediaRemoval> {
       if (!isOwner(actor)) throw new MediaAccessDeniedError();
 
-      if (!(await media.findById(id))) return { kind: "not_found" };
+      const item = await media.findById(id);
+      if (!item) return { kind: "not_found" };
 
       const posts = await findReferences(id);
       if (posts.length > 0 && !confirmReferenced) {
         return { kind: "referenced", posts };
       }
 
-      const storageKey = await media.markDeleted(id, now());
-      if (storageKey === null) return { kind: "not_found" };
-
-      try {
-        await storage.delete(storageKey);
-      } catch (error) {
-        console.error(
-          JSON.stringify({
-            event: "media.orphan",
-            storageKey,
-            error: String(error),
-          }),
-        );
+      await storage.delete(item.storageKey);
+      if ((await media.markDeleted(id, now())) === null) {
+        return { kind: "not_found" };
       }
 
       console.info(
