@@ -39,7 +39,10 @@ export {
 export { DeletePostButton } from "./components/delete-post-button";
 export { NewDraftLauncher } from "./components/new-draft-launcher";
 export { PostForm } from "./components/post-form";
-export type { EditorBackgroundConfig } from "./components/editor-background";
+export {
+  EditorBackgroundSettings,
+  type EditorBackgroundConfig,
+} from "./components/editor-background";
 export { PostList } from "./components/post-list";
 export {
   PostEditorHeader,

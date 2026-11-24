@@ -128,7 +128,7 @@ export function DeleteMediaButton({
       <p className="text-sm" role="alert">
         Delete this image? It cannot be restored.
         {isBackground
-          ? " It is the editor background; the editor returns to the plain canvas."
+          ? " It is an editor background; editors that use it return to the plain canvas."
           : null}
       </p>
       <div className="flex flex-wrap gap-2">

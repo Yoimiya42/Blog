@@ -1,6 +1,6 @@
 # 0031. Editor background preference
 
-- **Status**: Accepted
+- **Status**: Accepted; per-owner scope superseded by 0032
 - **Date**: 2026-11-23
 - **Requirements**: FR-ADMIN-26
 - **Supersedes**: —

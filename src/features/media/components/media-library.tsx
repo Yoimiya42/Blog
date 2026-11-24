@@ -34,11 +34,11 @@ function formatSize(bytes: number): string {
  */
 export function MediaLibrary({
   items,
-  backgroundMediaId = null,
+  backgroundMediaIds = [],
 }: {
   items: MediaLibraryItem[];
-  /** The editor background, flagged in its detail view (FR-ADMIN-26). */
-  backgroundMediaId?: string | null;
+  /** Images used as an editor background, by the default or a post. */
+  backgroundMediaIds?: readonly string[];
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const close = useCallback(() => setOpenId(null), []);
@@ -92,7 +92,7 @@ export function MediaLibrary({
         {selected ? (
           <DialogContent className="max-w-2xl overflow-hidden p-0">
             <MediaDetail
-              isBackground={selected.id === backgroundMediaId}
+              isBackground={backgroundMediaIds.includes(selected.id)}
               item={selected}
               onDeleted={close}
             />

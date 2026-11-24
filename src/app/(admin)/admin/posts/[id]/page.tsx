@@ -7,7 +7,8 @@ import {
   getMediaService,
   listMediaForPickerAction,
   MEDIA_UPLOAD_CONFIG,
-  updateEditorBackgroundAction,
+  resetPostEditorBackgroundAction,
+  updatePostEditorBackgroundAction,
 } from "@/features/media";
 import {
   collectMediaReferences,
@@ -35,7 +36,7 @@ export default async function EditPostPage({
     service.listTags(session, post.id),
     service.listAllTags(session),
     getEditorBackgroundService().then((backgrounds) =>
-      backgrounds.get(session),
+      backgrounds.getForPost(session, post.id),
     ),
   ]);
 
@@ -68,7 +69,9 @@ export default async function EditPostPage({
       background={{
         initial: background,
         opacities: EDITOR_BACKGROUND_OPACITIES,
-        save: updateEditorBackgroundAction,
+        // Bound to this post: changes here never touch the default.
+        save: updatePostEditorBackgroundAction.bind(null, post.id),
+        reset: resetPostEditorBackgroundAction.bind(null, post.id),
       }}
       focusTitle={post.status === "DRAFT" && isBlankDraftIdentity(post)}
       headerActions={<DeletePostButton postId={post.id} title={post.title} />}
