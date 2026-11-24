@@ -6,6 +6,8 @@ import { requireOwner } from "@/features/auth";
 
 import {
   getEditorBackgroundService,
+  type EditorBackgroundResult,
+  type EditorBackgroundService,
   type EditorBackgroundView,
 } from "./editor-background.service";
 import {
@@ -86,26 +88,29 @@ export type EditorBackgroundActionResult =
 const BACKGROUND_MESSAGES = {
   invalid_opacity: "That visibility level is not available.",
   media_not_found: "That image is no longer in the library.",
+  post_not_found: "This post no longer exists.",
 } as const;
 
+const BACKGROUND_FAILED = "The background was not saved. Try again.";
+
+type BackgroundUpdateInput = { mediaId?: string | null; opacity?: number };
+
 /**
- * Saves the editor background (FR-ADMIN-26). The argument comes from the
- * client and is untrusted; the service validates the tier and the image. No
- * path is revalidated: the editor already shows the result, and a refresh
- * would re-render the open post form.
+ * Shared shell for the background actions: owner guard, service call, and a
+ * logged generic failure. No path is revalidated: the editor already shows the
+ * result, and a refresh would re-render the open post form.
  */
-export async function updateEditorBackgroundAction(update: {
-  mediaId?: string | null;
-  opacity?: number;
-}): Promise<EditorBackgroundActionResult> {
+async function runBackgroundAction(
+  run: (
+    service: EditorBackgroundService,
+    session: Awaited<ReturnType<typeof requireOwner>>,
+  ) => Promise<EditorBackgroundResult>,
+): Promise<EditorBackgroundActionResult> {
   const session = await requireOwner();
   const service = await getEditorBackgroundService();
 
   try {
-    const result = await service.update(session, {
-      mediaId: update.mediaId,
-      opacity: update.opacity,
-    });
+    const result = await run(service, session);
     return result.ok
       ? result
       : { ok: false, message: BACKGROUND_MESSAGES[result.reason] };
@@ -116,6 +121,47 @@ export async function updateEditorBackgroundAction(update: {
         error: String(error),
       }),
     );
-    return { ok: false, message: "The background was not saved. Try again." };
+    return { ok: false, message: BACKGROUND_FAILED };
   }
+}
+
+/**
+ * Saves the owner default (FR-ADMIN-27). The argument comes from the client
+ * and is untrusted; the service validates the tier and the image.
+ */
+export async function updateDefaultEditorBackgroundAction(
+  update: BackgroundUpdateInput,
+): Promise<EditorBackgroundActionResult> {
+  return runBackgroundAction((service, session) =>
+    service.updateDefault(session, {
+      mediaId: update.mediaId,
+      opacity: update.opacity,
+    }),
+  );
+}
+
+/**
+ * Saves one post's own background (FR-ADMIN-26, ADR-0032). The page binds
+ * `postId`; both arguments are untrusted.
+ */
+export async function updatePostEditorBackgroundAction(
+  postId: string,
+  update: BackgroundUpdateInput,
+): Promise<EditorBackgroundActionResult> {
+  return runBackgroundAction((service, session) =>
+    service.updateForPost(session, String(postId), {
+      mediaId: update.mediaId,
+      opacity: update.opacity,
+    }),
+  );
+}
+
+/** Returns one post to the owner default. `postId` is bound by the page. */
+export async function resetPostEditorBackgroundAction(
+  postId: string,
+): Promise<EditorBackgroundActionResult> {
+  return runBackgroundAction(async (service, session) => ({
+    ok: true,
+    background: await service.resetForPost(session, String(postId)),
+  }));
 }

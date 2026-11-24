@@ -406,6 +406,7 @@ export function PostForm({
                   imageUpload={imageUpload}
                   opacities={backgroundConfig.opacities}
                   pending={background.pending}
+                  reset={background.reset}
                   state={background.state}
                 />
               ) : null}

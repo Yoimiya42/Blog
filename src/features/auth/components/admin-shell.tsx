@@ -9,6 +9,7 @@ const navigation = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/posts", label: "Posts" },
   { href: "/admin/media", label: "Media" },
+  { href: "/admin/settings", label: "Settings" },
 ] as const;
 
 /** `search` is the command palette, injected by the admin layout. */

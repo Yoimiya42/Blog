@@ -95,6 +95,7 @@ describe("schema v1 matrix completeness", () => {
         "CODE_LANGUAGES",
         "CONTENT_SCHEMA_VERSION",
         "DeletePostButton",
+        "EditorBackgroundSettings",
         "EMPTY_ARTICLE_DOCUMENT",
         "POST_SLUG_MAX_LENGTH",
         "POST_STATUSES",

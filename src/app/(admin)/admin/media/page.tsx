@@ -7,19 +7,18 @@ import {
 
 export default async function AdminMediaPage() {
   const session = await requireOwner();
-  const [items, background] = await Promise.all([
+  const [items, backgroundIds] = await Promise.all([
     getMediaService().then((service) => service.list(session)),
-    getEditorBackgroundService().then((service) => service.get(session)),
+    getEditorBackgroundService().then((service) =>
+      service.listMediaIdsInUse(session),
+    ),
   ]);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">Media</h1>
       <div className="mt-8">
-        <MediaLibrary
-          backgroundMediaId={background.image?.mediaId ?? null}
-          items={items}
-        />
+        <MediaLibrary backgroundMediaIds={[...backgroundIds]} items={items} />
       </div>
     </div>
   );

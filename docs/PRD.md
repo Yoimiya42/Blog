@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.47 · 2026-11-23 · Draft
+> v0.48 · 2026-11-24 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -275,7 +275,8 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-22 | Styled system pages | v1 | Not-found, error, and loading states use the site tokens. A non-owner `/admin` request gets the same not-found page as any unknown URL |
 | FR-ADMIN-23 | Writing comfort | v1 | New post opens a stored blank draft, so autosave starts at once (ADR-0030). The editor body uses the public article typography and shows a placeholder when empty. The title field wraps. The editor header shows save state; word count and reading time show in the settings sidebar. Ctrl or Cmd+. toggles a focus mode that hides the admin navigation and the settings sidebar and widens the writing card to the editor header width |
 | FR-ADMIN-24 | Link text and address | v1 | The Link control, Ctrl or Cmd+K, opens a text and address pair at the cursor, written as `[text](address)`, with or without a selection. Editing a link changes both. Pasting a bare address inserts it as a link and opens the pair with the text empty. Empty text keeps the address as the text. A bare domain gains `https://`. Typing `[text](address)` converts to a link |
-| FR-ADMIN-26 | Immersive editor background | v1 | The owner picks one library image, or uploads one, as the edit-view background. It covers the viewport behind the editor at one of five visibility tiers: Off, 25%, 50%, 75%, 100%. With a background active, the admin header, editor card, toolbar, and settings sidebar render as frosted glass; text keeps WCAG AA contrast at every tier. Without `backdrop-filter` support or with reduced transparency, panels render solid. The choice is stored per owner, renders on first paint, and is shared across devices. The preview and other admin pages are unchanged. Deleting the active background returns the editor to the plain canvas. See ADR-0031 |
+| FR-ADMIN-26 | Immersive editor background | v1 | A background image covers the viewport behind the edit view at one of five visibility tiers: Off, 25%, 50%, 75%, 100%. A post opens with the default from FR-ADMIN-27 unless it has its own choice. The editor control picks a library image or uploads one, sets the tier, or removes the image for this post only; it shows whether the post uses the default and resets the post to it. With a background active, the admin header, editor header row, editor card, toolbar, and settings sidebar render as frosted glass; text keeps WCAG AA contrast at every tier. Without `backdrop-filter` support or with reduced transparency, panels render solid. Choices render on first paint and are shared across devices; they never change a post's `updatedAt`. The preview and other admin pages are unchanged. A deleted image returns the editor to the plain canvas. See ADR-0031 and ADR-0032 |
+| FR-ADMIN-27 | Admin settings | v1 | `/admin/settings`, linked from the admin navigation and the command palette, holds owner defaults. Its Editor section sets the default editor background image and visibility tier used by every post without its own choice (FR-ADMIN-26). Later appearance options join this section |
 
 ---
 
@@ -533,6 +534,7 @@ Issue #38 implements only these tables. Every other field in the logical model i
 | `PostTag` | `postId`, `tagId` |
 | `Media` | `id`, `storageKey`, `mimeType`, `width`, `height`, `sizeBytes`, `alt`, `gpsLatitude`, `gpsLongitude`, `createdAt`, `updatedAt`, `deletedAt` |
 | `EditorBackground` | `userId`, `mediaId`, `opacity`, `updatedAt` |
+| `PostEditorBackground` | `postId`, `mediaId`, `opacity`, `updatedAt` |
 
 - `status` accepts `DRAFT` and `PUBLISHED` only. `SCHEDULED` and `ARCHIVED` are deferred with FR-ADMIN-07 scheduling.
 - `publishedAt` is set on first publication and survives unpublishing. `slug` is immutable once `publishedAt` is set.
@@ -543,6 +545,7 @@ Issue #38 implements only these tables. Every other field in the logical model i
 - `Media.width` and `height` are the displayed dimensions after EXIF orientation. `alt` is empty for a decorative image. Coordinates are owner-only. Deletion is soft through `deletedAt`; a deleted image no longer resolves and blocks publishing a post that references it.
 - Deferred `Media` fields: `blurhash`, `exif`. `url` is derived from `storageKey`, not stored.
 - `EditorBackground` holds one row per owner (FR-ADMIN-26). `mediaId` is null for no background; `opacity` is `0`, `25`, `50`, `75`, or `100`. A deleted `Media` row stays referenced and no longer resolves.
+- `EditorBackground` is the owner default. `PostEditorBackground` holds a post's own choice and overrides the default; deleting the row returns the post to the default. It lives outside `Post`, so it never changes `Post.updatedAt`.
 
 Open question: repeat experiences collapse into one record with a single `finishedAt`. Multiple occurrences need a separate `ItemLog` table. See OQ-06.
 
@@ -712,3 +715,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-23 | v0.45 | FR-ADMIN-03 adds the quote control and quote styling |
 | 2026-11-23 | v0.46 | Added FR-ADMIN-26 immersive editor background and the `EditorBackground` table; see ADR-0031 |
 | 2026-11-23 | v0.47 | FR-ADMIN-03 centres the Edit and Preview toggle; FR-ADMIN-23 moves word count and reading time to the settings sidebar and widens the focus-mode card |
+| 2026-11-24 | v0.48 | FR-ADMIN-26 uses a default with a per-post override; added FR-ADMIN-27 admin settings and the `PostEditorBackground` table; see ADR-0032 |

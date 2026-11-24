@@ -6,9 +6,10 @@ import {
   Image as ImageIcon,
   LayoutGrid,
   LoaderCircle,
+  type LucideIcon,
   Plus,
   Search,
-  type LucideIcon,
+  Settings,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -46,6 +47,7 @@ const PAGES: { label: string; href: string; icon: LucideIcon }[] = [
   { label: "Overview", href: "/admin", icon: LayoutGrid },
   { label: "Posts", href: "/admin/posts", icon: FileText },
   { label: "Media", href: "/admin/media", icon: ImageIcon },
+  { label: "Settings", href: "/admin/settings", icon: Settings },
   { label: "View site", href: "/", icon: ExternalLink },
 ];
 

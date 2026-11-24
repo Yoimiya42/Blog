@@ -27,7 +27,9 @@ export {
 } from "./server/media.service";
 export {
   listMediaForPickerAction,
-  updateEditorBackgroundAction,
+  resetPostEditorBackgroundAction,
+  updateDefaultEditorBackgroundAction,
+  updatePostEditorBackgroundAction,
   type EditorBackgroundActionResult,
   type MediaPickerItem,
 } from "./server/media.actions";
