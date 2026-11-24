@@ -2,6 +2,8 @@
 /* eslint-disable @next/next/no-img-element -- Cloudflare Images serves fixed widths (ADR-0021). */
 
 import {
+  CircleSlash,
+  Ellipsis,
   Eye,
   Pin,
   Search,
@@ -9,9 +11,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "@/components/ui/toast";
 import {
   Tooltip,
   TooltipContent,
@@ -21,10 +31,12 @@ import {
 
 import {
   POST_STATUSES,
+  toPostVersion,
   type PostsByStatus,
   type PostStatus,
   type PostSummary,
 } from "../schema";
+import { unpublishPostAction } from "../server/post.actions";
 
 const GROUP_LABELS: Record<PostStatus, { heading: string; empty: string }> = {
   DRAFT: { heading: "Drafts", empty: "No drafts." },
@@ -119,9 +131,9 @@ export function PostList({
 }
 
 /**
- * The whole row opens the editor: the title link stretches over it. Actions
+ * The whole row opens the post: the title link stretches over it. Actions
  * sit above that layer, share one icon style, and keep their column for a
- * draft, which has no public page yet.
+ * draft, which has no public page or menu yet.
  */
 function PostRow({
   post,
@@ -188,17 +200,69 @@ function PostRow({
           label="Preview"
         />
         {post.status === "PUBLISHED" ? (
-          <RowAction
-            external
-            href={`/blog/${post.slug}`}
-            icon={SquareArrowOutUpRight}
-            label="View on site"
-          />
+          <>
+            <RowAction
+              external
+              href={`/blog/${post.slug}`}
+              icon={SquareArrowOutUpRight}
+              label="View on site"
+            />
+            <RowMenu post={post} />
+          </>
         ) : (
-          <span aria-hidden className="size-9" />
+          <span aria-hidden className="w-18" />
         )}
       </div>
     </li>
+  );
+}
+
+/** Less frequent actions on a published post (FR-ADMIN-20). */
+function RowMenu({ post }: { post: PostSummary }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+
+  function unpublish() {
+    startTransition(async () => {
+      const result = await unpublishPostAction(
+        post.id,
+        toPostVersion(post.updatedAt),
+      );
+      if (!result.ok) {
+        toast(result.message, "error");
+        return;
+      }
+      toast("Unpublished");
+      // The row moves to Drafts once the list renders again.
+      router.refresh();
+    });
+  }
+
+  return (
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              aria-label="More actions"
+              className="text-muted-foreground hover:text-foreground"
+              disabled={pending}
+              size="icon"
+              variant="ghost"
+            >
+              <Ellipsis />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>More</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={unpublish}>
+          <CircleSlash />
+          Unpublish
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

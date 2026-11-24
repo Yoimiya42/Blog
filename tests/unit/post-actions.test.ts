@@ -39,6 +39,7 @@ import {
   createBlankDraftAction,
   deletePostAction,
   savePostAction,
+  unpublishPostAction,
   type PostFormState,
 } from "@/features/post/server/post.actions";
 
@@ -527,6 +528,36 @@ describe("autosavePostAction", () => {
 
     expect(response).toEqual({ ok: false, reason: "invalid" });
     expect(service.autosave).not.toHaveBeenCalled();
+  });
+});
+
+describe("unpublishPostAction", () => {
+  it("unpublishes under the row token and refreshes public reads", async () => {
+    service.unpublish.mockResolvedValue({ ok: true, post: STORED });
+
+    expect(await unpublishPostAction("post-1", "1000")).toEqual({ ok: true });
+    expect(service.unpublish).toHaveBeenCalledWith(SESSION, "post-1", {
+      ifUpdatedAt: new Date(1_000),
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/posts");
+    expect(revalidatePath).toHaveBeenCalledWith("/blog", "layout");
+  });
+
+  it("reports a stale row without refreshing", async () => {
+    service.unpublish.mockResolvedValue({ ok: false, reason: "conflict" });
+
+    expect(await unpublishPostAction("post-1", "1000")).toMatchObject({
+      ok: false,
+      message: expect.stringContaining("changed"),
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing token before the service is reached", async () => {
+    expect(await unpublishPostAction("post-1", "")).toMatchObject({
+      ok: false,
+    });
+    expect(service.unpublish).not.toHaveBeenCalled();
   });
 });
 

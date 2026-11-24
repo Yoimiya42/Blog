@@ -21,6 +21,8 @@ const FIX_FIELDS = "Fix the highlighted fields and save again.";
 const POST_GONE = "This post no longer exists.";
 const POST_CHANGED =
   "This post changed in another tab or window. Reload the page before saving again.";
+const LIST_STALE =
+  "This post changed in another tab or window. Reload the list and try again.";
 
 export interface PostFormValues {
   title: string;
@@ -261,6 +263,39 @@ export async function autosavePostAction(
   return result.ok
     ? { ok: true, version: toPostVersion(result.updatedAt) }
     : { ok: false, reason: result.reason };
+}
+
+export type UnpublishResponse = { ok: true } | { ok: false; message: string };
+
+/**
+ * Unpublishes from the post list row menu (FR-ADMIN-20). The row's version
+ * token makes it conditional, so a post edited elsewhere is not withdrawn
+ * unseen.
+ */
+export async function unpublishPostAction(
+  postId: string,
+  version: string,
+): Promise<UnpublishResponse> {
+  const session = await requireOwner();
+
+  const ifUpdatedAt = fromPostVersion(version);
+  if (typeof postId !== "string" || !ifUpdatedAt) {
+    return { ok: false, message: LIST_STALE };
+  }
+
+  const result = await (
+    await getPostService()
+  ).unpublish(session, postId, { ifUpdatedAt });
+  if (!result.ok) {
+    return {
+      ok: false,
+      message: result.reason === "not_found" ? POST_GONE : LIST_STALE,
+    };
+  }
+
+  revalidatePath(POSTS_PATH);
+  revalidatePublicReads();
+  return { ok: true };
 }
 
 /** New post (ADR-0030): opens a stored blank draft in the editor. */
