@@ -230,9 +230,16 @@
     grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
   }
 
+  /* The text sets the height; the image fills it instead of its own ratio. */
   .formal .post-card--pinned .post-card__media {
+    position: relative;
     aspect-ratio: auto;
     min-height: 13rem;
+  }
+
+  .formal .post-card--pinned .post-card__media img {
+    position: absolute;
+    inset: 0;
   }
 
   .formal .post-card--pinned .post-card__body {
