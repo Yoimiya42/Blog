@@ -20,6 +20,7 @@ import {
   BLANK_DRAFT_TITLE,
   BLANK_DRAFT_SLUG_PATTERN,
   isBlankDraftIdentity,
+  MAX_PINNED_POSTS,
   POST_STATUSES,
   PostAccessDeniedError,
   PostSlugTakenError,
@@ -42,6 +43,9 @@ export type PostActor = { user: { role?: unknown } } | null | undefined;
 const SLUG_TAKEN = "This slug is already used by another post.";
 const SLUG_FROZEN = "The slug cannot change after the post is published.";
 const SLUG_PLACEHOLDER = "Choose a slug before publishing.";
+const COVER_UNKNOWN = "Choose a cover from the library.";
+const PIN_LIMIT = `Up to ${MAX_PINNED_POSTS} posts can be pinned. Unpin one first.`;
+const PIN_UNREADABLE = "Pinned could not be read.";
 
 function randomHex(bytes: number): string {
   const values = new Uint8Array(bytes);
@@ -106,6 +110,24 @@ async function contentError(
   const [first] = result.issues;
 
   return first ? `${first.path}: ${first.message}` : "Invalid content.";
+}
+
+/**
+ * A cover must name stored media. A deleted image is accepted, like a deleted
+ * image in the content, so the post stays saveable (ADR-0025); it simply no
+ * longer renders.
+ */
+async function coverError(
+  coverId: unknown,
+  media: MediaReferenceResolver | undefined,
+): Promise<string | undefined> {
+  if (coverId === undefined || coverId === null) return undefined;
+  if (typeof coverId !== "string" || coverId === "") return COVER_UNKNOWN;
+  if (!media) return undefined;
+
+  return (await media.findKnown([coverId])).has(coverId)
+    ? undefined
+    : COVER_UNKNOWN;
 }
 
 type ParsedTags =
@@ -193,6 +215,24 @@ export function createPostService({
     names: string[] | undefined,
   ): Promise<Tag[] | undefined> {
     return names === undefined ? undefined : resolveTags(names);
+  }
+
+  /**
+   * FR-BLOG-17 limit. Checked before the write, not inside it: with a single
+   * owner a concurrent pin is not a real case, and public reads cap the list.
+   */
+  async function pinError(
+    pinned: unknown,
+    alreadyPinned: boolean,
+    exceptId?: string,
+  ): Promise<string | undefined> {
+    if (pinned === undefined) return undefined;
+    if (typeof pinned !== "boolean") return PIN_UNREADABLE;
+    if (!pinned || alreadyPinned) return undefined;
+
+    return (await posts.countPinned(exceptId)) >= MAX_PINNED_POSTS
+      ? PIN_LIMIT
+      : undefined;
   }
 
   function withTags(
@@ -294,7 +334,15 @@ export function createPostService({
       const content = input.content ?? EMPTY_ARTICLE_DOCUMENT;
       const invalidContent = await checkContent(content);
       const tagNames = parseTags(input);
-      if (!parsed.ok || invalidContent || !tagNames.ok) {
+      const invalidCover = await coverError(input.coverId, media);
+      const invalidPin = await pinError(input.pinned, false);
+      if (
+        !parsed.ok ||
+        invalidContent ||
+        !tagNames.ok ||
+        invalidCover ||
+        invalidPin
+      ) {
         return {
           ok: false,
           reason: "invalid",
@@ -302,6 +350,8 @@ export function createPostService({
             ...(parsed.ok ? {} : parsed.fieldErrors),
             ...(invalidContent ? { content: invalidContent } : {}),
             ...(tagNames.ok ? {} : { tags: tagNames.message }),
+            ...(invalidCover ? { coverId: invalidCover } : {}),
+            ...(invalidPin ? { pinned: invalidPin } : {}),
           },
         };
       }
@@ -317,6 +367,8 @@ export function createPostService({
             ...parsed.fields,
             content,
             contentSchemaVersion: CONTENT_SCHEMA_VERSION,
+            coverId: input.coverId ?? null,
+            pinnedAt: input.pinned === true ? now() : null,
             status: "DRAFT",
             publishedAt: null,
           },
@@ -361,7 +413,19 @@ export function createPostService({
           ? undefined
           : await checkContent(input.content);
       const tagNames = parseTags(input);
-      if (!parsed.ok || invalidContent || !tagNames.ok) {
+      const invalidCover = await coverError(input.coverId, media);
+      const invalidPin = await pinError(
+        input.pinned,
+        current.pinnedAt !== null,
+        id,
+      );
+      if (
+        !parsed.ok ||
+        invalidContent ||
+        !tagNames.ok ||
+        invalidCover ||
+        invalidPin
+      ) {
         return {
           ok: false,
           reason: "invalid",
@@ -369,11 +433,20 @@ export function createPostService({
             ...(parsed.ok ? {} : parsed.fieldErrors),
             ...(invalidContent ? { content: invalidContent } : {}),
             ...(tagNames.ok ? {} : { tags: tagNames.message }),
+            ...(invalidCover ? { coverId: invalidCover } : {}),
+            ...(invalidPin ? { pinned: invalidPin } : {}),
           },
         };
       }
 
       const patch: PostPatch = { ...parsed.fields };
+      if (input.coverId !== undefined) patch.coverId = input.coverId;
+      // A repeated pin keeps its original time, so the order stays stable.
+      if (input.pinned === true && current.pinnedAt === null) {
+        patch.pinnedAt = now();
+      } else if (input.pinned === false && current.pinnedAt !== null) {
+        patch.pinnedAt = null;
+      }
       if (input.content !== undefined) {
         patch.content = input.content;
         patch.contentSchemaVersion = CONTENT_SCHEMA_VERSION;

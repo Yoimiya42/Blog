@@ -1,6 +1,6 @@
 # 0026. Admin component kit
 
-- **Status**: Accepted
+- **Status**: Accepted; public-page exclusion superseded by 0034
 - **Date**: 2026-11-22
 - **Requirements**: —
 - **Supersedes**: —

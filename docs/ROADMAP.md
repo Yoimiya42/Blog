@@ -66,7 +66,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | M1 — Identity live | The real homepage is live on `fangmingluan.com`; `www` redirects; a login code reaches the owner mailbox with SPF, DKIM, and DMARC passing; a mainland tester loads the homepage | #11, #18 |
 | M2 — Text blog | The owner writes and publishes a post with code blocks on a desktop browser; visitors read it on the public blog | #38, #12, #13, #15, #10, #16 |
 | M3 — Media | The owner publishes a post with a phone-taken photo uploaded from a desktop browser; the image loads from the project domain with no GPS in the served file; a mainland load result is recorded | #4, #62, #14, #63, #64 |
-| M4 — Visual identity | The owner approves a visual direction; the v1 public pages match it on production | #66, #68 |
+| M4 — Visual identity | The owner approves a visual direction; the v1 public pages match it on production | #66, #68, #94 |
 | M5 — Release gates | Every release gate below passes | #67, #58, #17, #19 |
 
 ### Scope notes
@@ -79,6 +79,8 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 - **M3 update, 2026-11-17**: ADR-0021 closes #4. Cloudflare Images on delivery replaces the deferred list above; camera exports up to 50 MB are accepted. GPS is removed in the Worker at upload and coordinates are kept owner-only. ADR-0020 makes the #62 mainland test recorded, not blocking, so #14 no longer waits for a mainland tester. #62 also selects the transform call.
 - **M3 close, 2026-11-22**: #64 shipped responsive sources and the enlarged view. #65 closed as not planned: the owner uploads Lightroom JPEG exports and phone photos, and the iOS photo picker converts HEIF to JPEG. A mainland tester loaded a post image. All exit conditions hold.
 - **M4**: #66 closes OQ-02 and is owner work with no code; it runs in parallel with M3 and is exempt from the one-branch limit. #68 applies the result after M3, through tokens and layout shells only. The milestone precedes the release gates because they measure the final appearance. The formal host stays restrained unless #66 changes that principle through the PRD.
+- **M4 addition, 2026-11-24**: #94 adds post covers and the full and compact list views (FR-BLOG-14 to FR-BLOG-16, FR-ADMIN-28). It ships the `coverId` migration and list layouts; #68 supplies the tokens they use.
+- **M4 revision, 2026-11-24**: Owner review of #94 replaced the card rotation with a uniform grid and moved pinned posts (FR-BLOG-17, FR-ADMIN-29) from v1.5 into #94, so the grid keeps a prominent slot. #94 adds the `pinnedAt` migration.
 - **M5**: Formerly M4. #67 moves the performance budgets into CI and may run whenever a feature branch is blocked on owner input. #58 resolves TD-002 before the site is promoted. #17 is the final audit; per-change checks moved to the PR template.
 - **Desktop acceptance, 2026-11-14**: v1 accepts the admin on a desktop browser. Phone acceptance left #12, #13, #14, and #19 and moved to #50 in v1.5. Admin layouts stay fluid and uploads stay server-processed, so phone support needs no rework.
 
@@ -113,6 +115,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | [#65](https://github.com/Yoimiya42/Blog/issues/65) | Accept HEIC input | — | P1 | S | Not planned | #14 |
 | [#66](https://github.com/Yoimiya42/Blog/issues/66) | Decide the visual direction | M4 | P0 | M | Backlog | Owner decisions |
 | [#68](https://github.com/Yoimiya42/Blog/issues/68) | Apply the visual direction to public pages | M4 | P0 | L | Backlog | #66, M3 |
+| [#94](https://github.com/Yoimiya42/Blog/issues/94) | Add post covers and list views | M4 | P1 | L | In progress | #66 |
 | [#67](https://github.com/Yoimiya42/Blog/issues/67) | Automate performance budgets in CI | M5 | P1 | S | Backlog | — |
 | [#58](https://github.com/Yoimiya42/Blog/issues/58) | Remove the Workers Free CPU overrun dependency | M5 | P0 | M | Backlog | ADR-0019 trigger |
 | [#17](https://github.com/Yoimiya42/Blog/issues/17) | Audit security, privacy, and accessibility | M5 | P0 | M | Backlog | All feature Issues, #68 |

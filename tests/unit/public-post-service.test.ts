@@ -136,7 +136,43 @@ describe("public post list", () => {
       publishedAt: NOW,
       tags: [{ id: "t1", slug: "sqlite", name: "SQLite" }],
       readingMinutes: 1,
+      cover: null,
     });
+  });
+
+  it("resolves live covers for list pages only", async () => {
+    await db
+      .prepare(
+        `INSERT INTO media (id, storage_key, mime_type, width, height, size_bytes)
+         VALUES ('m1', 'media/m1.jpg', 'image/jpeg', 1200, 800, 100),
+                ('m2', 'media/m2.jpg', 'image/jpeg', 1200, 800, 100)`,
+      )
+      .run();
+    await posts.insert(post({ id: "live", coverId: "m1" }), NOW);
+    await posts.insert(post({ id: "gone", coverId: "m2" }), NOW);
+    await posts.insert(post({ id: "none" }), NOW);
+    const cover = {
+      url: "/media/m1.jpg?w=960",
+      srcSet: "/media/m1.jpg?w=960 960w",
+      width: 1200,
+      height: 800,
+      alt: "",
+    };
+    // m2 stands for a deleted image: the media module does not return it.
+    const resolveCovers = vi.fn(async () => ({ m1: cover }));
+    const withCovers = createPublicPostService({ posts, tags, resolveCovers });
+
+    const page = await withCovers.listPage(1);
+    const bySlug = Object.fromEntries(
+      (page?.posts ?? []).map((entry) => [entry.slug, entry.cover]),
+    );
+
+    expect(bySlug).toEqual({ live: cover, gone: null, none: null });
+    expect(resolveCovers).toHaveBeenCalledOnce();
+    expect((await withCovers.latest(3)).every((entry) => !entry.cover)).toBe(
+      true,
+    );
+    expect(resolveCovers).toHaveBeenCalledOnce();
   });
 
   it("omits reading time for an invalid stored body instead of failing", async () => {
@@ -148,6 +184,36 @@ describe("public post list", () => {
     expect(entry?.readingMinutes).toBeNull();
     expect(error).toHaveBeenCalledOnce();
     error.mockRestore();
+  });
+});
+
+describe("pinned posts (FR-BLOG-17)", () => {
+  it("lifts published pins out of the full view and keeps them elsewhere", async () => {
+    await insertPublished(4);
+    await posts.update("p01", { pinnedAt: NOW }, NOW);
+    await posts.update("p03", { pinnedAt: new Date(NOW.getTime() + 1) }, NOW);
+    await posts.insert(
+      post({ id: "draft", status: "DRAFT", publishedAt: null, pinnedAt: NOW }),
+      NOW,
+    );
+
+    expect((await service.listPinned()).map((entry) => entry.slug)).toEqual([
+      "p03",
+      "p01",
+    ]);
+
+    const grid = await service.listPage(1, { excludePinned: true });
+    expect(grid?.posts.map((entry) => entry.slug)).toEqual(["p04", "p02"]);
+    expect(grid?.totalPosts).toBe(2);
+
+    // The compact view lists every published post in date order.
+    const all = await service.listPage(1);
+    expect(all?.posts.map((entry) => entry.slug)).toEqual([
+      "p04",
+      "p03",
+      "p02",
+      "p01",
+    ]);
   });
 });
 

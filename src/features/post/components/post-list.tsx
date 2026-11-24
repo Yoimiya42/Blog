@@ -1,7 +1,9 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Cloudflare Images serves fixed widths (ADR-0021). */
 
 import {
   Eye,
+  Pin,
   Search,
   SquareArrowOutUpRight,
   type LucideIcon,
@@ -45,10 +47,21 @@ function matches(post: PostSummary, query: string): boolean {
   );
 }
 
-/** Grouped by state; filters as the owner types (FR-ADMIN-20). */
-export function PostList({ groups }: { groups: PostsByStatus }) {
+/**
+ * Grouped by state; filters as the owner types (FR-ADMIN-20). `covers` maps a
+ * post id to its cover thumbnail URL (FR-ADMIN-28).
+ */
+export function PostList({
+  groups,
+  covers = {},
+}: {
+  groups: PostsByStatus;
+  covers?: Readonly<Record<string, string>>;
+}) {
   const [query, setQuery] = useState("");
   const needle = query.trim().toLowerCase();
+  // Titles stay aligned: every row keeps the slot once any post has a cover.
+  const showCovers = Object.keys(covers).length > 0;
 
   return (
     <TooltipProvider>
@@ -89,7 +102,11 @@ export function PostList({ groups }: { groups: PostsByStatus }) {
               ) : (
                 <ul className="mt-3 divide-y divide-border overflow-hidden rounded-card border border-border bg-card">
                   {posts.map((post) => (
-                    <PostRow key={post.id} post={post} />
+                    <PostRow
+                      cover={showCovers ? (covers[post.id] ?? null) : undefined}
+                      key={post.id}
+                      post={post}
+                    />
                   ))}
                 </ul>
               )}
@@ -106,18 +123,49 @@ export function PostList({ groups }: { groups: PostsByStatus }) {
  * sit above that layer, share one icon style, and keep their column for a
  * draft, which has no public page yet.
  */
-function PostRow({ post }: { post: PostSummary }) {
+function PostRow({
+  post,
+  cover,
+}: {
+  post: PostSummary;
+  /** Undefined hides the slot; null keeps it empty. */
+  cover?: string | null;
+}) {
   const updated = post.updatedAt;
 
   return (
     <li className="relative flex items-center gap-4 py-3 pr-2 pl-4 transition-colors focus-within:bg-muted/50 hover:bg-muted/50">
-      <div className="min-w-0 flex-1">
-        <Link
-          className="block truncate font-medium outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
-          href={`/admin/posts/${post.id}`}
+      {cover === undefined ? null : (
+        <span
+          aria-hidden
+          className="block h-9 w-14 shrink-0 overflow-hidden rounded-mark bg-muted"
         >
-          {post.title || "Untitled"}
-        </Link>
+          {cover ? (
+            <img
+              alt=""
+              className="size-full object-cover"
+              decoding="async"
+              loading="lazy"
+              src={cover}
+            />
+          ) : null}
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Link
+            className="block truncate font-medium outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
+            href={`/admin/posts/${post.id}`}
+          >
+            {post.title || "Untitled"}
+          </Link>
+          {post.pinnedAt ? (
+            <>
+              <Pin aria-hidden className="size-3.5 shrink-0 text-faint" />
+              <span className="sr-only">Pinned</span>
+            </>
+          ) : null}
+        </div>
         {post.summary ? (
           <p className="mt-0.5 truncate text-sm text-muted-foreground">
             {post.summary}

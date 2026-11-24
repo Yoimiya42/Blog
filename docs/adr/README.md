@@ -41,7 +41,7 @@ Template: `template.md`.
 | [0023](0023-worker-entry-serves-media.md) | A custom Worker entry serves `/media` before vinext | `worker/index.ts` answers `/media` with year-long browser caching and delegates everything else to vinext | Accepted | 2026-11-17 |
 | [0024](0024-image-upload-endpoint.md) | Image upload through the Worker entry | `POST /api/media` checks origin and owner before reading a raw body, then strips GPS in place | Accepted | 2026-11-17 |
 | [0025](0025-media-deletion.md) | Media deletion and reference safety | Scan posts for references at delete time; confirm twice for referenced items; keep the row so saves still pass; publishing needs live media | Accepted; deletion order superseded by 0033 | 2026-11-18 |
-| [0026](0026-admin-component-kit.md) | Admin component kit | Build admin UI from shadcn/ui in `src/components/ui` with Radix, cmdk, and Lucide; icon-first controls | Accepted | 2026-11-22 |
+| [0026](0026-admin-component-kit.md) | Admin component kit | Build admin UI from shadcn/ui in `src/components/ui` with Radix, cmdk, and Lucide; icon-first controls | Accepted; public-page exclusion superseded by 0034 | 2026-11-22 |
 | [0027](0027-editor-side-code-highlighting.md) | Editor-side code highlighting with Shiki | Highlight editor code blocks in the browser with the server's Shiki theme and grammars, loaded per language | Accepted | 2026-11-22 |
 | [0028](0028-cpp-code-blocks.md) | C++ code blocks with the C grammar | Add `cpp` to schema v1 as an additive language value, highlighted with the C grammar | Accepted | 2026-11-22 |
 | [0029](0029-design-tokens.md) | Design tokens | One token vocabulary in `globals.css` for colour, radius, motion, and type; shells override values; a test bans raw palette classes | Accepted | 2026-11-22 |
@@ -49,3 +49,4 @@ Template: `template.md`.
 | [0031](0031-editor-background.md) | Editor background preference | Store one background and opacity tier per owner in D1; render it server-side with `:has()` glass whose opacity rises with the tier | Accepted; per-owner scope superseded by 0032 | 2026-11-23 |
 | [0032](0032-editor-appearance-defaults.md) | Editor appearance defaults and per-post override | `editor_background` is the owner default; `post_editor_background` holds a post's own choice outside `post`, which wins when present | Accepted | 2026-11-24 |
 | [0033](0033-delete-media-object-first.md) | Delete the media object before the row | Delete the R2 object, then mark the row; any failure is reported and the same delete retries | Accepted | 2026-11-24 |
+| [0034](0034-public-controls-use-component-kit.md) | Public controls use the component kit | Public interactive controls use `src/components/ui` and lucide icons; content layout stays custom CSS | Accepted | 2026-11-24 |

@@ -156,6 +156,14 @@ export async function savePostAction(
   const input = {
     ...fields,
     ...(formData.has("tags") ? { tags } : {}),
+    // Same rule for the cover: absent keeps it, blank removes it.
+    ...(formData.has("coverId")
+      ? { coverId: readText(formData, "coverId") || null }
+      : {}),
+    // And for the pin: absent keeps it.
+    ...(formData.has("pinned")
+      ? { pinned: readText(formData, "pinned") === "true" }
+      : {}),
     ...(submitted.content === undefined ? {} : { content: submitted.content }),
   };
 

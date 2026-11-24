@@ -28,6 +28,10 @@ export interface PostSummary {
   slug: string;
   title: string;
   summary: string | null;
+  /** List cover media id (FR-BLOG-14). It may name a deleted image. */
+  coverId: string | null;
+  /** Pin time; null when not pinned (FR-BLOG-17). */
+  pinnedAt: Date | null;
   status: PostStatus;
   publishedAt: Date | null;
   createdAt: Date;
@@ -50,6 +54,10 @@ export interface NewPost {
   summary: string | null;
   content: unknown;
   contentSchemaVersion: number;
+  /** Omitted for no cover. */
+  coverId?: string | null;
+  /** Omitted for not pinned. */
+  pinnedAt?: Date | null;
   status: PostStatus;
   publishedAt: Date | null;
 }
@@ -60,7 +68,12 @@ export interface PublishedPostQuery {
   limit: number;
   offset: number;
   tagId?: string;
+  /** Leaves pinned posts out, for the full view grid (FR-BLOG-15). */
+  excludePinned?: boolean;
 }
+
+/** FR-BLOG-17: at most this many non-deleted posts are pinned. */
+export const MAX_PINNED_POSTS = 3;
 
 export const POST_TITLE_MAX_LENGTH = 200;
 export const POST_SLUG_MAX_LENGTH = 100;
@@ -111,9 +124,14 @@ export interface PostInput {
   content?: unknown;
   /** Comma-separated tag names. Omitted to keep the stored tags. */
   tags?: string;
+  /** Media id of the cover; null removes it. Omitted to keep the stored one. */
+  coverId?: string | null;
+  /** Pins or unpins the post. Omitted to keep the stored pin. */
+  pinned?: boolean;
 }
 
-export type PostField = "title" | "slug" | "summary" | "content" | "tags";
+export type PostField =
+  "title" | "slug" | "summary" | "content" | "tags" | "coverId" | "pinned";
 
 export type PostFieldErrors = Partial<Record<PostField, string>>;
 

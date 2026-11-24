@@ -8,6 +8,7 @@ import {
 } from "@/lib/db/types";
 
 import {
+  MAX_PINNED_POSTS,
   POST_STATUSES,
   PostSlugTakenError,
   type NewPost,
@@ -24,6 +25,8 @@ interface PostSummaryRow {
   slug: string;
   title: string;
   summary: string | null;
+  cover_id: string | null;
+  pinned_at: EpochMilliseconds | null;
   status: string;
   published_at: EpochMilliseconds | null;
   created_at: EpochMilliseconds;
@@ -36,7 +39,7 @@ interface PostRow extends PostSummaryRow {
 }
 
 const SUMMARY_COLUMNS =
-  "id, slug, title, summary, status, published_at, created_at, updated_at";
+  "id, slug, title, summary, cover_id, pinned_at, status, published_at, created_at, updated_at";
 const POST_COLUMNS = `${SUMMARY_COLUMNS}, content, content_schema_version`;
 
 function toStatus(value: string): PostStatus {
@@ -52,6 +55,9 @@ function toSummary(row: PostSummaryRow): PostSummary {
     slug: row.slug,
     title: row.title,
     summary: row.summary,
+    coverId: row.cover_id,
+    pinnedAt:
+      row.pinned_at === null ? null : fromEpochMilliseconds(row.pinned_at),
     status: toStatus(row.status),
     publishedAt:
       row.published_at === null
@@ -81,6 +87,8 @@ const PATCH_COLUMNS = {
   summary: (value: string | null) => ["summary", value],
   content: (value: unknown) => ["content", JSON.stringify(value)],
   contentSchemaVersion: (value: number) => ["content_schema_version", value],
+  coverId: (value: string | null) => ["cover_id", value],
+  pinnedAt: (value: Date | null) => ["pinned_at", toNullableEpoch(value)],
   status: (value: PostStatus) => ["status", value],
   publishedAt: (value: Date | null) => ["published_at", toNullableEpoch(value)],
 } as const satisfies {
@@ -104,26 +112,34 @@ export function createPostRepository(db: D1Database) {
     }
   }
 
+  /** Shared by the published list and its count, so pages always agree. */
+  function publishedFilter(
+    query: Omit<PublishedPostQuery, "limit" | "offset">,
+  ) {
+    const conditions = ["status = 'PUBLISHED'", "deleted_at IS NULL"];
+    const values: string[] = [];
+    if (query.tagId !== undefined) {
+      conditions.push("id IN (SELECT post_id FROM post_tag WHERE tag_id = ?)");
+      values.push(query.tagId);
+    }
+    if (query.excludePinned) conditions.push("pinned_at IS NULL");
+
+    return { sql: conditions.join(" AND "), values };
+  }
+
   async function selectPublished<Row>(
     columns: string,
     query: PublishedPostQuery,
   ): Promise<Row[]> {
-    const tagFilter =
-      query.tagId === undefined
-        ? ""
-        : "AND id IN (SELECT post_id FROM post_tag WHERE tag_id = ?)";
-    const bound =
-      query.tagId === undefined
-        ? [query.limit, query.offset]
-        : [query.tagId, query.limit, query.offset];
+    const filter = publishedFilter(query);
     const { results } = await db
       .prepare(
         `SELECT ${columns} FROM post
-         WHERE status = 'PUBLISHED' AND deleted_at IS NULL ${tagFilter}
+         WHERE ${filter.sql}
          ORDER BY published_at DESC, id DESC
          LIMIT ? OFFSET ?`,
       )
-      .bind(...bound)
+      .bind(...filter.values, query.limit, query.offset)
       .all<Row>();
 
     return results;
@@ -184,8 +200,9 @@ export function createPostRepository(db: D1Database) {
         .prepare(
           `INSERT INTO post
              (id, slug, title, summary, content, content_schema_version,
-              status, published_at, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              cover_id, pinned_at, status, published_at, created_at,
+              updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING ${POST_COLUMNS}`,
         )
         .bind(
@@ -195,6 +212,8 @@ export function createPostRepository(db: D1Database) {
           post.summary,
           JSON.stringify(post.content),
           post.contentSchemaVersion,
+          post.coverId ?? null,
+          toNullableEpoch(post.pinnedAt ?? null),
           post.status,
           toNullableEpoch(post.publishedAt),
           timestamp,
@@ -326,17 +345,42 @@ export function createPostRepository(db: D1Database) {
       return rows.map(toPost);
     },
 
-    async countPublished(tagId?: string): Promise<number> {
-      const tagFilter =
-        tagId === undefined
-          ? ""
-          : "AND id IN (SELECT post_id FROM post_tag WHERE tag_id = ?)";
+    async countPublished(
+      query: Omit<PublishedPostQuery, "limit" | "offset"> = {},
+    ): Promise<number> {
+      const filter = publishedFilter(query);
+      const row = await db
+        .prepare(`SELECT count(*) AS total FROM post WHERE ${filter.sql}`)
+        .bind(...filter.values)
+        .first<{ total: number }>();
+
+      return row?.total ?? 0;
+    },
+
+    /** FR-BLOG-17: published pinned posts, most recently pinned first. */
+    async listPinnedPublishedWithContent(): Promise<Post[]> {
+      const { results } = await db
+        .prepare(
+          `SELECT ${POST_COLUMNS} FROM post
+           WHERE status = 'PUBLISHED' AND deleted_at IS NULL
+             AND pinned_at IS NOT NULL
+           ORDER BY pinned_at DESC, id DESC
+           LIMIT ?`,
+        )
+        .bind(MAX_PINNED_POSTS)
+        .all<PostRow>();
+
+      return results.map(toPost);
+    },
+
+    /** Non-deleted pinned posts of any status, other than `exceptId`. */
+    async countPinned(exceptId?: string): Promise<number> {
       const row = await db
         .prepare(
           `SELECT count(*) AS total FROM post
-           WHERE status = 'PUBLISHED' AND deleted_at IS NULL ${tagFilter}`,
+           WHERE pinned_at IS NOT NULL AND deleted_at IS NULL AND id != ?`,
         )
-        .bind(...(tagId === undefined ? [] : [tagId]))
+        .bind(exceptId ?? "")
         .first<{ total: number }>();
 
       return row?.total ?? 0;
@@ -356,24 +400,31 @@ export function createPostRepository(db: D1Database) {
     },
 
     /**
-     * Title and raw content of every non-deleted post, drafts included. Used
-     * by the media reference scan (ADR-0025); content is not validated.
+     * Title, raw content, and cover of every non-deleted post, drafts
+     * included. Used by the media reference scan (ADR-0025); content is not
+     * validated.
      */
     async listContentSources(): Promise<
-      { id: string; title: string; content: unknown }[]
+      { id: string; title: string; content: unknown; coverId: string | null }[]
     > {
       const { results } = await db
         .prepare(
-          `SELECT id, title, content FROM post
+          `SELECT id, title, content, cover_id FROM post
            WHERE deleted_at IS NULL
            ORDER BY updated_at DESC, id DESC`,
         )
-        .all<{ id: string; title: string; content: string }>();
+        .all<{
+          id: string;
+          title: string;
+          content: string;
+          cover_id: string | null;
+        }>();
 
       return results.map((row) => ({
         id: row.id,
         title: row.title,
         content: JSON.parse(row.content) as unknown,
+        coverId: row.cover_id,
       }));
     },
 

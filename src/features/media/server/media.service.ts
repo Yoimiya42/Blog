@@ -84,6 +84,22 @@ function toLibraryItem(item: Media): MediaLibraryItem {
   };
 }
 
+/**
+ * Fallback `src` for list covers (FR-BLOG-14). The widest card is the lead
+ * cover at about 26rem, so 960 is sharp on a two-times display.
+ */
+export const COVER_IMAGE_WIDTH: MediaWidth = 960;
+
+/** What a list card or admin row needs for one post cover. */
+export interface ResolvedCover {
+  url: string;
+  srcSet: string;
+  thumbnailUrl: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+
 /** What an article renderer needs for one image. */
 export interface ResolvedMedia {
   url: string;
@@ -208,6 +224,34 @@ export function createMediaService({
             zoomUrl: mediaUrl(item.storageKey, coveringWidth(item.width)),
             width: item.width,
             height: item.height,
+          },
+        ]),
+      );
+    },
+
+    /** Public read for list covers. Unknown or deleted ids are absent. */
+    async resolveCovers(
+      ids: readonly string[],
+    ): Promise<Record<string, ResolvedCover>> {
+      if (ids.length === 0) return {};
+
+      const found = await media.findDisplayByIds(ids);
+      return Object.fromEntries(
+        found.map((item) => [
+          item.id,
+          {
+            url: mediaUrl(
+              item.storageKey,
+              Math.min(
+                COVER_IMAGE_WIDTH,
+                coveringWidth(item.width),
+              ) as MediaWidth,
+            ),
+            srcSet: mediaSrcSet(item.storageKey, item.width),
+            thumbnailUrl: mediaUrl(item.storageKey, THUMBNAIL_WIDTH),
+            width: item.width,
+            height: item.height,
+            alt: item.alt,
           },
         ]),
       );

@@ -113,6 +113,7 @@ describe("schema v1 matrix completeness", () => {
         "collectMediaReferences",
         "deriveArticleContent",
         "formatTagNames",
+        "getBlogView",
         "getMediaReferenceFinder",
         "getPostService",
         "getPublicPostService",

@@ -23,12 +23,15 @@ interface MediaRow {
   updated_at: EpochMilliseconds;
 }
 
-type DisplayRow = Pick<MediaRow, "id" | "storage_key" | "width" | "height">;
+type DisplayRow = Pick<
+  MediaRow,
+  "id" | "storage_key" | "width" | "height" | "alt"
+>;
 
 const MEDIA_COLUMNS =
   "id, storage_key, mime_type, width, height, size_bytes, alt, gps_latitude, gps_longitude, created_at, updated_at";
 // Public reads never select the coordinates.
-const DISPLAY_COLUMNS = "id, storage_key, width, height";
+const DISPLAY_COLUMNS = "id, storage_key, width, height, alt";
 
 const MIME_TYPES: readonly MediaMimeType[] = [
   "image/jpeg",
@@ -65,6 +68,7 @@ function toDisplay(row: DisplayRow): MediaDisplay {
     storageKey: row.storage_key,
     width: row.width,
     height: row.height,
+    alt: row.alt,
   };
 }
 

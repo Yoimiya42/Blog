@@ -24,7 +24,9 @@ function referencesMedia(node: unknown, mediaId: string): boolean {
   );
 }
 
-/** Non-deleted posts, drafts included, whose content shows `mediaId`. */
+/**
+ * Non-deleted posts, drafts included, whose content or cover shows `mediaId`.
+ */
 export async function findPostsReferencingMedia(
   posts: Pick<PostRepository, "listContentSources">,
   mediaId: string,
@@ -32,7 +34,10 @@ export async function findPostsReferencingMedia(
   const sources = await posts.listContentSources();
 
   return sources
-    .filter((post) => referencesMedia(post.content, mediaId))
+    .filter(
+      (post) =>
+        post.coverId === mediaId || referencesMedia(post.content, mediaId),
+    )
     .map(({ id, title }) => ({ id, title }));
 }
 

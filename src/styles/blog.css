@@ -36,13 +36,141 @@
   line-height: 1.2;
 }
 
-.formal .post-index {
+/* ---- page header and view switch (FR-BLOG-01) ---- */
+
+/* The title block and the view switch share one row. */
+.formal .blog-page__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.formal .blog-page__header .blog-page__title {
+  margin-bottom: 0;
+}
+
+.formal .view-switch {
+  flex-shrink: 0;
+}
+
+/* ---- full view (FR-BLOG-15) and pinned posts (FR-BLOG-17) ---- */
+
+.formal .post-grid,
+.formal .post-pinned {
   display: grid;
-  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+.formal .post-pinned {
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 40rem) {
+  .formal .post-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Cards in one row share a height; the tags sit on the bottom edge. */
+.formal .post-grid > li,
+.formal .post-pinned > li {
+  display: flex;
+}
+
+.formal .post-card {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--card);
+}
+
+.formal .post-card:hover,
+.formal .post-card:focus-within {
+  border-color: var(--faint);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .formal .post-card {
+    transition: border-color var(--duration-base) var(--ease-enter);
+  }
+
+  .formal .post-card__media img {
+    transition: transform var(--duration-slow) var(--ease-enter);
+  }
+
+  .formal .post-card:hover .post-card__media img {
+    transform: scale(1.02);
+  }
+}
+
+.formal .post-card__media {
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--muted);
+}
+
+.formal .post-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.formal .post-card__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 1.25rem 1.5rem;
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  line-height: 1.35;
+  text-align: center;
+  color: var(--muted-foreground);
+  overflow-wrap: anywhere;
+}
+
+.formal .post-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1rem 1.125rem 1.125rem;
+}
+
+/* The heading comes first in the DOM; the date reads first on screen. */
+.formal .post-card__meta {
+  order: -1;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.25rem;
+}
+
+.formal .post-card__meta .post-meta {
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.formal .post-card__pin {
+  display: inline-flex;
+  color: var(--foreground);
+}
+
+.formal .post-card__pin svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .formal .post-card__title {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 600;
   line-height: 1.4;
 }
@@ -51,12 +179,214 @@
   text-decoration: none;
 }
 
-.formal .post-card__title a:hover {
-  text-decoration: underline;
+/* The title link covers the card; tags stay clickable above it. */
+.formal .post-card__title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.formal .post-card__title a:focus-visible {
+  outline: none;
+}
+
+.formal .post-card__title a:focus-visible::after {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
 }
 
 .formal .post-card__summary {
+  display: -webkit-box;
   margin-top: 0.375rem;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--muted-foreground);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.formal .post-card .tag-list {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+/* Pinned: wider, cover beside the text, full summary. */
+.formal .post-card--pinned .post-card__title {
+  font-size: var(--text-xl);
+  line-height: 1.35;
+}
+
+.formal .post-card--pinned .post-card__summary {
+  display: block;
+}
+
+@media (min-width: 40rem) {
+  .formal .post-card--pinned {
+    display: grid;
+    grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+  }
+
+  /* The text sets the height; the image fills it instead of its own ratio. */
+  .formal .post-card--pinned .post-card__media {
+    position: relative;
+    aspect-ratio: auto;
+    min-height: 13rem;
+  }
+
+  .formal .post-card--pinned .post-card__media img {
+    position: absolute;
+    inset: 0;
+  }
+
+  .formal .post-card--pinned .post-card__body {
+    justify-content: center;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .formal .post-card--pinned .tag-list {
+    margin-top: 0;
+  }
+}
+
+/* ---- compact view (FR-BLOG-16) ---- */
+
+.formal .timeline {
+  /* Centre of the first text line, where the dot sits. */
+  --dot-y: 1.375rem;
+  --date-column: 2.75rem;
+  --rail-column: 1.25rem;
+}
+
+.formal .timeline section + section {
+  margin-top: 1.75rem;
+}
+
+.formal .timeline__year {
+  margin-bottom: 0.25rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.formal .timeline__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--date-column) var(--rail-column) minmax(0, 1fr);
+  column-gap: 0.25rem;
+}
+
+.formal .timeline__date {
+  padding-top: 0.625rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--text-xs);
+  line-height: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--muted-foreground);
+}
+
+/* One segment per row; segments meet, so a year reads as one line. */
+.formal .timeline__rail {
+  position: relative;
+}
+
+.formal .timeline__rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 0.5px);
+  /* Same mark colour as the dots, so the year reads as one line. */
+  border-left: 1px solid var(--faint);
+}
+
+.formal .timeline__item:first-child .timeline__rail::before {
+  top: var(--dot-y);
+}
+
+.formal .timeline__item:last-child .timeline__rail::before {
+  bottom: calc(100% - var(--dot-y));
+}
+
+.formal .timeline__item:only-child .timeline__rail::before {
+  content: none;
+}
+
+.formal .timeline__rail::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--dot-y) - 0.25rem);
+  left: calc(50% - 0.25rem);
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1.5px solid var(--faint);
+  border-radius: 50%;
+  background: var(--background);
+}
+
+.formal .timeline__body {
+  min-width: 0;
+  padding: 0.625rem 0;
+}
+
+.formal .timeline__title {
+  display: block;
+  line-height: 1.5rem;
+  text-decoration: none;
+}
+
+/* The title link covers the row, so date and rail are part of the target. */
+.formal .timeline__title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.formal .timeline__item:hover .timeline__title,
+.formal .timeline__item:focus-within .timeline__title {
+  text-decoration: underline;
+}
+
+.formal .timeline__item:hover .timeline__rail::after,
+.formal .timeline__item:focus-within .timeline__rail::after,
+.formal .timeline__item[data-open] .timeline__rail::after {
+  border-color: var(--foreground);
+  background: var(--foreground);
+}
+
+/* Collapsed to a zero-height row until revealed. */
+.formal .timeline__reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+
+.formal .timeline__item:hover .timeline__reveal,
+.formal .timeline__item:focus-within .timeline__reveal,
+.formal .timeline__item[data-open] .timeline__reveal {
+  grid-template-rows: 1fr;
+}
+
+.formal .timeline__summary {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .formal .timeline__reveal {
+    transition: grid-template-rows var(--duration-slow) ease;
+  }
+
+  .formal .timeline__rail::after {
+    transition:
+      background-color var(--duration-base),
+      border-color var(--duration-base);
+  }
 }
 
 .formal .post-index__empty {

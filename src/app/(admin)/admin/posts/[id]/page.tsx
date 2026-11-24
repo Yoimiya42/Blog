@@ -50,10 +50,12 @@ export default async function EditPostPage({
   const mediaIds = initialDocument
     ? collectMediaReferences(initialDocument)
     : [];
-  const mediaService = mediaIds.length > 0 ? await getMediaService() : null;
-  const resolved = mediaService
-    ? await mediaService.resolveForArticle(mediaIds)
-    : {};
+  const mediaService =
+    mediaIds.length > 0 || post.coverId ? await getMediaService() : null;
+  const resolved =
+    mediaService && mediaIds.length > 0
+      ? await mediaService.resolveForArticle(mediaIds)
+      : {};
   const initialMediaUrls = Object.fromEntries(
     Object.entries(resolved).map(([id, media]) => [id, media.url]),
   );
@@ -63,6 +65,18 @@ export default async function EditPostPage({
     mediaService && unresolved.length > 0
       ? [...(await mediaService.findKnown(unresolved))]
       : [];
+
+  // A cover that no longer resolves was deleted; the field says so.
+  const covers =
+    mediaService && post.coverId
+      ? await mediaService.resolveCovers([post.coverId])
+      : {};
+  const initialCover = post.coverId
+    ? {
+        mediaId: post.coverId,
+        thumbnailUrl: covers[post.coverId]?.thumbnailUrl ?? null,
+      }
+    : null;
 
   return (
     <PostForm
@@ -79,6 +93,8 @@ export default async function EditPostPage({
         ...MEDIA_UPLOAD_CONFIG,
         loadLibrary: listMediaForPickerAction,
       }}
+      initialCover={initialCover}
+      initialPinned={post.pinnedAt !== null}
       initialDocument={initialDocument}
       deletedMediaIds={deletedMediaIds}
       initialMediaUrls={initialMediaUrls}

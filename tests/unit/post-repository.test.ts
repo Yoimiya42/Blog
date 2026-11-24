@@ -67,6 +67,8 @@ describe("post repository mapping", () => {
       slug: "hello",
       title: "Hello",
       summary: null,
+      coverId: null,
+      pinnedAt: null,
       content: SAMPLE_DOCUMENT,
       contentSchemaVersion: 1,
       status: "DRAFT",
@@ -76,6 +78,28 @@ describe("post repository mapping", () => {
     });
     expect(await posts.findById("post-1")).toEqual(inserted);
     expect(await posts.findBySlug("hello")).toEqual(inserted);
+  });
+
+  it("sets and clears a cover that names stored media", async () => {
+    await db
+      .prepare(
+        `INSERT INTO media (id, storage_key, mime_type, width, height, size_bytes)
+         VALUES ('m1', 'media/m1.jpg', 'image/jpeg', 1200, 800, 100)`,
+      )
+      .run();
+    await posts.insert(draft({ coverId: "m1" }), CREATED);
+
+    expect((await posts.findById("post-1"))?.coverId).toBe("m1");
+    expect((await posts.listAll())[0]?.coverId).toBe("m1");
+
+    const cleared = await posts.update("post-1", { coverId: null }, LATER);
+    expect(cleared?.coverId).toBeNull();
+  });
+
+  it("rejects a cover that names no media row", async () => {
+    await expect(
+      posts.insert(draft({ coverId: "missing" }), CREATED),
+    ).rejects.toThrow();
   });
 
   it("stores explicit column representations", async () => {
@@ -250,8 +274,28 @@ describe("post repository lists", () => {
     });
 
     expect(list.map((post) => post.id)).toEqual(["b", "a"]);
-    expect(await posts.countPublished("t1")).toBe(2);
-    expect(await posts.countPublished("missing")).toBe(0);
+    expect(await posts.countPublished({ tagId: "t1" })).toBe(2);
+    expect(await posts.countPublished({ tagId: "missing" })).toBe(0);
+  });
+
+  it("lists pinned posts apart from the grid (FR-BLOG-17)", async () => {
+    await posts.update("a", { pinnedAt: CREATED }, LATER);
+    await posts.update("c", { pinnedAt: LATER }, LATER);
+    // A pinned draft counts toward the limit but is never listed.
+    await posts.update("d", { pinnedAt: LATER }, LATER);
+
+    const pinned = await posts.listPinnedPublishedWithContent();
+    expect(pinned.map((post) => post.id)).toEqual(["c", "a"]);
+
+    const grid = await posts.listPublished({
+      limit: 10,
+      offset: 0,
+      excludePinned: true,
+    });
+    expect(grid.map((post) => post.id)).toEqual(["b"]);
+    expect(await posts.countPublished({ excludePinned: true })).toBe(1);
+    expect(await posts.countPinned()).toBe(3);
+    expect(await posts.countPinned("d")).toBe(2);
   });
 });
 

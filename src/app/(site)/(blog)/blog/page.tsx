@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { getPublicPostService, PostIndex } from "@/features/post";
+import { getBlogView, getPublicPostService, PostIndex } from "@/features/post";
 
 import { parsePageNumber } from "../page-number";
 
@@ -14,16 +14,24 @@ export default async function BlogIndexPage({
 }) {
   const page = parsePageNumber((await searchParams).page);
   const service = await getPublicPostService();
-  const result = await service.listPage(page);
+  const view = await getBlogView();
+  // FR-BLOG-17: the full view lifts pinned posts out of the grid onto page 1.
+  const full = view === "full";
+  const [result, pinned] = await Promise.all([
+    service.listPage(page, { excludePinned: full }),
+    full && page === 1 ? service.listPinned() : Promise.resolve([]),
+  ]);
   if (!result) notFound();
 
   return (
     <div className="blog-page">
-      <h1 className="blog-page__title">Writing</h1>
       <PostIndex
         basePath="/blog"
         emptyMessage="No posts yet."
+        heading={<h1 className="blog-page__title">Writing</h1>}
+        pinned={pinned}
         result={result}
+        view={view}
       />
     </div>
   );

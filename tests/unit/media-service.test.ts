@@ -206,6 +206,30 @@ describe("media resolution", () => {
     );
   });
 
+  it("resolves list covers at card width with alt text", async () => {
+    const { media } = service();
+    const created = await media.upload(
+      OWNER,
+      buildJpeg({ width: 1200, height: 800 }),
+      "Harbour at dusk",
+    );
+
+    expect(await media.resolveCovers([created.id, "missing"])).toEqual({
+      [created.id]: {
+        url: `/media/${created.id}.jpg?w=960`,
+        srcSet: [
+          `/media/${created.id}.jpg?w=480 480w`,
+          `/media/${created.id}.jpg?w=960 960w`,
+          `/media/${created.id}.jpg?w=1600 1200w`,
+        ].join(", "),
+        thumbnailUrl: `/media/${created.id}.jpg?w=480`,
+        width: 1200,
+        height: 800,
+        alt: "Harbour at dusk",
+      },
+    });
+  });
+
   it("skips soft-deleted media", async () => {
     const { media } = service();
     const created = await media.upload(OWNER, buildJpeg());

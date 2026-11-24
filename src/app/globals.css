@@ -42,6 +42,9 @@
   --font-sans:
     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* Device serif faces only; no webfont (NFR-CN-01). */
+  --font-serif:
+    ui-serif, Georgia, "Songti SC", "Noto Serif CJK SC", SimSun, serif;
 
   /* Radius by role: inline marks, controls, containers inside a card, cards. */
   --radius-mark: 0.25rem;
