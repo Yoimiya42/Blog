@@ -181,7 +181,7 @@ describe("savePostAction", () => {
   ])(
     "reports a conflict without writing when the version is %s",
     async (_case, fields) => {
-      for (const intent of ["save", "publish", "unpublish"]) {
+      for (const intent of ["save", "publish"]) {
         const state = await savePostAction(
           "post-1",
           PREVIOUS,
@@ -195,7 +195,6 @@ describe("savePostAction", () => {
       }
       expect(service.update).not.toHaveBeenCalled();
       expect(service.publish).not.toHaveBeenCalled();
-      expect(service.unpublish).not.toHaveBeenCalled();
       expect(revalidatePath).not.toHaveBeenCalled();
     },
   );
@@ -427,42 +426,6 @@ describe("publish intent", () => {
     ).rejects.toMatchObject({ path: "/admin/posts/post-1" });
 
     expect(service.publish).not.toHaveBeenCalled();
-  });
-});
-
-describe("unpublish intent", () => {
-  it("unpublishes without saving the form and reopens the post", async () => {
-    service.unpublish.mockResolvedValue({ ok: true, post: STORED });
-
-    await expect(
-      savePostAction(
-        "post-1",
-        PREVIOUS,
-        form({ title: "", slug: "", intent: "unpublish", version: "1000" }),
-      ),
-    ).rejects.toMatchObject({ path: "/admin/posts/post-1" });
-
-    expect(service.unpublish).toHaveBeenCalledWith(SESSION, "post-1", {
-      ifUpdatedAt: new Date(1_000),
-    });
-    expect(service.update).not.toHaveBeenCalled();
-    expectPublicRevalidation();
-  });
-
-  it("reports a conflict and leaves public reads alone", async () => {
-    service.unpublish.mockResolvedValue({ ok: false, reason: "conflict" });
-
-    const state = await savePostAction(
-      "post-1",
-      PREVIOUS,
-      form({ ...VALID, version: "1000", intent: "unpublish" }),
-    );
-
-    expect(state).toMatchObject({
-      values: VALID,
-      formError: expect.stringContaining("changed"),
-    });
-    expect(revalidatePath).not.toHaveBeenCalled();
   });
 });
 

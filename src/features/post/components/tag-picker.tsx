@@ -19,10 +19,9 @@ import {
 import { cn } from "@/lib/utils";
 
 interface TagPickerProps {
-  /** Form field that carries the comma-separated names. */
-  name: string;
   /** Comma-separated names, as the server returns them. */
-  defaultValue: string;
+  value: string;
+  onChange: (value: string) => void;
   /** Every tag name in the library. */
   suggestions: readonly string[];
   limit: number;
@@ -46,16 +45,18 @@ const sameName = (a: string, b: string) =>
 /**
  * Chips plus a searchable library popover. Picks existing tags or creates new
  * names; the server still parses, validates, and creates tags from the field.
+ * Controlled: the form carries the names in a hidden input.
  */
 export function TagPicker({
-  name,
-  defaultValue,
+  value,
+  onChange,
   suggestions,
   limit,
   invalid,
   describedBy,
 }: TagPickerProps) {
-  const [tags, setTags] = useState(() => splitNames(defaultValue));
+  const tags = splitNames(value);
+  const setTags = (next: string[]) => onChange(next.join(", "));
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -167,8 +168,6 @@ export function TagPicker({
           </Command>
         </PopoverContent>
       </Popover>
-
-      <input name={name} readOnly type="hidden" value={tags.join(", ")} />
     </div>
   );
 }

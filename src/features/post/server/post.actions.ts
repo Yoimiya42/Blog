@@ -130,18 +130,6 @@ export async function savePostAction(
   }
   const condition = { ifUpdatedAt };
 
-  // Unpublishing writes no field, so unsaved or invalid input cannot block it.
-  if (postId !== null && intent === "unpublish") {
-    const unpublished = await service.unpublish(session, postId, condition);
-    if (!unpublished.ok) return failure(values, unpublished);
-
-    revalidatePath(POSTS_PATH);
-    revalidatePublicReads();
-    await setFlash("Unpublished");
-    // A fresh render shows the new status and carries the new token.
-    redirect(`${POSTS_PATH}/${postId}`);
-  }
-
   const submitted = readContent(formData);
   if (!submitted.ok) {
     return {

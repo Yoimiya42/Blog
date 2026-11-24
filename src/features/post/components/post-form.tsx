@@ -1,49 +1,32 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import {
-  AlignLeft,
-  ChevronRight,
-  FileText,
-  Link2,
-  Lock,
-  Tag as TagIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { Send } from "lucide-react";
 import {
   useActionState,
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
   type ReactNode,
 } from "react";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 import { showFlash, toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 import { deriveArticleStats } from "../content/derive";
 import type { ImageUploadConfig } from "../content/image-upload";
 import type { ArticleDocument } from "../content/types";
-import {
-  POST_SLUG_MAX_LENGTH,
-  POST_SUMMARY_MAX_LENGTH,
-  POST_TITLE_MAX_LENGTH,
-  type PostStatus,
-} from "../schema";
+import { POST_TITLE_MAX_LENGTH, type PostStatus } from "../schema";
 import {
   autosavePostAction,
   savePostAction,
   type PostFormState,
   type PostFormValues,
 } from "../server/post.actions";
-import { CoverField, type CoverValue } from "./cover-field";
-import { PinField } from "./pin-field";
+import type { CoverValue } from "./cover-field";
 import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
 import {
   EditorBackdrop,
@@ -52,8 +35,12 @@ import {
   type EditorBackgroundConfig,
 } from "./editor-background";
 import { PostEditorHeader } from "./post-editor-header";
-import { SubmitButton } from "./submit-button";
-import { TagPicker } from "./tag-picker";
+import {
+  FieldError,
+  PublishDialog,
+  SETTINGS_FIELDS,
+  type PostSettings,
+} from "./publish-dialog";
 import { UnsavedChangesGuard } from "./unsaved-guard";
 
 const AUTOSAVE_INTERVAL_MS = 10_000;
@@ -142,9 +129,6 @@ const ArticleEditor = dynamic(
   },
 );
 
-const INPUT_CLASS =
-  "mt-1.5 w-full rounded-control border border-border bg-background px-3 py-2 text-sm outline-none focus:border-faint aria-invalid:border-destructive";
-
 /** Grows with its content; no scrollbar inside a one-line field. */
 function fitHeight(element: HTMLTextAreaElement | null): void {
   if (!element) return;
@@ -178,6 +162,23 @@ export function PostForm({
   initialPinned = false,
 }: PostFormProps) {
   const background = useEditorBackground(backgroundConfig ?? NO_BACKGROUND);
+  const formId = useId();
+
+  // The publish dialog's fields (ADR-0035). Held here, not in the dialog, so
+  // closing it keeps unsaved choices; hidden inputs carry them on every save.
+  const [settings, setSettings] = useState<PostSettings>(() => ({
+    slug: initialValues.slug,
+    summary: initialValues.summary,
+    tags: initialValues.tags,
+    cover: initialCover,
+    pinned: initialPinned,
+  }));
+  const [publishOpen, setPublishOpen] = useState(false);
+  const changeSettings = useCallback(
+    (patch: Partial<PostSettings>) =>
+      setSettings((current) => ({ ...current, ...patch })),
+    [],
+  );
   const initialState: PostFormState = {
     values: initialValues,
     fieldErrors: {},
@@ -295,7 +296,8 @@ export function PostForm({
     }
   }, [autosaveStatus, checkDirty]);
 
-  // Ctrl or Cmd+S saves from anywhere on the page (FR-ADMIN-18).
+  // Ctrl or Cmd+S saves a draft from anywhere on the page. A published post
+  // changes only through Update, so there it opens the dialog (FR-ADMIN-18).
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (
@@ -307,13 +309,17 @@ export function PostForm({
         return;
       }
       event.preventDefault();
+      if (status === "PUBLISHED") {
+        setPublishOpen(true);
+        return;
+      }
       // No submitter: a plain save, never publish.
       if (!saving.current) formRef.current?.requestSubmit();
     }
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [status]);
 
   // A blank draft opens with its placeholder title selected, so typing
   // replaces it (ADR-0030).
@@ -400,15 +406,33 @@ export function PostForm({
 
     if (state.saved) {
       savedFields.current = readFields();
-      // Mirrors the action's outcome for the header indicator.
+      // Mirrors the action's outcome for the header indicator and dialog.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSavedAt(new Date());
+      setPublishOpen(false);
       checkDirty();
-      toast("Saved");
+      toast(status === "PUBLISHED" ? "Updated" : "Saved");
     } else if (state.formError) {
+      // A settings error is shown beside its field, in the dialog.
+      if (SETTINGS_FIELDS.some((field) => state.fieldErrors[field])) {
+        setPublishOpen(true);
+      }
       toast(state.formError, "error");
     }
-  }, [checkDirty, readFields, state]);
+  }, [checkDirty, readFields, state, status]);
+
+  // Publishing ends in a fresh render with the new status; the step is done.
+  // Not keyed on the token: a failed publish also renders a new one, and its
+  // errors must stay in view.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPublishOpen(false);
+  }, [status]);
+
+  // Hidden inputs follow the settings on the next render.
+  useEffect(() => {
+    checkDirty();
+  }, [checkDirty, settings]);
 
   const saveView = describeSave({
     autosave: autosaveStatus,
@@ -435,6 +459,20 @@ export function PostForm({
                 />
               ) : null}
               {headerActions}
+              <Button
+                aria-label={
+                  status === "PUBLISHED" ? "Update post" : "Publish post"
+                }
+                className="ml-1"
+                onClick={() => setPublishOpen(true)}
+                size="sm"
+                type="button"
+              >
+                <Send aria-hidden />
+                <span className="hidden sm:inline">
+                  {status === "PUBLISHED" ? "Update" : "Publish"}
+                </span>
+              </Button>
             </>
           }
           meta={<SaveIndicator save={saveView} />}
@@ -449,8 +487,9 @@ export function PostForm({
       {/* The max lengths mirror the server rules; the server remains the authority. */}
       <form
         action={formAction}
-        className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]"
+        className="mx-auto mt-4 max-w-4xl"
         data-focus-layout
+        id={formId}
         noValidate
         onClick={checkDirty}
         onInput={checkDirty}
@@ -462,6 +501,29 @@ export function PostForm({
           save={postId !== null ? saveBeforeLeaving : undefined}
           saveOnLeave={status === "DRAFT"}
         />
+        {/* The publish dialog's fields, carried with every save. */}
+        <input name="slug" type="hidden" value={settings.slug} />
+        <input name="summary" type="hidden" value={settings.summary} />
+        <input name="tags" type="hidden" value={settings.tags} />
+        <input
+          name="coverId"
+          type="hidden"
+          value={settings.cover?.mediaId ?? ""}
+        />
+        <input
+          name="pinned"
+          type="hidden"
+          value={settings.pinned ? "true" : "false"}
+        />
+        {autosaveStatus.kind === "stopped" ? (
+          <p
+            className="mb-4 rounded-card bg-card px-4 py-3 text-sm text-destructive ring-1 ring-border"
+            data-glass
+            role="alert"
+          >
+            {STOPPED_MESSAGES[autosaveStatus.reason]}
+          </p>
+        ) : null}
         <div
           className="min-w-0 rounded-card bg-card px-5 py-8 shadow-sm ring-1 ring-border md:px-12 md:py-12"
           data-glass
@@ -527,144 +589,25 @@ export function PostForm({
           )}
           <FieldError id="post-content-error" message={fieldErrors.content} />
         </div>
-
-        <aside
-          className="divide-y divide-border rounded-card bg-card ring-1 ring-border lg:sticky lg:top-20"
-          data-focus-hide
-          data-glass
-        >
-          <div className="space-y-2 p-4">
-            <div className="flex gap-2">
-              <SubmitButton
-                label={postId === null ? "Create draft" : "Save"}
-                pendingLabel="Saving…"
-              />
-              {status === "DRAFT" ? (
-                <SubmitButton
-                  intent="publish"
-                  label="Publish"
-                  pendingLabel="Publishing…"
-                  tone="secondary"
-                />
-              ) : null}
-              {status === "PUBLISHED" ? (
-                <SubmitButton
-                  intent="unpublish"
-                  label="Unpublish"
-                  pendingLabel="Unpublishing…"
-                  tone="secondary"
-                />
-              ) : null}
-            </div>
-
-            {state.formError ? (
-              <p className="text-sm text-destructive" role="alert">
-                {state.formError}
-              </p>
-            ) : null}
-            {autosaveStatus.kind === "stopped" ? (
-              <p className="text-sm text-destructive" role="alert">
-                {STOPPED_MESSAGES[autosaveStatus.reason]}
-              </p>
-            ) : status === "PUBLISHED" ? (
-              <p className="text-xs text-muted-foreground">
-                Saving updates the live post.
-              </p>
-            ) : null}
-          </div>
-
-          {stats ? <ArticleStats stats={stats} /> : null}
-
-          <CoverField
-            error={fieldErrors.coverId}
-            imageUpload={imageUpload}
-            initial={initialCover}
-            onChange={checkDirty}
-          />
-
-          <PinField
-            error={fieldErrors.pinned}
-            initial={initialPinned}
-            onChange={checkDirty}
-          />
-
-          <div className="flex gap-3 p-4">
-            <TagIcon
-              aria-hidden
-              className="mt-1.5 size-4 shrink-0 text-faint"
-            />
-            <div className="min-w-0 flex-1">
-              <TagPicker
-                describedBy={fieldErrors.tags ? "post-tags-error" : undefined}
-                defaultValue={values.tags}
-                invalid={fieldErrors.tags ? true : undefined}
-                limit={TAG_LIMIT_HINT}
-                name="tags"
-                suggestions={tagSuggestions}
-              />
-              <FieldError id="post-tags-error" message={fieldErrors.tags} />
-            </div>
-          </div>
-
-          <SidebarSection
-            icon={slugFrozen ? Lock : Link2}
-            invalid={Boolean(fieldErrors.slug)}
-            label="Slug"
-          >
-            <input
-              aria-describedby={
-                fieldErrors.slug ? "post-slug-error" : "post-slug-hint"
-              }
-              aria-invalid={fieldErrors.slug ? true : undefined}
-              aria-label="Slug"
-              autoCapitalize="none"
-              autoCorrect="off"
-              className={`${INPUT_CLASS} font-mono read-only:text-muted-foreground`}
-              defaultValue={values.slug}
-              id="post-slug"
-              maxLength={POST_SLUG_MAX_LENGTH}
-              name="slug"
-              placeholder="post-address"
-              readOnly={slugFrozen}
-              spellCheck={false}
-              title={
-                slugFrozen
-                  ? "Frozen since first publication"
-                  : "Lowercase letters, numbers, hyphens"
-              }
-              type="text"
-            />
-            <p className="sr-only" id="post-slug-hint">
-              {slugFrozen
-                ? "Frozen since first publication."
-                : "Lowercase letters, numbers, and hyphens. Frozen once published."}
-            </p>
-            <FieldError id="post-slug-error" message={fieldErrors.slug} />
-          </SidebarSection>
-
-          <SidebarSection
-            icon={AlignLeft}
-            invalid={Boolean(fieldErrors.summary)}
-            label="Summary"
-          >
-            <textarea
-              aria-describedby={
-                fieldErrors.summary ? "post-summary-error" : undefined
-              }
-              aria-invalid={fieldErrors.summary ? true : undefined}
-              aria-label="Summary, optional"
-              className={INPUT_CLASS}
-              defaultValue={values.summary}
-              id="post-summary"
-              maxLength={POST_SUMMARY_MAX_LENGTH}
-              name="summary"
-              placeholder="Optional"
-              rows={4}
-            />
-            <FieldError id="post-summary-error" message={fieldErrors.summary} />
-          </SidebarSection>
-        </aside>
       </form>
+
+      {status !== null ? (
+        <PublishDialog
+          fieldErrors={fieldErrors}
+          formError={state.formError}
+          formId={formId}
+          imageUpload={imageUpload}
+          onChange={changeSettings}
+          onOpenChange={setPublishOpen}
+          open={publishOpen}
+          settings={settings}
+          slugFrozen={slugFrozen}
+          stats={stats}
+          status={status}
+          tagLimit={TAG_LIMIT_HINT}
+          tagSuggestions={tagSuggestions}
+        />
+      ) : null}
     </>
   );
 }
@@ -719,7 +662,8 @@ function describeSave({
     return {
       tone: "bg-warning",
       label: "Unsaved",
-      detail: "Ctrl or Cmd+S saves. Drafts also autosave their text.",
+      detail:
+        "Drafts autosave title and text; Ctrl or Cmd+S saves at once. A published post changes through Update.",
     };
   }
 
@@ -731,8 +675,6 @@ function describeSave({
     detail: "All changes are saved.",
   };
 }
-
-const NUMBER_FORMAT = new Intl.NumberFormat("en-GB");
 
 /** Header save state (FR-ADMIN-23). The label hides on narrow screens. */
 function SaveIndicator({ save }: { save: SaveView }) {
@@ -748,69 +690,5 @@ function SaveIndicator({ save }: { save: SaveView }) {
       />
       <span className="sr-only sm:not-sr-only sm:truncate">{save.label}</span>
     </span>
-  );
-}
-
-/** Word count and reading time, in the settings sidebar (FR-ADMIN-23). */
-function ArticleStats({
-  stats,
-}: {
-  stats: { words: number; readingMinutes: number };
-}) {
-  return (
-    <p
-      className="flex min-h-11 items-center gap-3 px-4 text-sm text-muted-foreground tabular-nums"
-      title="CJK characters count as words"
-    >
-      <FileText aria-hidden className="size-4 text-faint" />
-      {NUMBER_FORMAT.format(stats.words)} words
-      {stats.words > 0 ? ` · ${stats.readingMinutes} min read` : null}
-    </p>
-  );
-}
-
-/**
- * One collapsed sidebar field. Starts closed; an error opens it so the message
- * is never hidden.
- */
-function SidebarSection({
-  icon: Icon,
-  label,
-  invalid,
-  children,
-}: {
-  icon: LucideIcon;
-  label: string;
-  invalid: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <Collapsible defaultOpen={invalid} key={invalid ? "error" : "ok"}>
-      <CollapsibleTrigger className="group flex min-h-11 w-full items-center gap-3 px-4 text-sm text-muted-foreground hover:text-foreground">
-        <Icon aria-hidden className="size-4 text-faint" />
-        <span className="flex-1 text-left">{label}</span>
-        <ChevronRight
-          aria-hidden
-          className="size-4 text-faint transition-transform group-data-[state=open]:rotate-90"
-        />
-      </CollapsibleTrigger>
-      {/* forceMount keeps the field in the form while collapsed. */}
-      <CollapsibleContent
-        className="px-4 pb-4 data-[state=closed]:hidden"
-        forceMount
-      >
-        {children}
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-
-  return (
-    <p className="mt-2 text-sm text-destructive" id={id} role="alert">
-      {message}
-    </p>
   );
 }

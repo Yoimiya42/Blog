@@ -37,31 +37,29 @@ type View =
   | { kind: "uploading" };
 
 /**
- * Cover picker in the settings sidebar. The choice is a form field: it saves
- * with the post, so `coverId` travels in a hidden input.
+ * Cover picker in the publish dialog (ADR-0035). Controlled: the form owns
+ * the value and carries it in a hidden input, so it survives the dialog
+ * closing.
  */
 export function CoverField({
-  initial,
+  value: cover,
   imageUpload,
   error,
   onChange,
 }: {
-  initial: CoverValue | null;
+  value: CoverValue | null;
   imageUpload?: ImageUploadConfig;
   error?: string;
-  /** Called after the hidden input changes, for the dirty state. */
-  onChange: () => void;
+  onChange: (next: CoverValue | null) => void;
 }) {
-  const [cover, setCover] = useState(initial);
   const [view, setView] = useState<View>({ kind: "main" });
   const [message, setMessage] = useState<string | null>(null);
   const loadLibrary = imageUpload?.loadLibrary;
 
   function choose(next: CoverValue | null) {
-    setCover(next);
     setView({ kind: "main" });
     setMessage(null);
-    onChange();
+    onChange(next);
   }
 
   async function openLibrary() {
@@ -99,8 +97,6 @@ export function CoverField({
 
   return (
     <div className="p-4">
-      <input name="coverId" type="hidden" value={cover?.mediaId ?? ""} />
-
       {view.kind === "library" ? (
         <LibraryGrid
           items={view.items}
@@ -167,7 +163,7 @@ export function CoverField({
           </div>
 
           {cover || view.kind === "uploading" ? (
-            <div className="relative mt-2 aspect-[16/10] overflow-hidden rounded-control bg-muted ring-1 ring-border">
+            <div className="relative mt-2 aspect-[16/10] max-w-64 overflow-hidden rounded-control bg-muted ring-1 ring-border">
               {cover?.thumbnailUrl ? (
                 <img
                   alt=""

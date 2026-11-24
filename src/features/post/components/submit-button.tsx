@@ -13,6 +13,8 @@ interface SubmitButtonProps {
    * buttons; the action reads which one was pressed.
    */
   intent?: string;
+  /** Id of the form, for a button rendered outside it, as in a dialog. */
+  form?: string;
 }
 
 const TONES = {
@@ -21,12 +23,16 @@ const TONES = {
   danger: "destructive",
 } as const;
 
-/** Must render inside the form it submits: useFormStatus reads that form. */
+/**
+ * Must render inside the form's React tree: useFormStatus reads that form. A
+ * portal, such as a dialog, keeps the tree; `form` then ties the DOM button.
+ */
 export function SubmitButton({
   label,
   pendingLabel,
   tone = "primary",
   intent,
+  form,
 }: SubmitButtonProps) {
   const { pending, data } = useFormStatus();
   // Every button is disabled during a submission, but only the pressed one
@@ -37,6 +43,7 @@ export function SubmitButton({
     <button
       className={buttonVariants({ variant: TONES[tone] })}
       disabled={pending}
+      form={form}
       name={intent === undefined ? undefined : "intent"}
       type="submit"
       value={intent}
