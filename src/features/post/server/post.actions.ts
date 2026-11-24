@@ -9,6 +9,7 @@ import { setFlash } from "@/lib/flash";
 import {
   formatTagNames,
   fromPostVersion,
+  postOpenPath,
   toPostVersion,
   type PostFieldErrors,
   type PostMutationResult,
@@ -197,8 +198,8 @@ export async function savePostAction(
 
     revalidatePublicReads();
     await setFlash("Published");
-    // A fresh render shows the new status and carries the new token.
-    redirect(`${POSTS_PATH}/${post.id}`);
+    // A published post opens in Preview, which shows the live version.
+    redirect(postOpenPath({ id: post.id, status: "PUBLISHED" }));
   }
 
   if (post.status === "PUBLISHED") revalidatePublicReads();
@@ -315,6 +316,8 @@ export interface PostCommandItem {
   title: string;
   slug: string;
   status: "DRAFT" | "PUBLISHED";
+  /** Where the post opens (FR-ADMIN-03). */
+  href: string;
 }
 
 /** Read on each palette open, so the list is never stale. */
@@ -327,5 +330,6 @@ export async function listPostsForCommandAction(): Promise<PostCommandItem[]> {
     title: post.title,
     slug: post.slug,
     status: post.status,
+    href: postOpenPath(post),
   }));
 }

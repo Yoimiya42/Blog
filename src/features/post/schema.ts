@@ -10,6 +10,19 @@ export const POST_STATUSES = ["DRAFT", "PUBLISHED"] as const;
 export const BLANK_DRAFT_TITLE = "Untitled";
 export const BLANK_DRAFT_SLUG_PATTERN = /^untitled-[0-9a-f]{6}$/;
 
+/**
+ * Where a post opens in the admin (FR-ADMIN-03): a published post in Preview,
+ * a draft in Edit, where its writing continues.
+ */
+export function postOpenPath(post: {
+  id: string;
+  status: "DRAFT" | "PUBLISHED";
+}): string {
+  return post.status === "PUBLISHED"
+    ? `/admin/posts/${post.id}/preview`
+    : `/admin/posts/${post.id}`;
+}
+
 /** True while a draft still carries the New post placeholders. */
 export function isBlankDraftIdentity(post: {
   title: string;

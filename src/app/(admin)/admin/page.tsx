@@ -4,7 +4,11 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { requireOwner } from "@/features/auth";
 import { getMediaService } from "@/features/media";
-import { getPostService, type PostSummary } from "@/features/post";
+import {
+  getPostService,
+  postOpenPath,
+  type PostSummary,
+} from "@/features/post";
 
 const RECENT_LIMIT = 5;
 
@@ -100,7 +104,7 @@ function RecentList({
             <li key={post.id}>
               <Link
                 className="group flex items-center gap-3 px-4 py-3 hover:bg-muted/50"
-                href={`/admin/posts/${post.id}`}
+                href={postOpenPath(post)}
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">

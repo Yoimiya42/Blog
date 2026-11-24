@@ -5,6 +5,7 @@ import {
   CircleSlash,
   Ellipsis,
   Eye,
+  PenLine,
   Pin,
   Search,
   SquareArrowOutUpRight,
@@ -31,6 +32,7 @@ import {
 
 import {
   POST_STATUSES,
+  postOpenPath,
   toPostVersion,
   type PostsByStatus,
   type PostStatus,
@@ -167,7 +169,7 @@ function PostRow({
         <div className="flex min-w-0 items-center gap-1.5">
           <Link
             className="block truncate font-medium outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
-            href={`/admin/posts/${post.id}`}
+            href={postOpenPath(post)}
           >
             {post.title || "Untitled"}
           </Link>
@@ -194,11 +196,20 @@ function PostRow({
       </time>
 
       <div className="relative z-10 flex shrink-0 items-center">
-        <RowAction
-          href={`/admin/posts/${post.id}/preview`}
-          icon={Eye}
-          label="Preview"
-        />
+        {/* The row opens one mode (FR-ADMIN-03); the icon offers the other. */}
+        {post.status === "PUBLISHED" ? (
+          <RowAction
+            href={`/admin/posts/${post.id}`}
+            icon={PenLine}
+            label="Edit"
+          />
+        ) : (
+          <RowAction
+            href={`/admin/posts/${post.id}/preview`}
+            icon={Eye}
+            label="Preview"
+          />
+        )}
         {post.status === "PUBLISHED" ? (
           <>
             <RowAction

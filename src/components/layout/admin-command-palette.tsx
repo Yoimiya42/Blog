@@ -36,6 +36,8 @@ export interface CommandPost {
   title: string;
   slug: string;
   status: "DRAFT" | "PUBLISHED";
+  /** A published post opens in Preview, a draft in Edit. */
+  href: string;
 }
 
 const noSubscribe = () => () => {};
@@ -151,7 +153,7 @@ export function AdminCommandPalette({
                     <CommandItem
                       key={post.id}
                       keywords={[post.slug]}
-                      onSelect={() => go(`/admin/posts/${post.id}`)}
+                      onSelect={() => go(post.href)}
                       value={`post ${post.id} ${post.title}`}
                     >
                       <FileText aria-hidden />

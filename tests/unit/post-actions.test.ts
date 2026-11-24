@@ -357,7 +357,7 @@ describe("savePostAction", () => {
 });
 
 describe("publish intent", () => {
-  it("saves, publishes that version, and reopens the post", async () => {
+  it("saves, publishes that version, and opens its preview", async () => {
     service.update.mockResolvedValue({ ok: true, post: STORED });
     service.publish.mockResolvedValue({
       ok: true,
@@ -370,7 +370,7 @@ describe("publish intent", () => {
         PREVIOUS,
         form({ ...VALID, version: "1000", intent: "publish" }),
       ),
-    ).rejects.toMatchObject({ path: "/admin/posts/post-1" });
+    ).rejects.toMatchObject({ path: "/admin/posts/post-1/preview" });
 
     expect(service.publish).toHaveBeenCalledWith(SESSION, "post-1", {
       ifUpdatedAt: SAVED_AT,
