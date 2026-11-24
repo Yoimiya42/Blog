@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { getPublicPostService, PostIndex } from "@/features/post";
+import { getBlogView, getPublicPostService, PostIndex } from "@/features/post";
 
 import { parsePageNumber } from "../page-number";
 
@@ -24,6 +24,7 @@ export default async function BlogIndexPage({
         basePath="/blog"
         emptyMessage="No posts yet."
         result={result}
+        view={await getBlogView()}
       />
     </div>
   );

@@ -23,6 +23,7 @@ export {
   type MediaLibraryItem,
   type MediaRemoval,
   type MediaService,
+  type ResolvedCover,
   type ResolvedMedia,
 } from "./server/media.service";
 export {

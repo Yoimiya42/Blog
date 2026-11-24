@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { getPublicPostService, PostIndex } from "@/features/post";
+import { getBlogView, getPublicPostService, PostIndex } from "@/features/post";
 
 import { parsePageNumber } from "../../../page-number";
 import { decodeRouteParam } from "../../../route-param";
@@ -33,6 +33,7 @@ export default async function TagArchivePage({ params, searchParams }: Props) {
         basePath={`/blog/tags/${result.tag.slug}`}
         emptyMessage="No published posts with this tag."
         result={result}
+        view={await getBlogView()}
       />
     </div>
   );

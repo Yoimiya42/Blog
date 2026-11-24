@@ -67,6 +67,7 @@ describe("post repository mapping", () => {
       slug: "hello",
       title: "Hello",
       summary: null,
+      coverId: null,
       content: SAMPLE_DOCUMENT,
       contentSchemaVersion: 1,
       status: "DRAFT",
@@ -76,6 +77,28 @@ describe("post repository mapping", () => {
     });
     expect(await posts.findById("post-1")).toEqual(inserted);
     expect(await posts.findBySlug("hello")).toEqual(inserted);
+  });
+
+  it("sets and clears a cover that names stored media", async () => {
+    await db
+      .prepare(
+        `INSERT INTO media (id, storage_key, mime_type, width, height, size_bytes)
+         VALUES ('m1', 'media/m1.jpg', 'image/jpeg', 1200, 800, 100)`,
+      )
+      .run();
+    await posts.insert(draft({ coverId: "m1" }), CREATED);
+
+    expect((await posts.findById("post-1"))?.coverId).toBe("m1");
+    expect((await posts.listAll())[0]?.coverId).toBe("m1");
+
+    const cleared = await posts.update("post-1", { coverId: null }, LATER);
+    expect(cleared?.coverId).toBeNull();
+  });
+
+  it("rejects a cover that names no media row", async () => {
+    await expect(
+      posts.insert(draft({ coverId: "missing" }), CREATED),
+    ).rejects.toThrow();
   });
 
   it("stores explicit column representations", async () => {

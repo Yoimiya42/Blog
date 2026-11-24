@@ -24,6 +24,7 @@ interface PostSummaryRow {
   slug: string;
   title: string;
   summary: string | null;
+  cover_id: string | null;
   status: string;
   published_at: EpochMilliseconds | null;
   created_at: EpochMilliseconds;
@@ -36,7 +37,7 @@ interface PostRow extends PostSummaryRow {
 }
 
 const SUMMARY_COLUMNS =
-  "id, slug, title, summary, status, published_at, created_at, updated_at";
+  "id, slug, title, summary, cover_id, status, published_at, created_at, updated_at";
 const POST_COLUMNS = `${SUMMARY_COLUMNS}, content, content_schema_version`;
 
 function toStatus(value: string): PostStatus {
@@ -52,6 +53,7 @@ function toSummary(row: PostSummaryRow): PostSummary {
     slug: row.slug,
     title: row.title,
     summary: row.summary,
+    coverId: row.cover_id,
     status: toStatus(row.status),
     publishedAt:
       row.published_at === null
@@ -81,6 +83,7 @@ const PATCH_COLUMNS = {
   summary: (value: string | null) => ["summary", value],
   content: (value: unknown) => ["content", JSON.stringify(value)],
   contentSchemaVersion: (value: number) => ["content_schema_version", value],
+  coverId: (value: string | null) => ["cover_id", value],
   status: (value: PostStatus) => ["status", value],
   publishedAt: (value: Date | null) => ["published_at", toNullableEpoch(value)],
 } as const satisfies {
@@ -184,8 +187,8 @@ export function createPostRepository(db: D1Database) {
         .prepare(
           `INSERT INTO post
              (id, slug, title, summary, content, content_schema_version,
-              status, published_at, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              cover_id, status, published_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING ${POST_COLUMNS}`,
         )
         .bind(
@@ -195,6 +198,7 @@ export function createPostRepository(db: D1Database) {
           post.summary,
           JSON.stringify(post.content),
           post.contentSchemaVersion,
+          post.coverId ?? null,
           post.status,
           toNullableEpoch(post.publishedAt),
           timestamp,
@@ -356,24 +360,31 @@ export function createPostRepository(db: D1Database) {
     },
 
     /**
-     * Title and raw content of every non-deleted post, drafts included. Used
-     * by the media reference scan (ADR-0025); content is not validated.
+     * Title, raw content, and cover of every non-deleted post, drafts
+     * included. Used by the media reference scan (ADR-0025); content is not
+     * validated.
      */
     async listContentSources(): Promise<
-      { id: string; title: string; content: unknown }[]
+      { id: string; title: string; content: unknown; coverId: string | null }[]
     > {
       const { results } = await db
         .prepare(
-          `SELECT id, title, content FROM post
+          `SELECT id, title, content, cover_id FROM post
            WHERE deleted_at IS NULL
            ORDER BY updated_at DESC, id DESC`,
         )
-        .all<{ id: string; title: string; content: string }>();
+        .all<{
+          id: string;
+          title: string;
+          content: string;
+          cover_id: string | null;
+        }>();
 
       return results.map((row) => ({
         id: row.id,
         title: row.title,
         content: JSON.parse(row.content) as unknown,
+        coverId: row.cover_id,
       }));
     },
 

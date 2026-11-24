@@ -458,7 +458,8 @@ function EditorBackgroundPanel({
   );
 }
 
-function LibraryGrid({
+/** Library picker grid, shared with the cover field. */
+export function LibraryGrid({
   items,
   selectedId,
   onPick,

@@ -27,6 +27,8 @@ export interface MediaDisplay {
   storageKey: string;
   width: number;
   height: number;
+  /** Empty marks a decorative image. */
+  alt: string;
 }
 
 /** Thrown when a non-owner reaches a media mutation. */

@@ -9,6 +9,15 @@ import type { PostRepository } from "./post.repository";
 
 export const PUBLIC_POSTS_PER_PAGE = 10;
 
+/** A list cover as cards render it (FR-BLOG-14). */
+export interface PostCover {
+  url: string;
+  srcSet: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+
 /** A post as visitors see it in lists. Never a draft. */
 export interface PublicPostSummary {
   slug: string;
@@ -18,6 +27,11 @@ export interface PublicPostSummary {
   tags: Tag[];
   /** Null when the stored document fails validation. */
   readingMinutes: number | null;
+  /**
+   * Null for no cover or a deleted image. Only list pages resolve covers; the
+   * homepage and the post page do not show them.
+   */
+  cover: PostCover | null;
 }
 
 export interface PublicPost extends PublicPostSummary {
@@ -36,6 +50,11 @@ export interface PublicPostPage {
 interface PublicPostServiceDependencies {
   posts: PostRepository;
   tags: TagRepository;
+  /**
+   * Live covers by media id, from the media module. Omitted by tests that do
+   * not exercise covers; every cover is then null.
+   */
+  resolveCovers?: (ids: string[]) => Promise<Record<string, PostCover>>;
 }
 
 /**
@@ -61,6 +80,7 @@ function toSummary(
   post: Post,
   document: ArticleDocument | null,
   tags: Tag[],
+  cover: PostCover | null = null,
 ): PublicPostSummary {
   return {
     slug: post.slug,
@@ -72,6 +92,7 @@ function toSummary(
     readingMinutes: document
       ? deriveArticleContent(document).readingMinutes
       : null,
+    cover,
   };
 }
 
@@ -82,12 +103,29 @@ function toSummary(
 export function createPublicPostService({
   posts,
   tags,
+  resolveCovers,
 }: PublicPostServiceDependencies) {
-  async function summarise(rows: Post[]): Promise<PublicPostSummary[]> {
-    const tagsByPost = await tags.listByPostIds(rows.map((post) => post.id));
+  async function summarise(
+    rows: Post[],
+    { withCovers = false } = {},
+  ): Promise<PublicPostSummary[]> {
+    const coverIds = withCovers
+      ? rows.flatMap((post) => (post.coverId ? [post.coverId] : []))
+      : [];
+    const [tagsByPost, covers] = await Promise.all([
+      tags.listByPostIds(rows.map((post) => post.id)),
+      resolveCovers && coverIds.length > 0
+        ? resolveCovers(coverIds)
+        : Promise.resolve<Record<string, PostCover>>({}),
+    ]);
 
     return rows.map((post) =>
-      toSummary(post, readDocument(post), tagsByPost.get(post.id) ?? []),
+      toSummary(
+        post,
+        readDocument(post),
+        tagsByPost.get(post.id) ?? [],
+        (post.coverId && covers[post.coverId]) || null,
+      ),
     );
   }
 
@@ -111,7 +149,12 @@ export function createPublicPostService({
       tagId,
     });
 
-    return { posts: await summarise(rows), page, totalPages, totalPosts };
+    return {
+      posts: await summarise(rows, { withCovers: true }),
+      page,
+      totalPages,
+      totalPosts,
+    };
   }
 
   return {
@@ -170,5 +213,10 @@ export async function getPublicPostService(): Promise<PublicPostService> {
   return createPublicPostService({
     posts: await getPostRepository(),
     tags: await getTagRepository(),
+    // Loaded on first use: the media module owns delivery URLs.
+    resolveCovers: async (ids) => {
+      const { getMediaService } = await import("@/features/media");
+      return (await getMediaService()).resolveCovers(ids);
+    },
   });
 }

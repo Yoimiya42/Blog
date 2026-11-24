@@ -28,6 +28,8 @@ export interface PostSummary {
   slug: string;
   title: string;
   summary: string | null;
+  /** List cover media id (FR-BLOG-14). It may name a deleted image. */
+  coverId: string | null;
   status: PostStatus;
   publishedAt: Date | null;
   createdAt: Date;
@@ -50,6 +52,8 @@ export interface NewPost {
   summary: string | null;
   content: unknown;
   contentSchemaVersion: number;
+  /** Omitted for no cover. */
+  coverId?: string | null;
   status: PostStatus;
   publishedAt: Date | null;
 }
@@ -111,9 +115,12 @@ export interface PostInput {
   content?: unknown;
   /** Comma-separated tag names. Omitted to keep the stored tags. */
   tags?: string;
+  /** Media id of the cover; null removes it. Omitted to keep the stored one. */
+  coverId?: string | null;
 }
 
-export type PostField = "title" | "slug" | "summary" | "content" | "tags";
+export type PostField =
+  "title" | "slug" | "summary" | "content" | "tags" | "coverId";
 
 export type PostFieldErrors = Partial<Record<PostField, string>>;
 

@@ -14,6 +14,7 @@ describe("findPostsReferencingMedia", () => {
         {
           id: "p1",
           title: "Nested",
+          coverId: null,
           content: {
             type: "doc",
             content: [{ type: "blockquote", content: [image("m1")] }],
@@ -22,11 +23,17 @@ describe("findPostsReferencingMedia", () => {
         {
           id: "p2",
           title: "Other",
+          coverId: null,
           content: { type: "doc", content: [image("m2")] },
         },
         // Malformed content must not throw or match.
-        { id: "p3", title: "Broken", content: { type: "doc", content: "x" } },
-        { id: "p4", title: "Null", content: null },
+        {
+          id: "p3",
+          title: "Broken",
+          coverId: null,
+          content: { type: "doc", content: "x" },
+        },
+        { id: "p4", title: "Null", coverId: null, content: null },
       ],
     };
 
@@ -34,5 +41,22 @@ describe("findPostsReferencingMedia", () => {
       { id: "p1", title: "Nested" },
     ]);
     expect(await findPostsReferencingMedia(posts, "m3")).toEqual([]);
+  });
+
+  it("counts a cover as a reference", async () => {
+    const posts = {
+      listContentSources: async () => [
+        {
+          id: "p1",
+          title: "Covered",
+          coverId: "m1",
+          content: { type: "doc", content: [] },
+        },
+      ],
+    };
+
+    expect(await findPostsReferencingMedia(posts, "m1")).toEqual([
+      { id: "p1", title: "Covered" },
+    ]);
   });
 });

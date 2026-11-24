@@ -50,6 +50,8 @@ export {
 } from "./components/post-editor-header";
 export { PostArticle } from "./components/public/post-article";
 export { PostIndex } from "./components/public/post-index";
+export type { BlogView } from "./blog-view";
+export { getBlogView } from "./server/blog-view";
 export { toCalendarDate } from "./components/public/post-meta";
 
 export {
@@ -60,6 +62,7 @@ export {
 export {
   getPublicPostService,
   PUBLIC_POSTS_PER_PAGE,
+  type PostCover,
   type PublicPost,
   type PublicPostPage,
   type PublicPostService,

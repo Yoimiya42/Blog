@@ -184,6 +184,64 @@ describe("media references", () => {
   });
 });
 
+describe("cover", () => {
+  async function insertMedia(id: string) {
+    await db
+      .prepare(
+        `INSERT INTO media (id, storage_key, mime_type, width, height, size_bytes)
+         VALUES (?, ?, 'image/jpeg', 10, 10, 100)`,
+      )
+      .bind(id, `media/${id}.jpg`)
+      .run();
+  }
+
+  it("rejects a cover that names no stored media", async () => {
+    const result = await service.create(
+      OWNER,
+      input({ coverId: "missingmedia00000001" }),
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      fieldErrors: { coverId: "Choose a cover from the library." },
+    });
+    expect(await countRows()).toBe(0);
+  });
+
+  it("sets, keeps, and removes the cover", async () => {
+    await insertMedia("covermedia0000000001");
+    const post = await createPost({ coverId: "covermedia0000000001" });
+    expect(post.coverId).toBe("covermedia0000000001");
+
+    // Omitted keeps the stored cover.
+    const kept = await service.update(OWNER, post.id, input());
+    expect(kept).toMatchObject({
+      ok: true,
+      post: { coverId: "covermedia0000000001" },
+    });
+
+    const removed = await service.update(
+      OWNER,
+      post.id,
+      input({ coverId: null }),
+    );
+    expect(removed).toMatchObject({ ok: true, post: { coverId: null } });
+  });
+
+  it("publishes with a deleted cover", async () => {
+    await insertMedia("covermedia0000000002");
+    const post = await createPost({ coverId: "covermedia0000000002" });
+    await db.prepare("UPDATE media SET deleted_at = 1").run();
+
+    // The list renders without a cover instead (FR-BLOG-14).
+    expect(await service.update(OWNER, post.id, input())).toMatchObject({
+      ok: true,
+    });
+    const published = await service.publish(OWNER, post.id);
+    expect(published).toMatchObject({ ok: true });
+  });
+});
+
 describe("create", () => {
   it("creates a draft with a valid empty document", async () => {
     const post = await createPost({ title: "  Hello  ", summary: "   " });

@@ -156,6 +156,10 @@ export async function savePostAction(
   const input = {
     ...fields,
     ...(formData.has("tags") ? { tags } : {}),
+    // Same rule for the cover: absent keeps it, blank removes it.
+    ...(formData.has("coverId")
+      ? { coverId: readText(formData, "coverId") || null }
+      : {}),
     ...(submitted.content === undefined ? {} : { content: submitted.content }),
   };
 
