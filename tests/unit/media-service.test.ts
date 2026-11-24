@@ -306,16 +306,35 @@ describe("media library", () => {
     expect(objects.has(created.storageKey)).toBe(false);
   });
 
-  it("keeps the row deleted when the object delete fails", async () => {
-    const { media, storage } = service();
+  it("keeps the row live when the object delete fails, so a retry works", async () => {
+    const { media, storage, objects } = service();
     const created = await media.upload(OWNER, buildJpeg());
     vi.mocked(storage.delete).mockRejectedValueOnce(new Error("r2 down"));
 
+    await expect(media.remove(OWNER, created.id)).rejects.toThrow("r2 down");
+    expect(await media.list(OWNER)).toHaveLength(1);
+    expect(objects.has(created.storageKey)).toBe(true);
+
     expect(await media.remove(OWNER, created.id)).toEqual({ kind: "deleted" });
     expect(await media.list(OWNER)).toEqual([]);
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining("media.orphan"),
-    );
+    expect(objects.has(created.storageKey)).toBe(false);
+  });
+
+  it("finishes on retry when the row update fails after the object is gone", async () => {
+    const { media, objects } = service();
+    const created = await media.upload(OWNER, buildJpeg());
+    const spy = vi
+      .spyOn(repository, "markDeleted")
+      .mockRejectedValueOnce(new Error("d1 down"));
+
+    await expect(media.remove(OWNER, created.id)).rejects.toThrow("d1 down");
+    expect(objects.has(created.storageKey)).toBe(false);
+    expect(await media.list(OWNER)).toHaveLength(1);
+
+    spy.mockRestore();
+    // R2 reports success for a key that is already gone.
+    expect(await media.remove(OWNER, created.id)).toEqual({ kind: "deleted" });
+    expect(await media.list(OWNER)).toEqual([]);
   });
 });
 

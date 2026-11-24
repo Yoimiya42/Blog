@@ -12,6 +12,7 @@ import {
   Upload,
   Wallpaper,
 } from "lucide-react";
+import { RadioGroup } from "radix-ui";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -369,33 +370,25 @@ function EditorBackgroundPanel({
         ) : null}
       </div>
 
-      <div
+      {/* Radix supplies one Tab stop and arrow-key selection (APG radio group). */}
+      <RadioGroup.Root
         aria-label="Visibility"
         className="flex rounded-control bg-foreground/5 p-0.5"
-        role="radiogroup"
+        disabled={!state.image}
+        onValueChange={(value) => void setOpacity(Number(value))}
+        orientation="horizontal"
+        value={String(state.opacity)}
       >
-        {opacities.map((opacity) => {
-          const checked = state.opacity === opacity;
-          return (
-            <button
-              aria-checked={checked}
-              className={cn(
-                "h-8 flex-1 rounded-mark text-xs font-medium tabular-nums transition-colors disabled:pointer-events-none disabled:opacity-40",
-                checked
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-              disabled={!state.image}
-              key={opacity}
-              onClick={() => void setOpacity(opacity)}
-              role="radio"
-              type="button"
-            >
-              {opacity === 0 ? "Off" : `${opacity}%`}
-            </button>
-          );
-        })}
-      </div>
+        {opacities.map((opacity) => (
+          <RadioGroup.Item
+            className="h-8 flex-1 rounded-mark text-xs font-medium text-muted-foreground tabular-nums transition-colors outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40 data-[state=checked]:bg-background data-[state=checked]:text-foreground data-[state=checked]:shadow-sm"
+            key={opacity}
+            value={String(opacity)}
+          >
+            {opacity === 0 ? "Off" : `${opacity}%`}
+          </RadioGroup.Item>
+        ))}
+      </RadioGroup.Root>
 
       <div className="flex gap-2">
         {imageUpload ? (

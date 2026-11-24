@@ -34,7 +34,7 @@ Upload and delivery paths for images under ADR-0021, ADR-0022, ADR-0023, and ADR
 | 422 | Rejected file: type, HEIC, pixel limits, damaged file, or GPS not removable |
 | 500 | Storage or database failure; the R2 object is deleted when the row fails |
 
-Workers Logs events: `media.upload` (id, type, size, `hadGps`; never coordinates), `media.reject` (reason), `media.upload_failed`, `media.orphan` (an object whose cleanup failed; delete it by key).
+Workers Logs events: `media.upload` (id, type, size, `hadGps`; never coordinates), `media.reject` (reason), `media.upload_failed`, `media.orphan` (an upload whose object cleanup failed; delete it by key), `media.delete`, `media.delete_failed` (the item stays in the library; delete it again).
 
 The `media` table arrives with migration `0007_create_media.sql`. Apply it before the code that uses it; see `d1-migrations.md`.
 

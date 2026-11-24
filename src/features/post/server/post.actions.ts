@@ -119,7 +119,14 @@ export async function savePostAction(
   };
 
   const intent = readText(formData, "intent");
-  const condition = { ifUpdatedAt: fromPostVersion(formData.get("version")) };
+  const ifUpdatedAt = fromPostVersion(formData.get("version"));
+
+  // Every write to an existing post is conditional. Without a token the
+  // repository would drop the check and could overwrite a newer version.
+  if (postId !== null && !ifUpdatedAt) {
+    return failure(values, { ok: false, reason: "conflict" });
+  }
+  const condition = { ifUpdatedAt };
 
   // Unpublishing writes no field, so unsaved or invalid input cannot block it.
   if (postId !== null && intent === "unpublish") {

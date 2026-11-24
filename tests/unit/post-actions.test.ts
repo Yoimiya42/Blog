@@ -68,7 +68,7 @@ const STORED = {
   status: "DRAFT",
   updatedAt: SAVED_AT,
 };
-const NO_TOKEN = { ifUpdatedAt: undefined };
+const TOKEN = { ifUpdatedAt: new Date(1_000) };
 
 function expectPublicRevalidation(): void {
   expect(revalidatePath).toHaveBeenCalledWith("/");
@@ -136,14 +136,14 @@ describe("savePostAction", () => {
     const state = await savePostAction(
       "post-1",
       PREVIOUS,
-      form({ ...VALID, summary: "  " }),
+      form({ ...VALID, version: "1000", summary: "  " }),
     );
 
     expect(service.update).toHaveBeenCalledWith(
       SESSION,
       "post-1",
       { ...VALID, summary: "  " },
-      NO_TOKEN,
+      TOKEN,
     );
     expect(state).toEqual({
       values: { title: "Hello", slug: "hello", summary: "", tags: "" },
@@ -174,22 +174,30 @@ describe("savePostAction", () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
-  it("ignores a version field that is not a token", async () => {
-    service.update.mockResolvedValue({ ok: true, post: STORED });
+  it.each([
+    ["missing", VALID],
+    ["not a token", { ...VALID, version: "1e3" }],
+  ])(
+    "reports a conflict without writing when the version is %s",
+    async (_case, fields) => {
+      for (const intent of ["save", "publish", "unpublish"]) {
+        const state = await savePostAction(
+          "post-1",
+          PREVIOUS,
+          form({ ...fields, intent }),
+        );
 
-    await savePostAction(
-      "post-1",
-      PREVIOUS,
-      form({ ...VALID, version: "1e3" }),
-    );
-
-    expect(service.update).toHaveBeenCalledWith(
-      SESSION,
-      "post-1",
-      VALID,
-      NO_TOKEN,
-    );
-  });
+        expect(state).toMatchObject({
+          values: { ...VALID, tags: "" },
+          formError: expect.stringContaining("changed"),
+        });
+      }
+      expect(service.update).not.toHaveBeenCalled();
+      expect(service.publish).not.toHaveBeenCalled();
+      expect(service.unpublish).not.toHaveBeenCalled();
+      expect(revalidatePath).not.toHaveBeenCalled();
+    },
+  );
 
   it("refreshes public reads when a published post is saved", async () => {
     service.update.mockResolvedValue({
@@ -197,7 +205,11 @@ describe("savePostAction", () => {
       post: { ...STORED, status: "PUBLISHED" },
     });
 
-    await savePostAction("post-1", PREVIOUS, form(VALID));
+    await savePostAction(
+      "post-1",
+      PREVIOUS,
+      form({ ...VALID, version: "1000" }),
+    );
 
     expectPublicRevalidation();
   });
@@ -223,7 +235,11 @@ describe("savePostAction", () => {
   it("reports a post deleted since the form opened", async () => {
     service.update.mockResolvedValue({ ok: false, reason: "not_found" });
 
-    const state = await savePostAction("post-1", PREVIOUS, form(VALID));
+    const state = await savePostAction(
+      "post-1",
+      PREVIOUS,
+      form({ ...VALID, version: "1000" }),
+    );
 
     expect(state).toMatchObject({
       fieldErrors: {},
@@ -261,14 +277,14 @@ describe("savePostAction", () => {
     const state = await savePostAction(
       "post-1",
       PREVIOUS,
-      form({ ...VALID, tags: "go" }),
+      form({ ...VALID, version: "1000", tags: "go" }),
     );
 
     expect(service.update).toHaveBeenCalledWith(
       SESSION,
       "post-1",
       { ...VALID, tags: "go" },
-      NO_TOKEN,
+      TOKEN,
     );
     expect(state.values.tags).toBe("Go");
   });
@@ -276,7 +292,11 @@ describe("savePostAction", () => {
   it("leaves tags out when the request has no tag field", async () => {
     service.update.mockResolvedValue({ ok: true, post: STORED });
 
-    await savePostAction("post-1", PREVIOUS, form(VALID));
+    await savePostAction(
+      "post-1",
+      PREVIOUS,
+      form({ ...VALID, version: "1000" }),
+    );
 
     expect(service.update.mock.calls[0]?.[2]).not.toHaveProperty("tags");
   });
@@ -288,14 +308,14 @@ describe("savePostAction", () => {
     await savePostAction(
       "post-1",
       PREVIOUS,
-      form({ ...VALID, content: JSON.stringify(document) }),
+      form({ ...VALID, version: "1000", content: JSON.stringify(document) }),
     );
 
     expect(service.update).toHaveBeenCalledWith(
       SESSION,
       "post-1",
       { ...VALID, content: document },
-      NO_TOKEN,
+      TOKEN,
     );
   });
 
@@ -303,7 +323,7 @@ describe("savePostAction", () => {
     const state = await savePostAction(
       "post-1",
       PREVIOUS,
-      form({ ...VALID, content: "{not json" }),
+      form({ ...VALID, version: "1000", content: "{not json" }),
     );
 
     expect(state).toMatchObject({
@@ -324,7 +344,11 @@ describe("savePostAction", () => {
     const state = await savePostAction(
       "post-1",
       PREVIOUS,
-      form({ ...VALID, content: '{"type":"doc","content":[{"type":"x"}]}' }),
+      form({
+        ...VALID,
+        version: "1000",
+        content: '{"type":"doc","content":[{"type":"x"}]}',
+      }),
     );
 
     expect(state.fieldErrors.content).toBe("content.0.type: unknown node");
@@ -341,7 +365,11 @@ describe("publish intent", () => {
     });
 
     await expect(
-      savePostAction("post-1", PREVIOUS, form({ ...VALID, intent: "publish" })),
+      savePostAction(
+        "post-1",
+        PREVIOUS,
+        form({ ...VALID, version: "1000", intent: "publish" }),
+      ),
     ).rejects.toMatchObject({ path: "/admin/posts/post-1" });
 
     expect(service.publish).toHaveBeenCalledWith(SESSION, "post-1", {
@@ -360,7 +388,7 @@ describe("publish intent", () => {
     await savePostAction(
       "post-1",
       PREVIOUS,
-      form({ ...VALID, intent: "publish" }),
+      form({ ...VALID, version: "1000", intent: "publish" }),
     );
 
     expect(service.publish).not.toHaveBeenCalled();
@@ -378,7 +406,7 @@ describe("publish intent", () => {
     const state = await savePostAction(
       "post-1",
       PREVIOUS,
-      form({ ...VALID, intent: "publish" }),
+      form({ ...VALID, version: "1000", intent: "publish" }),
     );
 
     expect(state).toMatchObject({
@@ -426,7 +454,7 @@ describe("unpublish intent", () => {
     const state = await savePostAction(
       "post-1",
       PREVIOUS,
-      form({ ...VALID, intent: "unpublish" }),
+      form({ ...VALID, version: "1000", intent: "unpublish" }),
     );
 
     expect(state).toMatchObject({

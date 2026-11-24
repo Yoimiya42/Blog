@@ -1,6 +1,6 @@
 # 0025. Media deletion and reference safety
 
-- **Status**: Accepted
+- **Status**: Accepted; deletion order superseded by 0033
 - **Date**: 2026-11-18
 - **Requirements**: FR-ADMIN-08
 - **Supersedes**: —
