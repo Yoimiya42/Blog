@@ -487,6 +487,20 @@ describe("autosavePostAction", () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
+  it("passes a title on to the service", async () => {
+    service.autosave.mockResolvedValue({ ok: true, updatedAt: SAVED_AT });
+
+    await autosavePostAction("post-1", "1000", JSON.stringify(DOCUMENT), "T");
+
+    expect(service.autosave).toHaveBeenCalledWith(
+      SESSION,
+      "post-1",
+      DOCUMENT,
+      new Date(1_000),
+      "T",
+    );
+  });
+
   it.each(["conflict", "not_found", "not_draft"] as const)(
     "passes on the %s outcome",
     async (reason) => {
@@ -505,9 +519,10 @@ describe("autosavePostAction", () => {
     ["content that is not JSON", "post-1", "1000", "{not json"],
     ["a non-string post id", 7, "1000", "{}"],
     ["non-string content", "post-1", "1000", { type: "doc" }],
+    ["a non-string title", "post-1", "1000", "{}", 5],
   ])("rejects %s before the service is reached", async (_name, ...args) => {
     const response = await autosavePostAction(
-      ...(args as [string, string, string]),
+      ...(args as [string, string, string, string?]),
     );
 
     expect(response).toEqual({ ok: false, reason: "invalid" });

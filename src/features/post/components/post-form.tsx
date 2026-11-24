@@ -59,9 +59,11 @@ import { UnsavedChangesGuard } from "./unsaved-guard";
 const AUTOSAVE_INTERVAL_MS = 10_000;
 const STATS_DELAY_MS = 400;
 
-/** Fields compared against the last save; content is tracked by autosave. */
+/**
+ * Fields compared against the last save. Title and content are tracked by
+ * autosave, which saves them for drafts (ADR-0035).
+ */
 const TRACKED_FIELDS = [
-  "title",
   "slug",
   "summary",
   "tags",
@@ -188,9 +190,10 @@ export function PostForm({
   const [autosave] = useState(() =>
     createDraftAutosave({
       initialContent: initialDocument ? JSON.stringify(initialDocument) : "",
+      initialTitle: initialValues.title,
       initialVersion: version ?? "",
-      save: (current, content) =>
-        autosavePostAction(postId ?? "", current, content),
+      save: (current, content, title) =>
+        autosavePostAction(postId ?? "", current, content, title),
       onStatus: setAutosaveStatus,
     }),
   );
@@ -340,11 +343,17 @@ export function PostForm({
           // A redirecting action may settle without a state; keep the last one.
           const next = (await savePostAction(postId, previous, formData)) as
             PostFormState | undefined;
-          if (next?.version) {
-            const content = formData.get("content");
+          const content = formData.get("content");
+          const title = formData.get("title");
+          // No state means the action redirected, which it does only after
+          // a successful write; the fresh render brings the new token.
+          const savedVersion =
+            next === undefined ? autosave.currentVersion() : next.version;
+          if (savedVersion) {
             autosave.markSaved(
-              next.version,
+              savedVersion,
               typeof content === "string" ? content : undefined,
+              typeof title === "string" ? title : undefined,
             );
           }
 
@@ -475,7 +484,9 @@ export function PostForm({
                 field.value = field.value.replace(/[\r\n]+/g, " ");
               }
               fitHeight(field);
+              autosave.changeTitle(field.value);
             }}
+            onBlur={saveOnBlur}
             onKeyDown={(event) => {
               // Enter moves to the body, like leaving a heading.
               if (event.key !== "Enter" || event.nativeEvent.isComposing) {

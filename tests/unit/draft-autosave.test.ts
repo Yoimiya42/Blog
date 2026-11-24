@@ -10,7 +10,13 @@ import {
 const SAVED_AT = new Date("2026-11-15T10:00:00.000Z");
 
 let save: ReturnType<
-  typeof vi.fn<(version: string, content: string) => Promise<AutosaveOutcome>>
+  typeof vi.fn<
+    (
+      version: string,
+      content: string,
+      title?: string,
+    ) => Promise<AutosaveOutcome>
+  >
 >;
 let statuses: AutosaveStatus[];
 let autosave: DraftAutosave;
@@ -29,6 +35,7 @@ beforeEach(() => {
   statuses = [];
   autosave = createDraftAutosave({
     initialContent: "v0",
+    initialTitle: "Draft",
     initialVersion: "100",
     save,
     onStatus: (status) => statuses.push(status),
@@ -207,6 +214,44 @@ describe("runExclusive", () => {
     ).rejects.toThrow("redirect");
 
     expect(await autosave.runExclusive(async (version) => version)).toBe("100");
+  });
+});
+
+describe("title", () => {
+  it("saves a changed title with the document", async () => {
+    save.mockResolvedValueOnce({ ok: true, version: "200" });
+    autosave.changeTitle("Renamed");
+
+    expect(autosave.hasUnsavedContent()).toBe(true);
+    await autosave.flush();
+    await autosave.flush();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith("100", "v0", "Renamed");
+    expect(autosave.hasUnsavedContent()).toBe(false);
+  });
+
+  it("holds a blank title back but still saves the document", async () => {
+    save.mockResolvedValueOnce({ ok: true, version: "200" });
+    autosave.changeTitle("  ");
+    autosave.change("v1");
+
+    await autosave.flush();
+    await autosave.flush();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenCalledWith("100", "v1");
+    // The blank title is still unsaved, so leaving still asks.
+    expect(autosave.hasUnsavedContent()).toBe(true);
+  });
+
+  it("records a title saved by a manual save", async () => {
+    autosave.changeTitle("Renamed");
+    autosave.markSaved("200", undefined, "Renamed");
+
+    await autosave.flush();
+
+    expect(save).not.toHaveBeenCalled();
   });
 });
 

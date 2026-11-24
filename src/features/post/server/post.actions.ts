@@ -222,13 +222,14 @@ export async function savePostAction(
 }
 
 /**
- * Saves the document of a draft in the background. Called directly from the
- * client, so every argument is untrusted.
+ * Saves the document, and the title when given, of a draft in the
+ * background. Called directly from the client, so every argument is untrusted.
  */
 export async function autosavePostAction(
   postId: string,
   version: string,
   content: string,
+  title?: string,
 ): Promise<AutosaveResponse> {
   const session = await requireOwner();
 
@@ -236,6 +237,7 @@ export async function autosavePostAction(
   if (
     typeof postId !== "string" ||
     typeof content !== "string" ||
+    (title !== undefined && typeof title !== "string") ||
     !ifUpdatedAt
   ) {
     return { ok: false, reason: "invalid" };
@@ -249,7 +251,10 @@ export async function autosavePostAction(
   }
 
   const service = await getPostService();
-  const result = await service.autosave(session, postId, document, ifUpdatedAt);
+  const result =
+    title === undefined
+      ? await service.autosave(session, postId, document, ifUpdatedAt)
+      : await service.autosave(session, postId, document, ifUpdatedAt, title);
 
   // No revalidation: a draft has no public read, and refreshing the admin
   // route every few seconds would re-render the page under the editor.

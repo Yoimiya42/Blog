@@ -14,8 +14,15 @@ export type AutosaveOutcome =
 interface DraftAutosaveOptions {
   /** Serialised document as stored on the server. */
   initialContent: string;
+  /** Stored title; drafts autosave it too (ADR-0035). */
+  initialTitle?: string;
   initialVersion: string;
-  save: (version: string, content: string) => Promise<AutosaveOutcome>;
+  /** `title` is absent when it has not changed since the last save. */
+  save: (
+    version: string,
+    content: string,
+    title?: string,
+  ) => Promise<AutosaveOutcome>;
   onStatus: (status: AutosaveStatus) => void;
   now?: () => Date;
 }
@@ -28,6 +35,7 @@ interface DraftAutosaveOptions {
  */
 export function createDraftAutosave({
   initialContent,
+  initialTitle = "",
   initialVersion,
   save,
   onStatus,
@@ -35,6 +43,8 @@ export function createDraftAutosave({
 }: DraftAutosaveOptions) {
   let content = initialContent;
   let savedContent = initialContent;
+  let title = initialTitle;
+  let savedTitle = initialTitle;
   let version = initialVersion;
   let enabled = false;
   let stopped = false;
@@ -49,14 +59,25 @@ export function createDraftAutosave({
   }
 
   async function saveIfDirty(): Promise<void> {
-    if (!enabled || stopped || content === savedContent) return;
+    // A blank title is invalid; it waits until the owner types one.
+    const attemptTitle = title.trim() === "" ? savedTitle : title;
+    if (
+      !enabled ||
+      stopped ||
+      (content === savedContent && attemptTitle === savedTitle)
+    ) {
+      return;
+    }
 
     const attempt = content;
     onStatus({ kind: "saving" });
 
     let outcome: AutosaveOutcome;
     try {
-      outcome = await save(version, attempt);
+      outcome =
+        attemptTitle === savedTitle
+          ? await save(version, attempt)
+          : await save(version, attempt, attemptTitle);
     } catch {
       onStatus({ kind: "error" });
       return;
@@ -65,6 +86,7 @@ export function createDraftAutosave({
     if (outcome.ok) {
       version = outcome.version;
       savedContent = attempt;
+      savedTitle = attemptTitle;
       onStatus({ kind: "saved", at: now() });
     } else if (
       outcome.reason === "conflict" ||
@@ -83,14 +105,19 @@ export function createDraftAutosave({
   }
 
   return {
-    /** True while the editor document differs from the last stored one. */
+    /** True while the document or title differs from the stored one. */
     hasUnsavedContent(): boolean {
-      return content !== savedContent;
+      return content !== savedContent || title !== savedTitle;
     },
 
     /** Records the latest editor document. Does not save. */
     change(next: string): void {
       content = next;
+    },
+
+    /** Records the latest title. Does not save. */
+    changeTitle(next: string): void {
+      title = next;
     },
 
     setEnabled(next: boolean): void {
@@ -120,9 +147,14 @@ export function createDraftAutosave({
     },
 
     /** Records a write made outside autosave, such as a manual save. */
-    markSaved(nextVersion: string, saved?: string): void {
+    markSaved(
+      nextVersion: string,
+      saved?: string,
+      savedTitleNow?: string,
+    ): void {
       version = nextVersion;
       if (saved !== undefined) savedContent = saved;
+      if (savedTitleNow !== undefined) savedTitle = savedTitleNow;
     },
 
     /**
