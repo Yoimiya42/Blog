@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.48 · 2026-11-24 · Draft
+> v0.49 · 2026-11-24 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -570,7 +570,7 @@ NFR-CN-01 to NFR-CN-06, NFR-CN-08, and NFR-CN-09 are preventive and blocking. NF
 | NFR-CN-09 | No ICP filing; 2–5s first paint accepted | Filing needs a domestic entity, and personal filings forbid interactive features |
 | NFR-CN-10 | A mainland load-and-browse test is recorded before launch when a tester is available. Register, log in, and comment join the test in v2.5 | The only reliable verification |
 
-Cloudflare Workers is the selected production platform under ADR-0009. The Workers preview and code rollback procedure passed Issue #29 rehearsal, and Issue #29 is closed. Vercel now serves pull request previews only. Provider domains are development evidence only; production requires custom domains; mainland China tests are recorded under ADR-0020.
+Cloudflare Workers is the selected production platform under ADR-0009. The Workers preview and code rollback procedure passed Issue #29 rehearsal, and Issue #29 is closed. Vercel was disconnected in Issue #91. Provider domains are development evidence only; production requires custom domains; mainland China tests are recorded under ADR-0020.
 
 ### 6.2 Performance
 
@@ -636,7 +636,7 @@ Gallery growth will exceed the R2 free tier; overage is ~$0.015/GB/month.
 | Content | Versioned TipTap JSON in D1 TEXT | Schema v1 | Confirmed | JSON is authoritative; HTML and Markdown are derived exports; see ADR-0010 |
 | Editor | TipTap | 3.x candidate | Confirmed | Use the schema in `article-content-schema.md`; validate the exact package release during implementation |
 | Email | Resend | Current managed service | Confirmed | v1 requires verified code delivery to the owner mailbox. The release that opens login to visitors requires successful code delivery to QQ Mail and 163 Mail; see ADR-0016 |
-| Hosting | Cloudflare Workers | Current managed service | Confirmed | Use Workers for production; keep Vercel only as a temporary rollback path; see ADR-0009 |
+| Hosting | Cloudflare Workers | Current managed service | Confirmed | Use Workers for production and Worker Previews for branches; see ADR-0009 and ADR-0015 |
 | Next.js runtime adapter | vinext; OpenNext fallback | Current compatible | Confirmed | vinext passed Issue #29 compatibility, preview, and rollback checks; use OpenNext only for a documented blocker |
 | Analytics | None in v1 | — | Confirmed | Reconsider cookie-free analytics in v1.5 |
 | Code quality | ESLint, Prettier, Husky, lint-staged | Current compatible | Confirmed | Run local checks before user commits |
@@ -716,3 +716,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-23 | v0.46 | Added FR-ADMIN-26 immersive editor background and the `EditorBackground` table; see ADR-0031 |
 | 2026-11-23 | v0.47 | FR-ADMIN-03 centres the Edit and Preview toggle; FR-ADMIN-23 moves word count and reading time to the settings sidebar and widens the focus-mode card |
 | 2026-11-24 | v0.48 | FR-ADMIN-26 uses a default with a per-post override; added FR-ADMIN-27 admin settings and the `PostEditorBackground` table; see ADR-0032 |
+| 2026-11-24 | v0.49 | Removed Vercel from the hosting row; Worker Previews are the only preview target |

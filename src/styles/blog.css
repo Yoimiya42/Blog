@@ -220,6 +220,17 @@
   border-radius: var(--radius-container);
 }
 
+/* Below 75rem the inline list is the touch path: 44 px targets (PRD 6.3). */
+.formal .toc--inline .toc__list {
+  gap: 0;
+}
+
+.formal .toc--inline .toc__item a {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
 .formal .toc--inline summary {
   min-height: 2.75rem;
   display: flex;

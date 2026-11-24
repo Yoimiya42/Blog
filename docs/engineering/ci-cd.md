@@ -32,7 +32,7 @@ Ruleset `protect-main` targets the default branch. It is a GitHub setting, not a
 | Require a pull request | On, zero approvals |
 | Require status checks | `check` from GitHub Actions; branch must be up to date |
 
-Only `check` is required. Workers Builds and Vercel are third-party checks and must not block merges.
+Only `check` is required. Workers Builds is a third-party check and must not block merges.
 
 Verify:
 

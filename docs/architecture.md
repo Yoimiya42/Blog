@@ -1,6 +1,6 @@
 # Architecture and Engineering Standards
 
-> v0.26 · 2026-11-23
+> v0.27 · 2026-11-24
 > Requirements: `PRD.md`. Decisions: `adr/`.
 
 ---
@@ -125,7 +125,7 @@ This boundary allows visual redesigns to remain inside layouts, public component
 - Better Auth provides owner sessions and six-digit email codes. See ADR-0004.
 - Cloudflare R2 stores media behind the project domain.
 - Versioned TipTap JSON in D1 `TEXT` is the only authoritative article body. The server validates it and maps allowlisted nodes to React components. See ADR-0010 and `article-content-schema.md`.
-- Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal, and Workers Builds now deploys `main`. OpenNext remains a fallback only for a documented blocker. Vercel serves pull request previews only since Issue #29 closed.
+- Cloudflare Workers is the production target. vinext passed the Issue #29 preview and rollback rehearsal, and Workers Builds now deploys `main`. OpenNext remains a fallback only for a documented blocker. Vercel was disconnected in Issue #91; Worker Previews are the only preview target.
 - Code highlighting runs on the server through Shiki's JavaScript regex engine; Workers rejects the WebAssembly engine. The admin editor also highlights in the browser with the same theme and grammars, loaded per language (ADR-0027). Production stays on Workers Free after the public blog ships although measured requests exceed the free CPU limit; an exceeded-CPU outcome or public promotion triggers Workers Paid or cached public HTML. See ADR-0011 and ADR-0019.
 - Images: the Worker entry accepts owner uploads at `POST /api/media`, strips GPS in place, and stores GPS-clean originals in R2; Cloudflare Images resizes on delivery at `/media`. See ADR-0021, ADR-0022, ADR-0023, and ADR-0024. `/admin/media` lists, copies, and deletes media; deletion scans post content for references (ADR-0025). Article images list every allowed width up to the one that covers the original in `srcset`; the enlarged view uses that covering width.
 
@@ -305,3 +305,4 @@ Any failing row is an architectural defect.
 | 2026-11-23 | v0.24 | Added the owner-only post preview route to the blog shell |
 | 2026-11-23 | v0.25 | Moved the post preview into the admin; it frames the blog shell under the editor's header row |
 | 2026-11-23 | v0.26 | The post preview frames the article layout only, without the site header and footer |
+| 2026-11-24 | v0.27 | Removed Vercel pull request previews |

@@ -102,15 +102,19 @@ export function createEditorBackgroundRepository(db: D1Database) {
         .run();
     },
 
-    /** Media ids used by the user's default or by any post. */
+    /**
+     * Media ids used by the user's default or by any live post. Posts are
+     * soft-deleted, so the foreign-key cascade never removes their rows.
+     */
     async listMediaIdsInUse(userId: string): Promise<string[]> {
       const { results } = await db
         .prepare(
           `SELECT media_id FROM editor_background
            WHERE user_id = ? AND media_id IS NOT NULL
            UNION
-           SELECT media_id FROM post_editor_background
-           WHERE media_id IS NOT NULL`,
+           SELECT background.media_id FROM post_editor_background AS background
+           JOIN post ON post.id = background.post_id
+           WHERE background.media_id IS NOT NULL AND post.deleted_at IS NULL`,
         )
         .bind(userId)
         .all<{ media_id: string }>();
