@@ -48,9 +48,7 @@ export function MediaLibrary({
     return (
       <div className="flex flex-col items-center gap-2 rounded-card border border-dashed border-input py-16 text-center">
         <ImageOff aria-hidden className="size-6 text-faint" />
-        <p className="text-sm text-muted-foreground">
-          No images yet. Upload from the post editor.
-        </p>
+        <p className="text-sm text-muted-foreground">No images yet</p>
       </div>
     );
   }
@@ -162,7 +160,7 @@ function MediaDetail({
         {item.hadLocation ? (
           <p className="flex items-start gap-2 text-xs text-muted-foreground">
             <MapPinOff aria-hidden className="mt-0.5 size-3.5 shrink-0" />
-            Location removed from the served file; kept privately.
+            Location hidden
           </p>
         ) : null}
 

@@ -17,9 +17,7 @@ export default function AdminError({
       <h1 className="text-2xl font-semibold tracking-tight">
         Something went wrong
       </h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        The page failed to load. Nothing was changed.
-      </p>
+      <p className="mt-2 text-sm text-muted-foreground">Nothing was changed.</p>
       {error.digest ? (
         <p className="mt-1 font-mono text-xs text-faint">{error.digest}</p>
       ) : null}

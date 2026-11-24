@@ -98,8 +98,8 @@ export function DeleteMediaButton({
       <form action={force} className="space-y-3">
         <div className="text-sm" role="alert">
           <p className="font-medium text-destructive">
-            {count === 1 ? "1 post shows" : `${count} posts show`} this image.
-            Deleting it leaves “Image unavailable” in its place.
+            Used in {count === 1 ? "1 post" : `${count} posts`}. They will show
+            “Image unavailable”.
           </p>
           <ul className="mt-2 list-disc pl-5">
             {checkState.posts.map((post) => (
@@ -126,10 +126,8 @@ export function DeleteMediaButton({
   return (
     <form action={check} className="space-y-3">
       <p className="text-sm" role="alert">
-        Delete this image? It cannot be restored.
-        {isBackground
-          ? " It is an editor background; editors that use it return to the plain canvas."
-          : null}
+        Delete permanently?
+        {isBackground ? " Editors using it as a background go plain." : null}
       </p>
       <div className="flex flex-wrap gap-2">
         <ConfirmButton label="Confirm delete" />

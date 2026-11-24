@@ -79,23 +79,23 @@ export const postInputSchema = z.object({
     .trim()
     .min(1, { error: "Title is required." })
     .max(POST_TITLE_MAX_LENGTH, {
-      error: `Title must be at most ${POST_TITLE_MAX_LENGTH} characters.`,
+      error: `Max ${POST_TITLE_MAX_LENGTH} characters`,
     }),
   slug: z
     .string({ error: "Slug is required." })
     .trim()
     .min(1, { error: "Slug is required." })
     .max(POST_SLUG_MAX_LENGTH, {
-      error: `Slug must be at most ${POST_SLUG_MAX_LENGTH} characters.`,
+      error: `Max ${POST_SLUG_MAX_LENGTH} characters`,
     })
     .regex(POST_SLUG_PATTERN, {
-      error: "Use lowercase letters, numbers, and single hyphens.",
+      error: "Use a–z, 0–9, and single hyphens",
     }),
   summary: z
     .string()
     .trim()
     .max(POST_SUMMARY_MAX_LENGTH, {
-      error: `Summary must be at most ${POST_SUMMARY_MAX_LENGTH} characters.`,
+      error: `Max ${POST_SUMMARY_MAX_LENGTH} characters`,
     })
     .nullish()
     // A blank summary is stored as NULL, never as an empty string.

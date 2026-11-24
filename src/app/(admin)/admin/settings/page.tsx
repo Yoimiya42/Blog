@@ -34,8 +34,7 @@ export default async function AdminSettingsPage() {
             Editor
           </h2>
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-            The background every post opens with. A post changed from its editor
-            keeps its own choice until you reset it there.
+            Default for every post. A post’s own choice overrides it.
           </p>
         </div>
 

@@ -4,7 +4,9 @@ import dynamic from "next/dynamic";
 import {
   AlignLeft,
   ChevronRight,
+  CircleAlert,
   FileText,
+  Globe,
   Link2,
   Lock,
   Tag as TagIcon,
@@ -529,18 +531,20 @@ export function PostForm({
               ) : null}
             </div>
 
-            {state.formError ? (
-              <p className="text-sm text-destructive" role="alert">
-                {state.formError}
-              </p>
-            ) : null}
+            {/* A save error shows once, as a toast; the fields it names are
+                highlighted. Only states that persist stay on the panel. */}
             {autosaveStatus.kind === "stopped" ? (
-              <p className="text-sm text-destructive" role="alert">
+              <p
+                className="flex items-center gap-1.5 text-sm text-destructive"
+                role="alert"
+              >
+                <CircleAlert aria-hidden className="size-4 shrink-0" />
                 {STOPPED_MESSAGES[autosaveStatus.reason]}
               </p>
             ) : status === "PUBLISHED" ? (
-              <p className="text-xs text-muted-foreground">
-                Saving updates the live post.
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Globe aria-hidden className="size-3.5 shrink-0" />
+                Saves go live
               </p>
             ) : null}
           </div>
@@ -587,16 +591,14 @@ export function PostForm({
               readOnly={slugFrozen}
               spellCheck={false}
               title={
-                slugFrozen
-                  ? "Frozen since first publication"
-                  : "Lowercase letters, numbers, hyphens"
+                slugFrozen ? "Locked after publishing" : "a–z, 0–9, hyphens"
               }
               type="text"
             />
             <p className="sr-only" id="post-slug-hint">
               {slugFrozen
-                ? "Frozen since first publication."
-                : "Lowercase letters, numbers, and hyphens. Frozen once published."}
+                ? "Locked after publishing."
+                : "a–z, 0–9, and hyphens. Locked after publishing."}
             </p>
             <FieldError id="post-slug-error" message={fieldErrors.slug} />
           </SidebarSection>
@@ -629,9 +631,8 @@ export function PostForm({
 }
 
 const STOPPED_MESSAGES = {
-  conflict:
-    "Autosave stopped: this post changed in another tab or window. Reload the page to continue.",
-  not_found: "Autosave stopped: this post no longer exists.",
+  conflict: "Changed in another tab. Reload.",
+  not_found: "Post not found",
 } as const;
 
 interface SaveView {
@@ -671,14 +672,14 @@ function describeSave({
     return {
       tone: "bg-destructive",
       label: "Retrying…",
-      detail: "Autosave failed; it retries every 10 seconds.",
+      detail: "Autosave failed. Retrying.",
     };
   }
   if (dirty) {
     return {
       tone: "bg-warning",
       label: "Unsaved",
-      detail: "Ctrl or Cmd+S saves. Drafts also autosave their text.",
+      detail: "Ctrl+S or ⌘S to save",
     };
   }
 
@@ -687,7 +688,7 @@ function describeSave({
     label: savedAt
       ? `Saved ${savedAt.toLocaleTimeString([], TIME_FORMAT)}`
       : "Saved",
-    detail: "All changes are saved.",
+    detail: "All saved",
   };
 }
 

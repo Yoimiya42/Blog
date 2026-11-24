@@ -31,12 +31,12 @@ export async function uploadImage(
 ): Promise<ImageUploadResult> {
   // The server checks the real type and size; these only save a long upload.
   if (file.size > config.maxBytes) {
-    return { ok: false, message: "The file is larger than 50 MB." };
+    return { ok: false, message: "Max 50 MB" };
   }
   if (/\.hei[cf]$/i.test(file.name) || /hei[cf]/i.test(file.type)) {
     return {
       ok: false,
-      message: "HEIC is not supported yet. Export the photo as JPEG.",
+      message: "HEIC not supported. Use JPEG.",
     };
   }
 
@@ -52,20 +52,20 @@ export async function uploadImage(
       },
     });
   } catch {
-    return { ok: false, message: "The upload failed. Check the connection." };
+    return { ok: false, message: "Upload failed. Check your connection." };
   }
 
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) {
     return {
       ok: false,
-      message: errorMessage(body) ?? `The upload failed (${response.status}).`,
+      message: errorMessage(body) ?? `Upload failed (${response.status})`,
     };
   }
 
   const reply = (body ?? {}) as { id?: unknown; url?: unknown; alt?: unknown };
   if (typeof reply.id !== "string" || typeof reply.url !== "string") {
-    return { ok: false, message: "The server returned an unexpected reply." };
+    return { ok: false, message: "Unexpected server reply" };
   }
 
   return {

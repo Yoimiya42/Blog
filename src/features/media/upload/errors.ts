@@ -8,14 +8,13 @@ export type MediaRejection =
   | "alt_too_long";
 
 const MESSAGES: Record<MediaRejection, string> = {
-  too_large: "The file is larger than 50 MB.",
-  unsupported_type: "Use a JPEG, PNG, or WebP image.",
-  heic_unsupported: "HEIC is not supported yet. Export the photo as JPEG.",
-  too_many_pixels:
-    "The image is larger than 100 megapixels or 12,000 px on an edge.",
-  invalid_image: "The image file is damaged or incomplete.",
-  gps_not_removed: "Location data could not be removed from this image.",
-  alt_too_long: "Alt text must be 500 characters or fewer.",
+  too_large: "Max 50 MB",
+  unsupported_type: "JPEG, PNG, or WebP only",
+  heic_unsupported: "HEIC not supported. Use JPEG.",
+  too_many_pixels: "Max 100 MP or 12,000 px per side",
+  invalid_image: "Damaged image file",
+  gps_not_removed: "Couldn’t remove location data",
+  alt_too_long: "Alt text: max 500 characters",
 };
 
 /** A file the owner can fix. The message is safe to show in the admin. */

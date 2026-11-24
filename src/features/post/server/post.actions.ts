@@ -17,10 +17,9 @@ import { getPostService } from "./post.service";
 
 const POSTS_PATH = "/admin/posts";
 
-const FIX_FIELDS = "Fix the highlighted fields and save again.";
-const POST_GONE = "This post no longer exists.";
-const POST_CHANGED =
-  "This post changed in another tab or window. Reload the page before saving again.";
+const FIX_FIELDS = "Check the highlighted fields";
+const POST_GONE = "Post not found";
+const POST_CHANGED = "Changed in another tab. Reload.";
 
 export interface PostFormValues {
   title: string;
@@ -144,7 +143,7 @@ export async function savePostAction(
   if (!submitted.ok) {
     return {
       values,
-      fieldErrors: { content: "The article content could not be read." },
+      fieldErrors: { content: "Unreadable content" },
       formError: FIX_FIELDS,
     };
   }
@@ -189,10 +188,14 @@ export async function savePostAction(
     if (!published.ok) {
       const failed = failure(stored, published);
 
-      // The save itself succeeded, so the form keeps the new token.
+      // The save itself succeeded, so the form keeps the new token. Invalid
+      // fields are already highlighted, so they need no extra words.
       return {
         ...failed,
-        formError: `Saved, but not published. ${failed.formError}`,
+        formError:
+          published.reason === "invalid"
+            ? "Saved, not published"
+            : `Saved, not published: ${failed.formError}`,
         version: toPostVersion(post.updatedAt),
       };
     }

@@ -269,7 +269,7 @@ function EditorBackgroundPanel({
       );
     } catch {
       setView({ kind: "main" });
-      setError("The library could not be loaded.");
+      setError("Couldn’t load the library");
     }
   }
 

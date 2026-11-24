@@ -86,12 +86,12 @@ export type EditorBackgroundActionResult =
   | { ok: false; message: string };
 
 const BACKGROUND_MESSAGES = {
-  invalid_opacity: "That visibility level is not available.",
-  media_not_found: "That image is no longer in the library.",
+  invalid_opacity: "Invalid opacity",
+  media_not_found: "Image not found",
   post_not_found: "This post no longer exists.",
 } as const;
 
-const BACKGROUND_FAILED = "The background was not saved. Try again.";
+const BACKGROUND_FAILED = "Not saved. Try again.";
 
 type BackgroundUpdateInput = { mediaId?: string | null; opacity?: number };
 

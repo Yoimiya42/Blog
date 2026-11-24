@@ -168,7 +168,7 @@ describe("savePostAction", () => {
     });
     expect(state).toMatchObject({
       fieldErrors: {},
-      formError: expect.stringContaining("changed"),
+      formError: expect.stringContaining("Changed in another tab"),
     });
     expect(state.saved).toBeUndefined();
     expect(revalidatePath).not.toHaveBeenCalled();
@@ -189,7 +189,7 @@ describe("savePostAction", () => {
 
         expect(state).toMatchObject({
           values: { ...VALID, tags: "" },
-          formError: expect.stringContaining("changed"),
+          formError: expect.stringContaining("Changed in another tab"),
         });
       }
       expect(service.update).not.toHaveBeenCalled();
@@ -243,7 +243,7 @@ describe("savePostAction", () => {
 
     expect(state).toMatchObject({
       fieldErrors: {},
-      formError: "This post no longer exists.",
+      formError: "Post not found",
     });
   });
 
@@ -459,7 +459,7 @@ describe("unpublish intent", () => {
 
     expect(state).toMatchObject({
       values: VALID,
-      formError: expect.stringContaining("changed"),
+      formError: expect.stringContaining("Changed in another tab"),
     });
     expect(revalidatePath).not.toHaveBeenCalled();
   });

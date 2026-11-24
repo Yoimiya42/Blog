@@ -344,7 +344,7 @@ describe("editor toolbar", () => {
     await pressInPair("Apply link");
 
     expect(document.body.querySelector('[role="alert"]')?.textContent).toMatch(
-      /relative, https, http, or mailto/,
+      /https, http, mailto, or a path/,
     );
     expect(submittedDocument()).toEqual(STORED);
   });

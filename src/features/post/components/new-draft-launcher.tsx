@@ -29,7 +29,7 @@ export function NewDraftLauncher({ create }: { create: () => Promise<void> }) {
     return (
       <div className="flex flex-col items-center gap-3 py-24 text-center">
         <p className="text-sm text-muted-foreground" role="alert">
-          The new post could not be created.
+          Couldn’t create the post
         </p>
         <Button onClick={start} type="button" variant="outline">
           Try again

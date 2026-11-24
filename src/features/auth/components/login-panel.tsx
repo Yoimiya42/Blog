@@ -24,13 +24,13 @@ export function LoginPanel() {
       });
 
       if (result.error) {
-        setError("Could not send the code. Try again.");
+        setError("Couldn’t send the code");
         return;
       }
 
       setStep("code");
     } catch {
-      setError("Could not send the code. Try again.");
+      setError("Couldn’t send the code");
     } finally {
       setPending(false);
     }
@@ -47,14 +47,14 @@ export function LoginPanel() {
       });
 
       if (result.error) {
-        setError("The code is invalid or expired.");
+        setError("Invalid or expired code");
         return;
       }
 
       router.replace("/admin");
       router.refresh();
     } catch {
-      setError("The code is invalid or expired.");
+      setError("Invalid or expired code");
     } finally {
       setPending(false);
     }

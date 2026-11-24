@@ -127,7 +127,7 @@ describe("uploadMedia", () => {
     const response = await uploadMedia(request(new Uint8Array([1])));
 
     expect(response.status).toBe(422);
-    expect(await errorOf(response)).toMatch(/HEIC is not supported/);
+    expect(await errorOf(response)).toMatch(/HEIC not supported/);
   });
 
   it("hides unexpected failures behind a generic 500", async () => {

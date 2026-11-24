@@ -30,7 +30,7 @@ export function PostArticle({
       <header className="post-head">
         {post.isDraft && showDraftNotice ? (
           <p className="post-head__draft" role="status">
-            Draft preview. Visitors cannot see this post.
+            Draft · hidden from visitors
           </p>
         ) : null}
         <h1 className="post-head__title">{post.title}</h1>

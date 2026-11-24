@@ -46,7 +46,7 @@ export function parseTagNames(raw: string): TagNamesResult {
     if (name.length > TAG_NAME_MAX_LENGTH) {
       return {
         ok: false,
-        message: `Each tag must be at most ${TAG_NAME_MAX_LENGTH} characters.`,
+        message: `Max ${TAG_NAME_MAX_LENGTH} characters per tag`,
       };
     }
     const slug = toTagSlug(name);
@@ -64,7 +64,7 @@ export function parseTagNames(raw: string): TagNamesResult {
   if (names.length > TAGS_PER_POST_MAX) {
     return {
       ok: false,
-      message: `Use at most ${TAGS_PER_POST_MAX} tags.`,
+      message: `Max ${TAGS_PER_POST_MAX} tags`,
     };
   }
 

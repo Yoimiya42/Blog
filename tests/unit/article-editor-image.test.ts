@@ -65,9 +65,7 @@ describe("image node in the editor", () => {
 
     const placeholder = figure.querySelector("[data-image-placeholder]");
     expect(placeholder?.getAttribute("data-image-placeholder")).toBe("deleted");
-    expect(placeholder?.textContent).toBe(
-      "Deleted image: A cat. Remove it before publishing.",
-    );
+    expect(placeholder?.textContent).toBe("Deleted image: A cat");
     // Display only: the stored node is unchanged.
     expect(saved()).toEqual(STORED);
   });

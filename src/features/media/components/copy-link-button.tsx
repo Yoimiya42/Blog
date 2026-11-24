@@ -19,7 +19,7 @@ export function CopyLinkButton({ url }: CopyLinkButtonProps) {
       toast("Link copied");
     } catch {
       // Clipboard access can be denied; the link stays visible to select.
-      toast("Copy failed. Select the link instead.", "error");
+      toast("Copy failed", "error");
     }
   }
 

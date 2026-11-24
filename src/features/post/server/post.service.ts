@@ -39,9 +39,9 @@ import type { PostRepository } from "./post.repository";
 /** The session of the caller, or nothing when the request is anonymous. */
 export type PostActor = { user: { role?: unknown } } | null | undefined;
 
-const SLUG_TAKEN = "This slug is already used by another post.";
-const SLUG_FROZEN = "The slug cannot change after the post is published.";
-const SLUG_PLACEHOLDER = "Choose a slug before publishing.";
+const SLUG_TAKEN = "Slug already in use";
+const SLUG_FROZEN = "Locked after publishing";
+const SLUG_PLACEHOLDER = "Set a slug to publish";
 
 function randomHex(bytes: number): string {
   const values = new Uint8Array(bytes);

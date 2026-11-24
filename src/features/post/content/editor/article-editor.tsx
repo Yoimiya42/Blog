@@ -200,7 +200,7 @@ export default function ArticleEditor({
     } catch {
       setImageStatus({
         kind: "error",
-        message: "The library could not be loaded. Try again.",
+        message: "Couldn’t load the library",
       });
     }
   }

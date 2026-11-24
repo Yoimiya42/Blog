@@ -89,7 +89,7 @@ export async function uploadMedia(request: Request): Promise<Response> {
 
   const declared = request.headers.get("content-length");
   if (declared === null || !/^\d+$/.test(declared) || !request.body) {
-    return failure(411, "The upload needs a Content-Length.");
+    return failure(411, "Missing file size");
   }
   const length = Number(declared);
   if (length === 0) return failure(400, "The file is empty.");
@@ -98,7 +98,7 @@ export async function uploadMedia(request: Request): Promise<Response> {
   }
 
   const alt = readAlt(request);
-  if (alt === null) return failure(400, "The alt text could not be read.");
+  if (alt === null) return failure(400, "Unreadable alt text");
 
   const bytes = await readBody(request.body, length);
   if (!bytes) return failure(400, "The upload was incomplete.");

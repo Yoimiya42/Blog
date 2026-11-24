@@ -38,7 +38,7 @@ export default async function AdminPage() {
 
       <div className="mt-10 grid gap-10 lg:grid-cols-2">
         <RecentList
-          empty="No drafts. Start one with New post."
+          empty="No drafts"
           heading="Continue writing"
           posts={groups.DRAFT.slice(0, RECENT_LIMIT)}
         />

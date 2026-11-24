@@ -829,7 +829,7 @@ describe("tags", () => {
     expect(result).toEqual({
       ok: false,
       reason: "invalid",
-      fieldErrors: { tags: "Use at most 10 tags." },
+      fieldErrors: { tags: "Max 10 tags" },
     });
     expect(await countRows()).toBe(0);
   });

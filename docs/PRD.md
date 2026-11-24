@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.49 · 2026-11-24 · Draft
+> v0.50 · 2026-11-24 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -269,7 +269,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-16 | Admin overview desk | v1 | `/admin` shows draft and published counts, the most recently updated drafts to resume, recent posts, and New post and Media actions |
 | FR-ADMIN-17 | Command palette | v1 | Ctrl or Cmd+K opens a search over admin pages, actions, and post titles; Enter navigates |
 | FR-ADMIN-18 | Editor keyboard save and save on leave | v1 | Ctrl or Cmd+S saves the post. An in-app link or command palette entry that leaves a draft with unsaved changes, including Back and Preview, saves first and stays on the page if the save fails. A published post asks in an in-app dialog: keep editing, leave without saving, or save and leave, which updates the live post. Closing or reloading the tab uses the browser's own prompt; browser back and forward are not intercepted |
-| FR-ADMIN-19 | Action feedback | v1 | Save, create, publish, unpublish, delete, and copy outcomes show a transient toast, including after a redirect |
+| FR-ADMIN-19 | Action feedback | v1 | Save, create, publish, unpublish, delete, and copy outcomes show a transient toast, including after a redirect. Messages are short phrases in common words; an icon or a highlighted field carries what text would repeat, and each error shows once |
 | FR-ADMIN-20 | Post list search and live link | v1 | The post list filters by title or slug as the owner types; a published post links to its public page. Rows show title, summary, and last update; the row opens the editor; icon actions preview the post and open its public page |
 | FR-ADMIN-21 | Media grid | v1 | The library shows a thumbnail grid; opening an item shows its details, copy link, and delete |
 | FR-ADMIN-22 | Styled system pages | v1 | Not-found, error, and loading states use the site tokens. A non-owner `/admin` request gets the same not-found page as any unknown URL |
@@ -717,3 +717,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-23 | v0.47 | FR-ADMIN-03 centres the Edit and Preview toggle; FR-ADMIN-23 moves word count and reading time to the settings sidebar and widens the focus-mode card |
 | 2026-11-24 | v0.48 | FR-ADMIN-26 uses a default with a per-post override; added FR-ADMIN-27 admin settings and the `PostEditorBackground` table; see ADR-0032 |
 | 2026-11-24 | v0.49 | Removed Vercel from the hosting row; Worker Previews are the only preview target |
+| 2026-11-24 | v0.50 | FR-ADMIN-19 requires short, common messages and shows each error once |

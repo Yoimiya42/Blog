@@ -92,7 +92,7 @@ export const ArticleImage = Node.create<ArticleImageOptions>({
     const deleted = !url && this.options.isDeleted(mediaId);
     const name = altText.trim() !== "" ? altText : mediaId;
     const label = deleted
-      ? `Deleted image: ${name}. Remove it before publishing.`
+      ? `Deleted image: ${name}`
       : altText.trim() !== ""
         ? `Image: ${altText}`
         : `Image ${mediaId}`;

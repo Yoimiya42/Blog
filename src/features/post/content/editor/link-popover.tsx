@@ -243,7 +243,7 @@ function LinkPairFields({
     }
     // The same predicate the server validates with.
     if (!isSafeHref(next)) {
-      setError("Use a relative, https, http, or mailto address.");
+      setError("Use https, http, mailto, or a path");
       hrefRef.current?.focus();
       return;
     }
