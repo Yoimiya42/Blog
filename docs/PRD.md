@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.46 · 2026-11-23 · Draft
+> v0.47 · 2026-11-23 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -253,7 +253,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 |---|---|---|---|
 | FR-ADMIN-01 | Login and authorisation | v1 | Non-owner requests to `/admin/*` return 404 |
 | FR-ADMIN-02 | Post list grouped by state | v1 | Create, find, edit, and delete on a desktop browser. One-handed phone use in v1.5 |
-| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5. Preview shows the saved version in the public article layout, with the table of contents and without the site header and footer, inside the admin. An Edit and Preview toggle sits at the same place on both views. The toolbar offers headings, bold, link, lists, quote, code block, and image; a quote renders as an accent-barred panel in both the editor and the public page |
+| FR-ADMIN-03 | TipTap article editor with preview | v1 | Edit and preview on a desktop browser. Editing area and block controls remain usable above the on-screen keyboard in v1.5. Preview shows the saved version in the public article layout, with the table of contents and without the site header and footer, inside the admin. An Edit and Preview toggle sits at the same place on both views, centred in the editor header; focus mode is the rightmost header control. The toolbar offers headings, bold, link, lists, quote, code block, and image; a quote renders as an accent-barred panel in both the editor and the public page |
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the article content of an existing draft only. A new post autosaves once it is created; a published post changes only through an explicit save. A save never overwrites a newer version |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
 | FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. HEIC and HEIF are not accepted: the owner uploads Lightroom JPEG exports, and the iOS photo picker already converts HEIF to JPEG. Reopen when HEIC files reach the desktop upload. See ADR-0021 |
@@ -273,7 +273,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-20 | Post list search and live link | v1 | The post list filters by title or slug as the owner types; a published post links to its public page. Rows show title, summary, and last update; the row opens the editor; icon actions preview the post and open its public page |
 | FR-ADMIN-21 | Media grid | v1 | The library shows a thumbnail grid; opening an item shows its details, copy link, and delete |
 | FR-ADMIN-22 | Styled system pages | v1 | Not-found, error, and loading states use the site tokens. A non-owner `/admin` request gets the same not-found page as any unknown URL |
-| FR-ADMIN-23 | Writing comfort | v1 | New post opens a stored blank draft, so autosave starts at once (ADR-0030). The editor body uses the public article typography and shows a placeholder when empty. The title field wraps. The editor header shows save state, word count, and reading time. Ctrl or Cmd+. toggles a focus mode that hides the admin navigation and the settings sidebar |
+| FR-ADMIN-23 | Writing comfort | v1 | New post opens a stored blank draft, so autosave starts at once (ADR-0030). The editor body uses the public article typography and shows a placeholder when empty. The title field wraps. The editor header shows save state; word count and reading time show in the settings sidebar. Ctrl or Cmd+. toggles a focus mode that hides the admin navigation and the settings sidebar and widens the writing card to the editor header width |
 | FR-ADMIN-24 | Link text and address | v1 | The Link control, Ctrl or Cmd+K, opens a text and address pair at the cursor, written as `[text](address)`, with or without a selection. Editing a link changes both. Pasting a bare address inserts it as a link and opens the pair with the text empty. Empty text keeps the address as the text. A bare domain gains `https://`. Typing `[text](address)` converts to a link |
 | FR-ADMIN-26 | Immersive editor background | v1 | The owner picks one library image, or uploads one, as the edit-view background. It covers the viewport behind the editor at one of five visibility tiers: Off, 25%, 50%, 75%, 100%. With a background active, the admin header, editor card, toolbar, and settings sidebar render as frosted glass; text keeps WCAG AA contrast at every tier. Without `backdrop-filter` support or with reduced transparency, panels render solid. The choice is stored per owner, renders on first paint, and is shared across devices. The preview and other admin pages are unchanged. Deleting the active background returns the editor to the plain canvas. See ADR-0031 |
 
@@ -711,3 +711,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-23 | v0.44 | FR-ADMIN-18 covers command palette navigation |
 | 2026-11-23 | v0.45 | FR-ADMIN-03 adds the quote control and quote styling |
 | 2026-11-23 | v0.46 | Added FR-ADMIN-26 immersive editor background and the `EditorBackground` table; see ADR-0031 |
+| 2026-11-23 | v0.47 | FR-ADMIN-03 centres the Edit and Preview toggle; FR-ADMIN-23 moves word count and reading time to the settings sidebar and widens the focus-mode card |

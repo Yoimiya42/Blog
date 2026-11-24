@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import {
   AlignLeft,
   ChevronRight,
+  FileText,
   Link2,
   Lock,
   Tag as TagIcon,
@@ -411,7 +412,7 @@ export function PostForm({
               {headerActions}
             </>
           }
-          meta={<EditorMeta save={saveView} stats={stats} />}
+          meta={<SaveIndicator save={saveView} />}
           mode="edit"
           postId={postId}
           status={status}
@@ -542,6 +543,8 @@ export function PostForm({
               </p>
             ) : null}
           </div>
+
+          {stats ? <ArticleStats stats={stats} /> : null}
 
           <div className="flex gap-3 p-4">
             <TagIcon
@@ -689,33 +692,38 @@ function describeSave({
 
 const NUMBER_FORMAT = new Intl.NumberFormat("en-GB");
 
-function EditorMeta({
-  save,
+/** Header save state (FR-ADMIN-23). The label hides on narrow screens. */
+function SaveIndicator({ save }: { save: SaveView }) {
+  return (
+    <span
+      className="flex min-w-0 items-center gap-1.5 px-2 text-xs whitespace-nowrap text-muted-foreground"
+      role="status"
+      title={save.detail}
+    >
+      <span
+        aria-hidden
+        className={cn("size-1.5 shrink-0 rounded-full", save.tone)}
+      />
+      <span className="sr-only sm:not-sr-only sm:truncate">{save.label}</span>
+    </span>
+  );
+}
+
+/** Word count and reading time, in the settings sidebar (FR-ADMIN-23). */
+function ArticleStats({
   stats,
 }: {
-  save: SaveView;
-  stats: { words: number; readingMinutes: number } | null;
+  stats: { words: number; readingMinutes: number };
 }) {
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      {stats ? (
-        <span
-          className="hidden tabular-nums md:inline"
-          title="CJK characters count as words"
-        >
-          {NUMBER_FORMAT.format(stats.words)} words
-          {stats.words > 0 ? ` · ${stats.readingMinutes} min` : null}
-        </span>
-      ) : null}
-      <span
-        className="flex items-center gap-1.5 whitespace-nowrap"
-        role="status"
-        title={save.detail}
-      >
-        <span aria-hidden className={cn("size-1.5 rounded-full", save.tone)} />
-        {save.label}
-      </span>
-    </div>
+    <p
+      className="flex min-h-11 items-center gap-3 px-4 text-sm text-muted-foreground tabular-nums"
+      title="CJK characters count as words"
+    >
+      <FileText aria-hidden className="size-4 text-faint" />
+      {NUMBER_FORMAT.format(stats.words)} words
+      {stats.words > 0 ? ` · ${stats.readingMinutes} min read` : null}
+    </p>
   );
 }
 
