@@ -47,6 +47,20 @@ export interface PublicPostPage {
   totalPosts: number;
 }
 
+/** A timeline row (FR-BLOG-16): no body, tags, or cover to load. */
+export type TimelinePost = Pick<
+  PublicPostSummary,
+  "slug" | "title" | "summary" | "publishedAt"
+>;
+
+export interface TimelinePage extends Omit<PublicPostPage, "posts"> {
+  posts: TimelinePost[];
+}
+
+function pageCount(totalPosts: number): number {
+  return Math.max(1, Math.ceil(totalPosts / PUBLIC_POSTS_PER_PAGE));
+}
+
 interface PublicPostServiceDependencies {
   posts: PostRepository;
   tags: TagRepository;
@@ -136,18 +150,18 @@ export function createPublicPostService({
   ): Promise<PublicPostPage | null> {
     if (!Number.isSafeInteger(page) || page < 1) return null;
 
-    const totalPosts = await posts.countPublished(filter);
-    const totalPages = Math.max(
-      1,
-      Math.ceil(totalPosts / PUBLIC_POSTS_PER_PAGE),
-    );
+    // Count and rows in parallel: one D1 round trip instead of two. A page
+    // past the end returns no rows, so the count still decides.
+    const [totalPosts, rows] = await Promise.all([
+      posts.countPublished(filter),
+      posts.listPublishedWithContent({
+        limit: PUBLIC_POSTS_PER_PAGE,
+        offset: (page - 1) * PUBLIC_POSTS_PER_PAGE,
+        ...filter,
+      }),
+    ]);
+    const totalPages = pageCount(totalPosts);
     if (page > totalPages) return null;
-
-    const rows = await posts.listPublishedWithContent({
-      limit: PUBLIC_POSTS_PER_PAGE,
-      offset: (page - 1) * PUBLIC_POSTS_PER_PAGE,
-      ...filter,
-    });
 
     return {
       posts: await summarise(rows, { withCovers: true }),
@@ -167,6 +181,36 @@ export function createPublicPostService({
       { excludePinned = false }: { excludePinned?: boolean } = {},
     ): Promise<PublicPostPage | null> {
       return listPage(page, { excludePinned });
+    },
+
+    /**
+     * The blog index as a timeline: every published post, pinned ones in
+     * date order. Rendered beside the full view, so it stays light.
+     */
+    async listTimelinePage(page: number): Promise<TimelinePage | null> {
+      if (!Number.isSafeInteger(page) || page < 1) return null;
+
+      const [totalPosts, rows] = await Promise.all([
+        posts.countPublished(),
+        posts.listPublished({
+          limit: PUBLIC_POSTS_PER_PAGE,
+          offset: (page - 1) * PUBLIC_POSTS_PER_PAGE,
+        }),
+      ]);
+      const totalPages = pageCount(totalPosts);
+      if (page > totalPages) return null;
+
+      return {
+        posts: rows.map((post) => ({
+          slug: post.slug,
+          title: post.title,
+          summary: post.summary,
+          publishedAt: post.publishedAt ?? post.updatedAt,
+        })),
+        page,
+        totalPages,
+        totalPosts,
+      };
     },
 
     /** FR-BLOG-17: published pinned posts with covers, most recent pin first. */

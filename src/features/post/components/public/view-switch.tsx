@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import type { BlogView } from "../../blog-view";
+import { parseBlogView, type BlogView } from "../../blog-view";
 import { setBlogViewAction } from "../../server/blog-view.actions";
 
 const OPTIONS: { view: BlogView; label: string; icon: LucideIcon }[] = [
@@ -19,18 +19,34 @@ const OPTIONS: { view: BlogView; label: string; icon: LucideIcon }[] = [
 ];
 
 /**
- * Full or compact (FR-BLOG-01, ADR-0034). A form, so it works before scripts
- * load; the action stores the choice and returns to this page.
+ * Full or compact (FR-BLOG-01, ADR-0034). With scripts, `onSelect` switches
+ * in the page. Before scripts load, the form posts to the action, which stores
+ * the choice and returns to this page.
  */
 export function ViewSwitch({
   view,
   returnTo,
+  onSelect,
 }: {
   view: BlogView;
   returnTo: string;
+  onSelect: (view: BlogView) => void;
 }) {
   return (
-    <form action={setBlogViewAction} className="view-switch">
+    <form
+      action={setBlogViewAction}
+      className="view-switch"
+      onSubmit={(event) => {
+        // React skips the action when the submit event is cancelled.
+        event.preventDefault();
+        const submitter = (event.nativeEvent as SubmitEvent).submitter;
+        onSelect(
+          parseBlogView(
+            submitter instanceof HTMLButtonElement ? submitter.value : null,
+          ),
+        );
+      }}
+    >
       <input name="returnTo" type="hidden" value={returnTo} />
       <TooltipProvider>
         <div

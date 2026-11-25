@@ -14,23 +14,27 @@ export default async function BlogIndexPage({
 }) {
   const page = parsePageNumber((await searchParams).page);
   const service = await getPublicPostService();
-  const view = await getBlogView();
-  // FR-BLOG-17: the full view lifts pinned posts out of the grid onto page 1.
-  const full = view === "full";
-  const [result, pinned] = await Promise.all([
-    service.listPage(page, { excludePinned: full }),
-    full && page === 1 ? service.listPinned() : Promise.resolve([]),
+  // Both views render, so switching needs no request (FR-BLOG-01). The full
+  // view lifts pinned posts out of its grid onto page 1 (FR-BLOG-17); the
+  // timeline lists every post and paginates on its own.
+  const [full, pinned, timeline, view] = await Promise.all([
+    service.listPage(page, { excludePinned: true }),
+    page === 1 ? service.listPinned() : Promise.resolve([]),
+    service.listTimelinePage(page),
+    getBlogView(),
   ]);
-  if (!result) notFound();
+  if (!full && !timeline) notFound();
 
   return (
     <div className="blog-page">
       <PostIndex
         basePath="/blog"
         emptyMessage="No posts yet."
+        full={full}
         heading={<h1 className="blog-page__title">Writing</h1>}
+        page={page}
         pinned={pinned}
-        result={result}
+        timeline={timeline}
         view={view}
       />
     </div>

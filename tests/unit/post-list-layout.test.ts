@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { parseBlogView, safeBlogReturnPath } from "@/features/post/blog-view";
+import {
+  parseBlogView,
+  readBlogViewCookie,
+  safeBlogReturnPath,
+  serializeBlogViewCookie,
+} from "@/features/post/blog-view";
 import { groupByYear } from "@/features/post/components/public/group-by-year";
 
 describe("compact view grouping (FR-BLOG-16)", () => {
@@ -21,6 +26,16 @@ describe("compact view grouping (FR-BLOG-16)", () => {
 });
 
 describe("blog view preference", () => {
+  it("round-trips the in-page cookie write", () => {
+    const written = serializeBlogViewCookie("compact");
+    expect(written).toBe(
+      "blog-view=compact; Path=/blog; Max-Age=31536000; SameSite=lax",
+    );
+    expect(readBlogViewCookie("a=1; blog-view=compact; b=2")).toBe("compact");
+    expect(readBlogViewCookie("blog-view=other")).toBe("full");
+    expect(readBlogViewCookie("a=1")).toBeNull();
+  });
+
   it("defaults to the full view", () => {
     expect(parseBlogView("compact")).toBe("compact");
     expect(parseBlogView("full")).toBe("full");

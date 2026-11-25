@@ -22,7 +22,10 @@ export default async function TagArchivePage({ params, searchParams }: Props) {
   const slug = decodeRouteParam((await params).slug);
   const page = parsePageNumber((await searchParams).page);
   const service = await getPublicPostService();
-  const result = await service.listTagPage(slug, page);
+  const [result, view] = await Promise.all([
+    service.listTagPage(slug, page),
+    getBlogView(),
+  ]);
   if (!result) notFound();
 
   return (
@@ -36,8 +39,11 @@ export default async function TagArchivePage({ params, searchParams }: Props) {
             <h1 className="blog-page__title">{result.tag.name}</h1>
           </>
         }
-        result={result}
-        view={await getBlogView()}
+        // A tag archive has no pinned section, so both views share one page.
+        full={result}
+        page={page}
+        timeline={result}
+        view={view}
       />
     </div>
   );

@@ -206,6 +206,17 @@ describe("pinned posts (FR-BLOG-17)", () => {
     expect(grid?.posts.map((entry) => entry.slug)).toEqual(["p04", "p02"]);
     expect(grid?.totalPosts).toBe(2);
 
+    // The timeline lists every published post in date order, without bodies.
+    const timeline = await service.listTimelinePage(1);
+    expect(timeline?.posts.map((entry) => entry.slug)).toEqual([
+      "p04",
+      "p03",
+      "p02",
+      "p01",
+    ]);
+    expect(timeline?.posts[0]).not.toHaveProperty("tags");
+    expect(await service.listTimelinePage(2)).toBeNull();
+
     // The compact view lists every published post in date order.
     const all = await service.listPage(1);
     expect(all?.posts.map((entry) => entry.slug)).toEqual([
