@@ -603,3 +603,182 @@
 .formal.preview-frame .blog-main {
   padding-bottom: 4rem;
 }
+
+/* ---- moments (FR-MOMENT-01, FR-MOMENT-02, FR-MOMENT-08) ---- */
+
+.formal .moment-page {
+  max-width: 36rem;
+}
+
+.formal .moment-page__empty {
+  color: var(--muted-foreground);
+}
+
+.formal .moment-list > li + li {
+  border-top: 1px solid var(--border);
+}
+
+.formal .moment {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem 0;
+}
+
+.formal .moment-list > li:first-child .moment {
+  padding-top: 0;
+}
+
+/* Plain text: the owner's line breaks are the only formatting. */
+.formal .moment__body {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  line-height: 1.65;
+}
+
+.formal .moment__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.formal .moment__date {
+  font-size: var(--text-sm);
+  color: var(--muted-foreground);
+}
+
+.formal .moment__actions {
+  display: flex;
+  gap: 0.25rem;
+  color: var(--faint);
+}
+
+/* One image keeps its own shape; several become square cells. */
+.formal .moment-grid {
+  display: grid;
+  gap: 0.25rem;
+  max-width: 28rem;
+}
+
+.formal .moment-grid[data-variant="square"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 19rem;
+}
+
+.formal .moment-grid[data-variant="triple"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.formal .moment-grid a {
+  display: block;
+  border-radius: var(--radius-mark);
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.formal .moment-grid img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--border);
+}
+
+.formal .moment-grid[data-variant="single"] a {
+  width: fit-content;
+}
+
+.formal .moment-grid[data-variant="single"] img {
+  width: auto;
+  max-width: 100%;
+  max-height: 24rem;
+}
+
+.formal .moment-grid:not([data-variant="single"]) img {
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+/* Enlarged view: one image at a time with previous and next. */
+.formal .moment-viewer {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--overlay-foreground);
+  touch-action: pan-y;
+}
+
+.formal .moment-viewer::backdrop {
+  background: var(--overlay);
+}
+
+.formal .moment-viewer[open] {
+  display: grid;
+  place-items: center;
+}
+
+.formal .moment-viewer__stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.formal .moment-viewer__stage img {
+  max-width: 95vw;
+  max-height: 88dvh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.formal .moment-viewer__close,
+.formal .moment-viewer__nav {
+  position: fixed;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--overlay-edge);
+  border-radius: var(--radius-control);
+  background: var(--overlay-control);
+  color: var(--overlay-foreground);
+  cursor: pointer;
+}
+
+.formal .moment-viewer__close {
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.formal .moment-viewer__nav {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.formal .moment-viewer__nav[data-side="prev"] {
+  left: 0.75rem;
+}
+
+.formal .moment-viewer__nav[data-side="next"] {
+  right: 0.75rem;
+}
+
+.formal .moment-viewer__close:focus-visible,
+.formal .moment-viewer__nav:focus-visible {
+  outline: 2px solid var(--overlay-foreground);
+  outline-offset: 2px;
+}
+
+.formal .moment-viewer__count {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--text-sm);
+}

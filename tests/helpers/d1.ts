@@ -61,6 +61,8 @@ export async function createMigratedDatabase(): Promise<TestDatabase> {
 
 export async function clearContentTables(db: D1Database): Promise<void> {
   await db.batch([
+    db.prepare("DELETE FROM moment_media"),
+    db.prepare("DELETE FROM moment"),
     db.prepare("DELETE FROM post_tag"),
     db.prepare("DELETE FROM post"),
     db.prepare("DELETE FROM tag"),

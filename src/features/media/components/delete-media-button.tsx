@@ -98,16 +98,15 @@ export function DeleteMediaButton({
       <form action={force} className="space-y-3">
         <div className="text-sm" role="alert">
           <p className="font-medium text-destructive">
-            {count === 1 ? "1 post shows" : `${count} posts show`} this image.
-            Deleting it leaves “Image unavailable” in its place.
+            {count === 1
+              ? "1 post or moment shows"
+              : `${count} posts or moments show`}{" "}
+            this image. Deleting it leaves “Image unavailable” in its place.
           </p>
           <ul className="mt-2 list-disc pl-5">
             {checkState.posts.map((post) => (
               <li key={post.id}>
-                <Link
-                  className="underline underline-offset-2"
-                  href={`/admin/posts/${post.id}`}
-                >
+                <Link className="underline underline-offset-2" href={post.href}>
                   {post.title || "Untitled"}
                 </Link>
               </li>

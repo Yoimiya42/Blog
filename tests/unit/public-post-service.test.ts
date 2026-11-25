@@ -17,7 +17,7 @@ import {
 } from "@/features/post/server/public-post.service";
 import { createTagRepository } from "@/features/tag";
 
-import { parsePageNumber } from "@/app/(site)/(blog)/page-number";
+import { parsePageNumber } from "@/lib/page-number";
 
 import {
   clearContentTables,
