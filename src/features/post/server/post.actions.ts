@@ -155,6 +155,10 @@ export async function savePostAction(
     ...(formData.has("pinned")
       ? { pinned: readText(formData, "pinned") === "true" }
       : {}),
+    // And for the category: absent keeps it, blank clears it.
+    ...(formData.has("category")
+      ? { category: readText(formData, "category") }
+      : {}),
     ...(submitted.content === undefined ? {} : { content: submitted.content }),
   };
 

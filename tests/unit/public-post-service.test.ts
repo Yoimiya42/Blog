@@ -136,6 +136,9 @@ describe("public post list", () => {
       publishedAt: NOW,
       tags: [{ id: "t1", slug: "sqlite", name: "SQLite" }],
       readingMinutes: 1,
+      category: null,
+      views: 0,
+      likes: 0,
       cover: null,
     });
   });

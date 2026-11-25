@@ -39,7 +39,14 @@ let clock: Date;
 let nextId: number;
 
 function input(overrides: Partial<PostInput> = {}): PostInput {
-  return { title: "Hello", slug: "hello", summary: "", ...overrides };
+  // Publishing needs a category (FR-BLOG-18).
+  return {
+    title: "Hello",
+    slug: "hello",
+    summary: "",
+    category: "tech",
+    ...overrides,
+  };
 }
 
 async function createPost(overrides: Partial<PostInput> = {}) {
@@ -1040,5 +1047,61 @@ describe("blank draft", () => {
       reason: "invalid",
       fieldErrors: { slug: expect.any(String) },
     });
+  });
+});
+
+describe("category (FR-BLOG-18)", () => {
+  it("stores, keeps, and clears a draft's category", async () => {
+    const post = await createPost({ category: "economy" });
+    expect(post.category).toBe("economy");
+
+    const kept = await service.update(
+      OWNER,
+      post.id,
+      input({ category: undefined }),
+    );
+    expect(kept).toMatchObject({ ok: true, post: { category: "economy" } });
+
+    const cleared = await service.update(
+      OWNER,
+      post.id,
+      input({ category: "" }),
+    );
+    expect(cleared).toMatchObject({ ok: true, post: { category: null } });
+  });
+
+  it("rejects a key outside the fixed set", async () => {
+    expect(
+      await service.create(OWNER, input({ category: "sports" })),
+    ).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { category: "Choose a category from the list." },
+    });
+  });
+
+  it("refuses to publish without a category", async () => {
+    const post = await createPost({ category: "" });
+
+    expect(await service.publish(OWNER, post.id)).toEqual({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { category: "Choose a category before publishing." },
+    });
+  });
+
+  it("keeps a category on a published post", async () => {
+    const post = await createPost();
+    await service.publish(OWNER, post.id);
+
+    expect(
+      await service.update(OWNER, post.id, input({ category: "" })),
+    ).toMatchObject({
+      ok: false,
+      fieldErrors: { category: "Choose a category before publishing." },
+    });
+    expect(
+      await service.update(OWNER, post.id, input({ category: "history" })),
+    ).toMatchObject({ ok: true, post: { category: "history" } });
   });
 });

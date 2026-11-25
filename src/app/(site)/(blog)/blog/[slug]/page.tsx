@@ -7,16 +7,18 @@ import { getMediaService } from "@/features/media";
 import {
   collectMediaReferences,
   getPublicPostService,
+  getVisitorId,
   PostArticle,
 } from "@/features/post";
 
 type Props = { params: Promise<{ slug: string }> };
 
-// Metadata and the page read the same post; one query per request.
+// Metadata and the page read the same post; one query per request. The like
+// cookie only marks whether this visitor already liked the post.
 const loadPost = cache(async (slug: string) => {
   const service = await getPublicPostService();
 
-  return service.getBySlug(slug);
+  return service.getBySlug(slug, await getVisitorId());
 });
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -43,5 +45,5 @@ export default async function PostPage({ params }: Props) {
       ? await (await getMediaService()).resolveForArticle(mediaIds)
       : {};
 
-  return <PostArticle mediaById={mediaById} post={post} />;
+  return <PostArticle engagement mediaById={mediaById} post={post} />;
 }

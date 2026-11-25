@@ -56,6 +56,7 @@ const TRACKED_FIELDS = [
   "tags",
   "coverId",
   "pinned",
+  "category",
 ] as const;
 
 /**
@@ -97,6 +98,8 @@ interface PostFormProps {
   initialCover?: CoverValue | null;
   /** Whether the post is pinned (FR-ADMIN-29). */
   initialPinned?: boolean;
+  /** The stored category key, or blank for none (FR-BLOG-18). */
+  initialCategory?: string;
 }
 
 /** Stands in when the page passes no background, so the hook always runs. */
@@ -160,6 +163,7 @@ export function PostForm({
   background: backgroundConfig,
   initialCover = null,
   initialPinned = false,
+  initialCategory = "",
 }: PostFormProps) {
   const background = useEditorBackground(backgroundConfig ?? NO_BACKGROUND);
   const formId = useId();
@@ -172,6 +176,7 @@ export function PostForm({
     tags: initialValues.tags,
     cover: initialCover,
     pinned: initialPinned,
+    category: initialCategory,
   }));
   const [publishOpen, setPublishOpen] = useState(false);
   const changeSettings = useCallback(
@@ -515,6 +520,7 @@ export function PostForm({
           type="hidden"
           value={settings.pinned ? "true" : "false"}
         />
+        <input name="category" type="hidden" value={settings.category} />
         {autosaveStatus.kind === "stopped" ? (
           <p
             className="mb-4 rounded-card bg-card px-4 py-3 text-sm text-destructive ring-1 ring-border"

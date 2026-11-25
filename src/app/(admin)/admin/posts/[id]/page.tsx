@@ -95,6 +95,7 @@ export default async function EditPostPage({
       }}
       initialCover={initialCover}
       initialPinned={post.pinnedAt !== null}
+      initialCategory={post.category ?? ""}
       initialDocument={initialDocument}
       deletedMediaIds={deletedMediaIds}
       initialMediaUrls={initialMediaUrls}

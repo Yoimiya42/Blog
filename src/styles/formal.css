@@ -14,6 +14,13 @@
   --faint: #8b909a; /* 3.2:1 on --background; non-text marks only */
   --border: #dcdfe4;
   --ring: #1d4ed8;
+  /* FR-BLOG-18 category text colours; each is 4.5:1 or more on --background.
+     Placeholders until #66 settles the visual direction. */
+  --category-tech: #1d4ed8;
+  --category-economy: #15803d;
+  --category-history: #a16207;
+  --category-prose: #be185d;
+  --category-monologue: #6d28d9;
   /* Aliases resolve where they are declared, so re-point them here. */
   --card: var(--background);
   --card-foreground: var(--foreground);

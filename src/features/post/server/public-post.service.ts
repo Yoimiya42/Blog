@@ -4,7 +4,7 @@ import { deriveArticleContent } from "../content/derive";
 import type { ArticleDocument } from "../content/types";
 import { CONTENT_SCHEMA_VERSION } from "../content/types";
 import { validateArticleDocument } from "../content/validate";
-import type { Post } from "../schema";
+import type { Post, PostCategory } from "../schema";
 import type { PostRepository } from "./post.repository";
 
 export const PUBLIC_POSTS_PER_PAGE = 10;
@@ -27,6 +27,11 @@ export interface PublicPostSummary {
   tags: Tag[];
   /** Null when the stored document fails validation. */
   readingMinutes: number | null;
+  /** Null for a post published before categories existed (FR-BLOG-18). */
+  category: PostCategory | null;
+  /** FR-BLOG-19 and FR-BLOG-20. */
+  views: number;
+  likes: number;
   /**
    * Null for no cover or a deleted image. Only list pages resolve covers; the
    * homepage and the post page do not show them.
@@ -38,7 +43,12 @@ export interface PublicPost extends PublicPostSummary {
   /** Null when the stored document fails validation; the page shows a notice. */
   document: ArticleDocument | null;
   isDraft: boolean;
+  /** Whether the requesting visitor has liked the post (FR-BLOG-20). */
+  liked: boolean;
 }
+
+/** The outcome of a like toggle; null when the post is not public. */
+export type LikeToggle = { liked: boolean; likes: number } | null;
 
 export interface PublicPostPage {
   posts: PublicPostSummary[];
@@ -69,6 +79,7 @@ interface PublicPostServiceDependencies {
    * not exercise covers; every cover is then null.
    */
   resolveCovers?: (ids: string[]) => Promise<Record<string, PostCover>>;
+  now?: () => Date;
 }
 
 /**
@@ -90,10 +101,13 @@ function readDocument(post: Post): ArticleDocument | null {
   return null;
 }
 
+const NO_ENGAGEMENT = { views: 0, likes: 0 } as const;
+
 function toSummary(
   post: Post,
   document: ArticleDocument | null,
   tags: Tag[],
+  engagement: { views: number; likes: number } = NO_ENGAGEMENT,
   cover: PostCover | null = null,
 ): PublicPostSummary {
   return {
@@ -106,6 +120,9 @@ function toSummary(
     readingMinutes: document
       ? deriveArticleContent(document).readingMinutes
       : null,
+    category: post.category,
+    views: engagement.views,
+    likes: engagement.likes,
     cover,
   };
 }
@@ -118,6 +135,7 @@ export function createPublicPostService({
   posts,
   tags,
   resolveCovers,
+  now = () => new Date(),
 }: PublicPostServiceDependencies) {
   async function summarise(
     rows: Post[],
@@ -126,8 +144,10 @@ export function createPublicPostService({
     const coverIds = withCovers
       ? rows.flatMap((post) => (post.coverId ? [post.coverId] : []))
       : [];
-    const [tagsByPost, covers] = await Promise.all([
-      tags.listByPostIds(rows.map((post) => post.id)),
+    const ids = rows.map((post) => post.id);
+    const [tagsByPost, engagement, covers] = await Promise.all([
+      tags.listByPostIds(ids),
+      posts.countEngagement(ids),
       resolveCovers && coverIds.length > 0
         ? resolveCovers(coverIds)
         : Promise.resolve<Record<string, PostCover>>({}),
@@ -138,6 +158,7 @@ export function createPublicPostService({
         post,
         readDocument(post),
         tagsByPost.get(post.id) ?? [],
+        engagement.get(post.id),
         (post.coverId && covers[post.coverId]) || null,
       ),
     );
@@ -241,20 +262,43 @@ export function createPublicPostService({
 
     /**
      * Published or draft. The caller MUST show a draft to the owner only
-     * (FR-BLOG-06).
+     * (FR-BLOG-06). `visitorId` is the like cookie, when the visitor has one.
      */
-    async getBySlug(slug: string): Promise<PublicPost | null> {
+    async getBySlug(
+      slug: string,
+      visitorId?: string,
+    ): Promise<PublicPost | null> {
       const post = await posts.findBySlug(slug);
       if (!post) return null;
 
       const document = readDocument(post);
-      const tagsByPost = await tags.listByPostIds([post.id]);
+      const [tagsByPost, engagement, liked] = await Promise.all([
+        tags.listByPostIds([post.id]),
+        posts.countEngagement([post.id]),
+        visitorId ? posts.hasLiked(post.id, visitorId) : false,
+      ]);
 
       return {
-        ...toSummary(post, document, tagsByPost.get(post.id) ?? []),
+        ...toSummary(
+          post,
+          document,
+          tagsByPost.get(post.id) ?? [],
+          engagement.get(post.id),
+        ),
         document,
         isDraft: post.status !== "PUBLISHED",
+        liked,
       };
+    },
+
+    /** FR-BLOG-19: false when no published post has the slug. */
+    recordView(slug: string): Promise<boolean> {
+      return posts.recordView(slug);
+    },
+
+    /** FR-BLOG-20: toggles the visitor's like on a published post. */
+    toggleLike(slug: string, visitorId: string): Promise<LikeToggle> {
+      return posts.toggleLike(slug, visitorId, now());
     },
   };
 }

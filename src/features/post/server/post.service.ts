@@ -20,6 +20,7 @@ import {
   BLANK_DRAFT_TITLE,
   BLANK_DRAFT_SLUG_PATTERN,
   isBlankDraftIdentity,
+  isPostCategory,
   MAX_PINNED_POSTS,
   POST_STATUSES,
   PostAccessDeniedError,
@@ -27,6 +28,7 @@ import {
   postInputSchema,
   type Post,
   type PostAutosaveResult,
+  type PostCategory,
   type PostField,
   type PostFieldErrors,
   type PostInput,
@@ -46,6 +48,8 @@ const SLUG_PLACEHOLDER = "Choose a slug before publishing.";
 const COVER_UNKNOWN = "Choose a cover from the library.";
 const PIN_LIMIT = `Up to ${MAX_PINNED_POSTS} posts can be pinned. Unpin one first.`;
 const PIN_UNREADABLE = "Pinned could not be read.";
+const CATEGORY_UNKNOWN = "Choose a category from the list.";
+const CATEGORY_REQUIRED = "Choose a category before publishing.";
 
 function randomHex(bytes: number): string {
   const values = new Uint8Array(bytes);
@@ -128,6 +132,20 @@ async function coverError(
   return (await media.findKnown([coverId])).has(coverId)
     ? undefined
     : COVER_UNKNOWN;
+}
+
+type ParsedCategory =
+  { ok: true; category?: PostCategory | null } | { ok: false; message: string };
+
+/** Undefined keeps the stored category; blank clears it (FR-BLOG-18). */
+function parseCategory(input: PostInput): ParsedCategory {
+  const { category } = input;
+  if (category === undefined) return { ok: true };
+  if (category === null || category === "") return { ok: true, category: null };
+
+  return isPostCategory(category)
+    ? { ok: true, category }
+    : { ok: false, message: CATEGORY_UNKNOWN };
 }
 
 type ParsedTags =
@@ -336,12 +354,14 @@ export function createPostService({
       const tagNames = parseTags(input);
       const invalidCover = await coverError(input.coverId, media);
       const invalidPin = await pinError(input.pinned, false);
+      const category = parseCategory(input);
       if (
         !parsed.ok ||
         invalidContent ||
         !tagNames.ok ||
         invalidCover ||
-        invalidPin
+        invalidPin ||
+        !category.ok
       ) {
         return {
           ok: false,
@@ -352,6 +372,7 @@ export function createPostService({
             ...(tagNames.ok ? {} : { tags: tagNames.message }),
             ...(invalidCover ? { coverId: invalidCover } : {}),
             ...(invalidPin ? { pinned: invalidPin } : {}),
+            ...(category.ok ? {} : { category: category.message }),
           },
         };
       }
@@ -369,6 +390,7 @@ export function createPostService({
             contentSchemaVersion: CONTENT_SCHEMA_VERSION,
             coverId: input.coverId ?? null,
             pinnedAt: input.pinned === true ? now() : null,
+            category: category.category ?? null,
             status: "DRAFT",
             publishedAt: null,
           },
@@ -419,12 +441,23 @@ export function createPostService({
         current.pinnedAt !== null,
         id,
       );
+      const category = parseCategory(input);
+      // A live post keeps a category: updating it cannot clear or omit one.
+      const categoryMessage = !category.ok
+        ? category.message
+        : current.status === "PUBLISHED" &&
+            (category.category === undefined
+              ? current.category
+              : category.category) === null
+          ? CATEGORY_REQUIRED
+          : undefined;
       if (
         !parsed.ok ||
         invalidContent ||
         !tagNames.ok ||
         invalidCover ||
-        invalidPin
+        invalidPin ||
+        categoryMessage
       ) {
         return {
           ok: false,
@@ -435,12 +468,16 @@ export function createPostService({
             ...(tagNames.ok ? {} : { tags: tagNames.message }),
             ...(invalidCover ? { coverId: invalidCover } : {}),
             ...(invalidPin ? { pinned: invalidPin } : {}),
+            ...(categoryMessage ? { category: categoryMessage } : {}),
           },
         };
       }
 
       const patch: PostPatch = { ...parsed.fields };
       if (input.coverId !== undefined) patch.coverId = input.coverId;
+      if (category.ok && category.category !== undefined) {
+        patch.category = category.category;
+      }
       // A repeated pin keeps its original time, so the order stays stable.
       if (input.pinned === true && current.pinnedAt === null) {
         patch.pinnedAt = now();
@@ -544,6 +581,14 @@ export function createPostService({
           ok: false,
           reason: "invalid",
           fieldErrors: { slug: SLUG_PLACEHOLDER },
+        };
+      }
+
+      if (current.category === null) {
+        return {
+          ok: false,
+          reason: "invalid",
+          fieldErrors: { category: CATEGORY_REQUIRED },
         };
       }
 

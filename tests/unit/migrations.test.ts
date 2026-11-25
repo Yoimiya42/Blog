@@ -78,7 +78,9 @@ describe("migration replay", () => {
       "post",
       "post_editor_background",
       "post_tag",
+      "post_view",
       "rate_limit",
+      "reaction",
       "session",
       "tag",
       "user",
@@ -130,6 +132,21 @@ describe("post constraints", () => {
     );
     await expect(
       insertPost({ status: "PUBLISHED", publishedAt: 1_700_000_000_000 }),
+    ).resolves.toBeDefined();
+  });
+
+  it("accepts only the fixed categories", async () => {
+    await insertPost();
+
+    await expect(
+      db
+        .prepare("UPDATE post SET category = 'sports' WHERE id = 'post-1'")
+        .run(),
+    ).rejects.toThrow(/CHECK constraint/);
+    await expect(
+      db
+        .prepare("UPDATE post SET category = 'prose' WHERE id = 'post-1'")
+        .run(),
     ).resolves.toBeDefined();
   });
 

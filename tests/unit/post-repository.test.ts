@@ -69,6 +69,7 @@ describe("post repository mapping", () => {
       summary: null,
       coverId: null,
       pinnedAt: null,
+      category: null,
       content: SAMPLE_DOCUMENT,
       contentSchemaVersion: 1,
       status: "DRAFT",

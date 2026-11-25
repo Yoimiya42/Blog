@@ -24,6 +24,7 @@ import {
   type PostFieldErrors,
   type PostStatus,
 } from "../schema";
+import { CategoryField } from "./category-field";
 import { CoverField, type CoverValue } from "./cover-field";
 import { PinField } from "./pin-field";
 import { SubmitButton } from "./submit-button";
@@ -37,6 +38,8 @@ export interface PostSettings {
   tags: string;
   cover: CoverValue | null;
   pinned: boolean;
+  /** A category key, or blank for none (FR-BLOG-18). */
+  category: string;
 }
 
 /** Settings fields; an error on any of them opens the dialog. */
@@ -46,6 +49,7 @@ export const SETTINGS_FIELDS = [
   "tags",
   "coverId",
   "pinned",
+  "category",
 ] as const satisfies readonly (keyof PostFieldErrors)[];
 
 const INPUT_CLASS =
@@ -126,6 +130,12 @@ export function PublishDialog({
             checked={settings.pinned}
             error={fieldErrors.pinned}
             onChange={(pinned) => onChange({ pinned })}
+          />
+
+          <CategoryField
+            error={fieldErrors.category}
+            onChange={(category) => onChange({ category })}
+            value={settings.category}
           />
 
           <Section icon={TagIcon} label="Tags">

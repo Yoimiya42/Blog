@@ -3,7 +3,13 @@ import { ARTICLE_PROSE_CLASS } from "../../content/prose";
 import { ArticleContent } from "../../content/render/article-content";
 import type { ArticleMediaMap } from "../../content/render/media";
 import type { PublicPost } from "../../server/public-post.service";
-import { PostMeta, TagList } from "./post-meta";
+import { PostEngagement } from "./post-engagement";
+import {
+  CategoryLabel,
+  EngagementCounts,
+  PostMeta,
+  TagList,
+} from "./post-meta";
 import { TableOfContents } from "./table-of-contents";
 
 /** A table of contents earns its space from two headings upward. */
@@ -14,12 +20,19 @@ export function PostArticle({
   post,
   mediaById,
   showDraftNotice = true,
+  engagement = false,
 }: {
   post: PublicPost;
   mediaById: ArticleMediaMap;
   /** Off where the page shows the post's state itself, as the preview does. */
   showDraftNotice?: boolean;
+  /**
+   * Counts a view and shows the like button (FR-BLOG-19, 20). Only the public
+   * post page turns it on, so the owner's preview never counts.
+   */
+  engagement?: boolean;
 }) {
+  const live = engagement && !post.isDraft;
   const toc = post.document
     ? deriveArticleContent(post.document).tableOfContents
     : [];
@@ -33,12 +46,18 @@ export function PostArticle({
             Draft preview. Visitors cannot see this post.
           </p>
         ) : null}
+        <CategoryLabel category={post.category} />
         <h1 className="post-head__title">{post.title}</h1>
         {post.summary ? (
           <p className="post-head__summary">{post.summary}</p>
         ) : null}
         {/* A draft has no publication date yet. */}
-        {post.isDraft ? null : <PostMeta post={post} />}
+        {post.isDraft ? null : (
+          <div className="post-head__meta">
+            <PostMeta post={post} />
+            <EngagementCounts post={post} showLikes={false} />
+          </div>
+        )}
         <TagList tags={post.tags} />
       </header>
 
@@ -54,6 +73,13 @@ export function PostArticle({
         ) : (
           <p role="alert">This post cannot be displayed right now.</p>
         )}
+        {live ? (
+          <PostEngagement
+            initialLiked={post.liked}
+            initialLikes={post.likes}
+            slug={post.slug}
+          />
+        ) : null}
       </div>
     </div>
   );

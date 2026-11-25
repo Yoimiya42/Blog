@@ -19,6 +19,7 @@ export {
   toPostVersion,
   type NewPost,
   type Post,
+  type PostCategory,
   type PostField,
   type PostFieldErrors,
   type PostInput,
@@ -53,6 +54,7 @@ export { PostArticle } from "./components/public/post-article";
 export { PostIndex } from "./components/public/post-index";
 export type { BlogView } from "./blog-view";
 export { getBlogView } from "./server/blog-view";
+export { getVisitorId } from "./server/visitor";
 export { toCalendarDate } from "./components/public/post-meta";
 
 export {

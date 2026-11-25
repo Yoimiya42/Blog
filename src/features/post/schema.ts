@@ -35,6 +35,35 @@ export function isBlankDraftIdentity(post: {
 
 export type PostStatus = (typeof POST_STATUSES)[number];
 
+/**
+ * FR-BLOG-18: a fixed, deliberately small set. Keys are stored; names are the
+ * product labels. Topics come from tags, not from new categories.
+ */
+export const POST_CATEGORIES = [
+  "tech",
+  "economy",
+  "history",
+  "prose",
+  "monologue",
+] as const;
+
+export type PostCategory = (typeof POST_CATEGORIES)[number];
+
+export const POST_CATEGORY_NAMES: Record<PostCategory, string> = {
+  tech: "科技",
+  economy: "经济观察",
+  history: "历史观察",
+  prose: "散文",
+  monologue: "随笔独白",
+};
+
+export function isPostCategory(value: unknown): value is PostCategory {
+  return (
+    typeof value === "string" &&
+    (POST_CATEGORIES as readonly string[]).includes(value)
+  );
+}
+
 /** A post without its body. List queries never load `content`. */
 export interface PostSummary {
   id: string;
@@ -45,6 +74,8 @@ export interface PostSummary {
   coverId: string | null;
   /** Pin time; null when not pinned (FR-BLOG-17). */
   pinnedAt: Date | null;
+  /** Null only for a post never published with one (FR-BLOG-18). */
+  category: PostCategory | null;
   status: PostStatus;
   publishedAt: Date | null;
   createdAt: Date;
@@ -71,6 +102,8 @@ export interface NewPost {
   coverId?: string | null;
   /** Omitted for not pinned. */
   pinnedAt?: Date | null;
+  /** Omitted for no category. */
+  category?: PostCategory | null;
   status: PostStatus;
   publishedAt: Date | null;
 }
@@ -141,10 +174,19 @@ export interface PostInput {
   coverId?: string | null;
   /** Pins or unpins the post. Omitted to keep the stored pin. */
   pinned?: boolean;
+  /** A category key; blank clears it. Omitted to keep the stored one. */
+  category?: string | null;
 }
 
 export type PostField =
-  "title" | "slug" | "summary" | "content" | "tags" | "coverId" | "pinned";
+  | "title"
+  | "slug"
+  | "summary"
+  | "content"
+  | "tags"
+  | "coverId"
+  | "pinned"
+  | "category";
 
 export type PostFieldErrors = Partial<Record<PostField, string>>;
 

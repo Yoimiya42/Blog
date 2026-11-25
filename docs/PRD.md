@@ -41,7 +41,7 @@ Releases ship in the order below and carry no calendar dates. Milestones and exi
 
 ### 2.1 v1
 
-Homepage · blog (list, detail, tags) · admin (write, upload, publish) accepted on desktop browsers · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance · one approved visual direction applied to the public pages.
+Homepage · blog (list, detail, tags) · admin (write, upload, publish) accepted on desktop browsers · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance · one approved visual direction applied to the public pages · post categories, view counts, and anonymous post likes (FR-BLOG-18 to 21), added at the owner's request.
 
 Excluded: life list, gallery, moments, visitor login, comments, ratings, whispers, subscriptions, dark mode, i18n.
 
@@ -179,9 +179,13 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 | FR-BLOG-12 | RSS | v1.5 | |
 | FR-BLOG-13 | Structured article content | v1 | Store only versioned TipTap JSON; validate it against `article-content-schema.md`; treat HTML and Markdown as derived exports |
 | FR-BLOG-14 | Post cover | v1 | One optional library image per post, set in FR-ADMIN-28. Rendered with explicit dimensions and the `Media` alt text. Used by the list views only; the post page is unchanged. A deleted image leaves the post without a cover |
-| FR-BLOG-15 | Full list view | v1 | Posts in date order in a uniform card grid: two columns from the 40rem breakpoint, one below. Every card has the same structure inside a bordered container: a 16:9 cover, date and reading time, title, a summary clipped to two lines, and tags. A post without a cover shows a placeholder of the same size with its title in the serif face. The card is one link; tags remain separate links. On the blog index, pinned posts (FR-BLOG-17) appear above the grid on page 1 and are left out of the grid |
+| FR-BLOG-15 | Full list view | v1 | Posts in date order in a uniform card grid: two columns from the 40rem breakpoint, one below. Every card has the same structure inside a bordered container: a 16:9 cover, category, date (FR-BLOG-21) and reading time, title, a summary clipped to two lines, tags, and view and like counts. A post without a cover shows a placeholder of the same size with its title in the serif face. The card is one link; tags remain separate links. On the blog index, pinned posts (FR-BLOG-17) appear above the grid on page 1 and are left out of the grid |
 | FR-BLOG-16 | Compact list view | v1 | Grouped by publication year, newest first, with the year shown once. Each row shows the `MM-DD` date close beside the title. One vertical line joins every row's dot within a year. Tags and reading time are hidden. Hover or keyboard focus highlights the row and reveals the summary under the title. On touch, the first tap reveals the summary and the second opens the post |
 | FR-BLOG-17 | Pinned posts | v1 | The owner pins up to 3 posts (FR-ADMIN-29); the most recently pinned comes first. Page 1 of the blog index full view shows published pinned posts above the grid as wide cards: cover beside the text, larger title, full summary, tags, and a pin mark. The grid and its pagination leave them out. The compact view and tag archives list them in date order. A pinned draft keeps its pin and is hidden from visitors |
+| FR-BLOG-18 | Post category | v1 | Each post has one category from a fixed set: `tech` 科技, `economy` 经济观察, `history` 历史观察, `prose` 散文, `monologue` 随笔独白. The set is small by design; topics come from tags. Set in the publish dialog (FR-ADMIN-07); publishing and updating a published post require it. Cards show the name in the category colour. No category archive yet |
+| FR-BLOG-19 | View count | v1 | Each opening of a published post page adds one view, recorded from the browser after load. No cookie, IP, or other personal data is stored. Cards and the post page show the count |
+| FR-BLOG-20 | Anonymous likes | v1 | Any visitor likes or unlikes a published post from the post page, once per browser. The browser is identified by a random `visitor_id` cookie set on the first like only. Likes are limited to 30 per minute per IP. Cards and the post page show the count. See ADR-0037 |
+| FR-BLOG-21 | Publication date display | v1 | Cards and the post page show the publication date only, never the update date. Within 7 days of publication it is relative: `28 minutes ago`, `12 hours ago`, `3 days ago`; after that `25 Nov 2026`. The browser refreshes a relative date after load. The compact view keeps `MM-DD` (FR-BLOG-16) |
 
 ### 4.3 Moments (FR-MOMENT)
 
@@ -261,7 +265,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-04 | Draft autosave | v1 | Every 10s and on blur. Saves the title and article content of an existing draft; a blank title is not autosaved. Settings save through the publish dialog, Ctrl or Cmd+S, or save on leave. A new post autosaves once it is created; a published post changes only through Update in the publish dialog. A save never overwrites a newer version. There is no Save button |
 | FR-ADMIN-05 | Image upload: library, camera, paste | v1 | Insert an `image` node that references the stored `Media` record. Library and paste in v1; camera input in v1.5 |
 | FR-ADMIN-06 | Upload limits, GPS removal, delivery conversion | v1 | JPEG, PNG, WebP up to 50 MB. GPS removed from the stored file; coordinates kept owner-only. AVIF or WebP at fixed widths on delivery. HEIC and HEIF are not accepted: the owner uploads Lightroom JPEG exports, and the iOS photo picker already converts HEIF to JPEG. Reopen when HEIC files reach the desktop upload. See ADR-0021 |
-| FR-ADMIN-07 | Publish, unpublish, schedule | v1 | Publish and unpublish ship in v1. Scheduling is deferred to v1.5. A header button, Publish on a draft and Update on a published post, opens a publish dialog with cover, pin, tags, slug, summary, and word count. Its primary action publishes the draft or updates the live post; a draft can also save its settings without publishing. Closing the dialog keeps unsaved choices; a save error reopens it. Later fields, such as privacy and location, join this dialog. Unpublish lives in the post list row menu (FR-ADMIN-20). See ADR-0035 |
+| FR-ADMIN-07 | Publish, unpublish, schedule | v1 | Publish and unpublish ship in v1. Scheduling is deferred to v1.5. A header button, Publish on a draft and Update on a published post, opens a publish dialog with cover, pin, category (FR-BLOG-18), tags, slug, summary, and word count. Its primary action publishes the draft or updates the live post; a draft can also save its settings without publishing. Closing the dialog keeps unsaved choices; a save error reopens it. Later fields, such as privacy and location, join this dialog. Unpublish lives in the post list row menu (FR-ADMIN-20). See ADR-0035 |
 | FR-ADMIN-08 | Media library management | v1 | Browse, copy link, delete |
 | FR-ADMIN-09 | Mobile rich-text toolbar | v1.5 | One-tap heading, bold, link, list, image, and code-block controls |
 | FR-ADMIN-10 | Offline tolerance | v1.5 | Content persists locally, resumes after reconnect |
@@ -536,12 +540,14 @@ Issue #38 implements only these tables. Every other field in the logical model i
 
 | Table | Fields |
 |---|---|
-| `Post` | `id`, `slug`, `title`, `summary`, `content`, `contentSchemaVersion`, `coverId`, `pinnedAt`, `status`, `publishedAt`, `createdAt`, `updatedAt`, `deletedAt` |
+| `Post` | `id`, `slug`, `title`, `summary`, `content`, `contentSchemaVersion`, `coverId`, `pinnedAt`, `category`, `status`, `publishedAt`, `createdAt`, `updatedAt`, `deletedAt` |
 | `Tag` | `id`, `slug`, `name` |
 | `PostTag` | `postId`, `tagId` |
 | `Media` | `id`, `storageKey`, `mimeType`, `width`, `height`, `sizeBytes`, `alt`, `gpsLatitude`, `gpsLongitude`, `createdAt`, `updatedAt`, `deletedAt` |
 | `EditorBackground` | `userId`, `mediaId`, `opacity`, `updatedAt` |
 | `PostEditorBackground` | `postId`, `mediaId`, `opacity`, `updatedAt` |
+| `PostView` | `postId`, `count` |
+| `Reaction` | `targetType`, `targetId`, `visitorId`, `kind`, `createdAt` |
 
 - `status` accepts `DRAFT` and `PUBLISHED` only. `SCHEDULED` and `ARCHIVED` are deferred with FR-ADMIN-07 scheduling.
 - `publishedAt` is set on first publication and survives unpublishing. `slug` is immutable once `publishedAt` is set.
@@ -550,7 +556,10 @@ Issue #38 implements only these tables. Every other field in the logical model i
 - `Tag` is a lookup table: no timestamps and no soft delete. Deleting a tag removes it from every post.
 - `coverId` references `Media` and is null for no cover (FR-BLOG-14). Unlike an image in the content, a deleted cover does not block publishing; the post renders without a cover.
 - `pinnedAt` is set when the owner pins the post and null otherwise. It orders pinned posts, most recent first. At most 3 non-deleted posts carry it (FR-BLOG-17).
-- Deferred `Post` fields: `visibility`, `readingMin`, `seriesId`, `viewCount`. Reading time is derived at render.
+- `category` is one of `tech`, `economy`, `history`, `prose`, `monologue`, or null for a post that has never been published with one (FR-BLOG-18).
+- Deferred `Post` fields: `visibility`, `readingMin`, `seriesId`. Reading time is derived at render. The view count lives in `PostView`, not on `Post` (ADR-0037).
+- `PostView` holds one row per viewed post, created by the first view. Writes never change `Post.updatedAt`.
+- `Reaction` holds one row per like: `targetType` is `POST` and `kind` is `LIKE` in v1; `visitorId` is the anonymous `visitor_id` cookie value. Like counts are derived. It has no foreign key, so moments can reuse it (FR-MOMENT-08).
 - `Media.width` and `height` are the displayed dimensions after EXIF orientation. `alt` is empty for a decorative image. Coordinates are owner-only. Deletion is soft through `deletedAt`; a deleted image no longer resolves and blocks publishing a post that references it.
 - Deferred `Media` fields: `blurhash`, `exif`. `url` is derived from `storageKey`, not stored.
 - `EditorBackground` holds one row per owner (FR-ADMIN-26). `mediaId` is null for no background; `opacity` is `0`, `25`, `50`, `75`, or `100`. A deleted `Media` row stays referenced and no longer resolves.
@@ -607,7 +616,8 @@ Cloudflare Workers is the selected production platform under ADR-0009. The Worke
 
 - `/privacy` states what is collected, why, for how long, and how to delete it.
 - Users can delete their account and all data themselves.
-- Analytics MUST be cookie-free, so no consent banner is required.
+- Analytics MUST be cookie-free, so no consent banner is required. View counts (FR-BLOG-19) store no visitor data.
+- The `visitor_id` cookie (FR-BLOG-20) is a random identifier set only when a visitor likes a post, kept for one year, and used only to remember that visitor's likes. It is strictly necessary for the feature the visitor uses, so it needs no consent banner. `/privacy` must list it when that page ships.
 - Identifiable people in photographs require usage permission.
 
 ### 6.6 Budget
@@ -729,3 +739,4 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-24 | v0.51 | Added FR-BLOG-14 post cover, FR-BLOG-15 full list view, FR-BLOG-16 compact list view, and FR-ADMIN-28 cover selection to v1; FR-BLOG-01 offers both views. Added FR-BLOG-17 pinned posts to v1.5. Moved `coverId` into the v1 `Post` contract |
 | 2026-11-24 | v0.52 | FR-BLOG-15 replaces the card rotation with a uniform card grid. FR-BLOG-17 pinned posts moves to v1 with its treatment; added FR-ADMIN-29 pin posts and `pinnedAt` in the v1 `Post` contract. FR-BLOG-01 switches views with icon buttons. Public controls may use the component kit; see ADR-0034 |
 | 2026-11-24 | v0.53 | Editor separates writing from publishing: settings move from the sidebar to a publish dialog (FR-ADMIN-07, 23, 28, 29); drafts autosave the title and the Save button goes (FR-ADMIN-04, 18); Unpublish moves to a post list row menu and published posts open in Preview (FR-ADMIN-03, 20). See ADR-0035 |
+| 2026-11-25 | v0.55 | Added FR-BLOG-18 post category, FR-BLOG-19 view count, FR-BLOG-20 anonymous likes, and FR-BLOG-21 publication date display to v1 at the owner's request; FR-BLOG-15 cards show them and FR-ADMIN-07 sets the category. Added `category` to `Post` and the `PostView` and `Reaction` tables to the v1 contract; `viewCount` leaves the deferred list. Anonymous likes move ahead of v2.5; see ADR-0037 |
