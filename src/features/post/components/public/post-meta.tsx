@@ -1,8 +1,11 @@
-import { Eye, Heart } from "lucide-react";
+import { Eye, Heart, Languages } from "lucide-react";
 import Link from "next/link";
 
-import { POST_CATEGORY_NAMES } from "../../schema";
-import type { PublicPostSummary } from "../../server/public-post.service";
+import { POST_LANGUAGE_LABELS } from "../../schema";
+import type {
+  PostVersion,
+  PublicPostSummary,
+} from "../../server/public-post.service";
 import { countLabel, formatCount } from "./format-count";
 import { requestTime } from "./post-date";
 import { PublishedDate } from "./published-date";
@@ -54,7 +57,7 @@ export function TagList({ tags }: { tags: PublicPostSummary["tags"] }) {
   );
 }
 
-/** FR-BLOG-18: the category name in its colour; nothing when unset. */
+/** FR-BLOG-18: the category name; nothing when unset. */
 export function CategoryLabel({
   category,
 }: {
@@ -62,10 +65,73 @@ export function CategoryLabel({
 }) {
   if (category === null) return null;
 
+  return <span className="post-category">{category.name}</span>;
+}
+
+/**
+ * FR-BLOG-22 on a card: the short label of each published language version.
+ * Screen readers hear the full language names.
+ */
+export function LanguageMarker({
+  languages,
+}: {
+  languages: PublicPostSummary["languages"];
+}) {
+  if (languages.length === 0) return null;
+
   return (
-    <span className="post-category" data-category={category}>
-      {POST_CATEGORY_NAMES[category]}
+    <span className="post-languages">
+      <Languages aria-hidden="true" />
+      <span aria-hidden="true">
+        {languages
+          .map((language) => POST_LANGUAGE_LABELS[language].short)
+          .join(" · ")}
+      </span>
+      <span className="sr-only">
+        {`Written in ${languages
+          .map((language) => POST_LANGUAGE_LABELS[language].name)
+          .join(", ")}`}
+      </span>
     </span>
+  );
+}
+
+/**
+ * FR-BLOG-22 on the post page: every published version, the current one as
+ * text and the others as links.
+ */
+export function PostVersions({ versions }: { versions: PostVersion[] }) {
+  if (versions.length === 0) return null;
+
+  return (
+    <nav aria-label="Language versions" className="post-languages">
+      <Languages aria-hidden="true" />
+      <ul>
+        {versions.map((version) => {
+          const label = POST_LANGUAGE_LABELS[version.language];
+
+          return (
+            <li key={version.language}>
+              {version.current ? (
+                <span aria-current="page" lang={version.language}>
+                  <span aria-hidden="true">{label.short}</span>
+                  <span className="sr-only">{label.name}</span>
+                </span>
+              ) : (
+                <Link
+                  hrefLang={version.language}
+                  href={`/blog/${version.slug}`}
+                  lang={version.language}
+                >
+                  <span aria-hidden="true">{label.short}</span>
+                  <span className="sr-only">{label.name}</span>
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
 

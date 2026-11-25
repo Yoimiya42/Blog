@@ -1,10 +1,11 @@
+import type { Category, CategoryRepository } from "@/features/category";
 import type { Tag, TagRepository } from "@/features/tag";
 
 import { deriveArticleContent } from "../content/derive";
 import type { ArticleDocument } from "../content/types";
 import { CONTENT_SCHEMA_VERSION } from "../content/types";
 import { validateArticleDocument } from "../content/validate";
-import type { Post, PostCategory } from "../schema";
+import { sortPostLanguages, type Post, type PostLanguage } from "../schema";
 import type { PostRepository } from "./post.repository";
 
 export const PUBLIC_POSTS_PER_PAGE = 10;
@@ -28,7 +29,12 @@ export interface PublicPostSummary {
   /** Null when the stored document fails validation. */
   readingMinutes: number | null;
   /** Null for a post published before categories existed (FR-BLOG-18). */
-  category: PostCategory | null;
+  category: Category | null;
+  /**
+   * FR-BLOG-22: languages of the published versions in the post's group, in
+   * display order. Empty when none has a language yet.
+   */
+  languages: PostLanguage[];
   /** FR-BLOG-19 and FR-BLOG-20. */
   views: number;
   likes: number;
@@ -45,6 +51,25 @@ export interface PublicPost extends PublicPostSummary {
   isDraft: boolean;
   /** Whether the requesting visitor has liked the post (FR-BLOG-20). */
   liked: boolean;
+  /**
+   * FR-BLOG-22: every published version of the group in display order,
+   * this post marked `current`. Empty when none has a language yet.
+   */
+  versions: PostVersion[];
+}
+
+/** One language version of a post, as the post page links to it. */
+export interface PostVersion {
+  language: PostLanguage;
+  slug: string;
+  current: boolean;
+}
+
+type GroupVersions = Map<string, { slug: string; language: PostLanguage }[]>;
+
+/** The group key of a post: its original's id (ADR-0038). */
+function groupOf(post: Post): string {
+  return post.translationOf ?? post.id;
 }
 
 /** The outcome of a like toggle; null when the post is not public. */
@@ -74,6 +99,7 @@ function pageCount(totalPosts: number): number {
 interface PublicPostServiceDependencies {
   posts: PostRepository;
   tags: TagRepository;
+  categories: Pick<CategoryRepository, "listByIds">;
   /**
    * Live covers by media id, from the media module. Omitted by tests that do
    * not exercise covers; every cover is then null.
@@ -103,12 +129,24 @@ function readDocument(post: Post): ArticleDocument | null {
 
 const NO_ENGAGEMENT = { views: 0, likes: 0 } as const;
 
+interface SummaryContext {
+  tags: Tag[];
+  categories: Map<string, Category>;
+  versions: GroupVersions;
+  engagement?: { views: number; likes: number };
+  cover?: PostCover | null;
+}
+
 function toSummary(
   post: Post,
   document: ArticleDocument | null,
-  tags: Tag[],
-  engagement: { views: number; likes: number } = NO_ENGAGEMENT,
-  cover: PostCover | null = null,
+  {
+    tags,
+    categories,
+    versions,
+    engagement = NO_ENGAGEMENT,
+    cover = null,
+  }: SummaryContext,
 ): PublicPostSummary {
   return {
     slug: post.slug,
@@ -120,7 +158,12 @@ function toSummary(
     readingMinutes: document
       ? deriveArticleContent(document).readingMinutes
       : null,
-    category: post.category,
+    category: post.categoryId
+      ? (categories.get(post.categoryId) ?? null)
+      : null,
+    languages: sortPostLanguages(
+      (versions.get(groupOf(post)) ?? []).map((version) => version.language),
+    ),
     views: engagement.views,
     likes: engagement.likes,
     cover,
@@ -134,6 +177,7 @@ function toSummary(
 export function createPublicPostService({
   posts,
   tags,
+  categories,
   resolveCovers,
   now = () => new Date(),
 }: PublicPostServiceDependencies) {
@@ -145,22 +189,27 @@ export function createPublicPostService({
       ? rows.flatMap((post) => (post.coverId ? [post.coverId] : []))
       : [];
     const ids = rows.map((post) => post.id);
-    const [tagsByPost, engagement, covers] = await Promise.all([
-      tags.listByPostIds(ids),
-      posts.countEngagement(ids),
-      resolveCovers && coverIds.length > 0
-        ? resolveCovers(coverIds)
-        : Promise.resolve<Record<string, PostCover>>({}),
-    ]);
+    const [tagsByPost, engagement, covers, categoryById, versions] =
+      await Promise.all([
+        tags.listByPostIds(ids),
+        posts.countEngagement(ids),
+        resolveCovers && coverIds.length > 0
+          ? resolveCovers(coverIds)
+          : Promise.resolve<Record<string, PostCover>>({}),
+        categories.listByIds(
+          rows.flatMap((post) => (post.categoryId ? [post.categoryId] : [])),
+        ),
+        posts.listPublishedVersions(rows.map(groupOf)),
+      ]);
 
     return rows.map((post) =>
-      toSummary(
-        post,
-        readDocument(post),
-        tagsByPost.get(post.id) ?? [],
-        engagement.get(post.id),
-        (post.coverId && covers[post.coverId]) || null,
-      ),
+      toSummary(post, readDocument(post), {
+        tags: tagsByPost.get(post.id) ?? [],
+        categories: categoryById,
+        versions,
+        engagement: engagement.get(post.id),
+        cover: (post.coverId && covers[post.coverId]) || null,
+      }),
     );
   }
 
@@ -272,22 +321,34 @@ export function createPublicPostService({
       if (!post) return null;
 
       const document = readDocument(post);
-      const [tagsByPost, engagement, liked] = await Promise.all([
-        tags.listByPostIds([post.id]),
-        posts.countEngagement([post.id]),
-        visitorId ? posts.hasLiked(post.id, visitorId) : false,
-      ]);
+      const [tagsByPost, engagement, liked, categoryById, versions] =
+        await Promise.all([
+          tags.listByPostIds([post.id]),
+          posts.countEngagement([post.id]),
+          visitorId ? posts.hasLiked(post.id, visitorId) : false,
+          categories.listByIds(post.categoryId ? [post.categoryId] : []),
+          posts.listPublishedVersions([groupOf(post)]),
+        ]);
+      const group = versions.get(groupOf(post)) ?? [];
+      const order = sortPostLanguages(group.map((version) => version.language));
 
       return {
-        ...toSummary(
-          post,
-          document,
-          tagsByPost.get(post.id) ?? [],
-          engagement.get(post.id),
-        ),
+        ...toSummary(post, document, {
+          tags: tagsByPost.get(post.id) ?? [],
+          categories: categoryById,
+          versions,
+          engagement: engagement.get(post.id),
+        }),
         document,
         isDraft: post.status !== "PUBLISHED",
         liked,
+        versions: order.flatMap((language) => {
+          const version = group.find((entry) => entry.language === language);
+
+          return version
+            ? [{ ...version, current: version.slug === post.slug }]
+            : [];
+        }),
       };
     },
 
@@ -307,14 +368,20 @@ export type PublicPostService = ReturnType<typeof createPublicPostService>;
 
 export async function getPublicPostService(): Promise<PublicPostService> {
   // Loaded lazily for the same reason as `getPostService`.
-  const [{ getPostRepository }, { getTagRepository }] = await Promise.all([
+  const [
+    { getPostRepository },
+    { getTagRepository },
+    { getCategoryRepository },
+  ] = await Promise.all([
     import("./post.repository"),
     import("@/features/tag"),
+    import("@/features/category"),
   ]);
 
   return createPublicPostService({
     posts: await getPostRepository(),
     tags: await getTagRepository(),
+    categories: await getCategoryRepository(),
     // Loaded on first use: the media module owns delivery URLs.
     resolveCovers: async (ids) => {
       const { getMediaService } = await import("@/features/media");

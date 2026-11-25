@@ -9,13 +9,14 @@ import {
 } from "@/lib/db/types";
 
 import {
-  isPostCategory,
+  isPostLanguage,
   MAX_PINNED_POSTS,
   POST_STATUSES,
+  PostLanguageTakenError,
   PostSlugTakenError,
   type NewPost,
   type Post,
-  type PostCategory,
+  type PostLanguage,
   type PostPatch,
   type PostStatus,
   type PostSummary,
@@ -30,7 +31,9 @@ interface PostSummaryRow {
   summary: string | null;
   cover_id: string | null;
   pinned_at: EpochMilliseconds | null;
-  category: string | null;
+  category_id: string | null;
+  language: string | null;
+  translation_of: string | null;
   status: string;
   published_at: EpochMilliseconds | null;
   created_at: EpochMilliseconds;
@@ -43,7 +46,7 @@ interface PostRow extends PostSummaryRow {
 }
 
 const SUMMARY_COLUMNS =
-  "id, slug, title, summary, cover_id, pinned_at, category, status, published_at, created_at, updated_at";
+  "id, slug, title, summary, cover_id, pinned_at, category_id, language, translation_of, status, published_at, created_at, updated_at";
 const POST_COLUMNS = `${SUMMARY_COLUMNS}, content, content_schema_version`;
 
 function toStatus(value: string): PostStatus {
@@ -53,9 +56,9 @@ function toStatus(value: string): PostStatus {
   throw new Error(`unknown post status in database: ${value}`);
 }
 
-function toCategory(value: string | null): PostCategory | null {
-  if (value === null || isPostCategory(value)) return value;
-  throw new Error(`unknown post category in database: ${value}`);
+function toLanguage(value: string | null): PostLanguage | null {
+  if (value === null || isPostLanguage(value)) return value;
+  throw new Error(`unknown post language in database: ${value}`);
 }
 
 function toSummary(row: PostSummaryRow): PostSummary {
@@ -67,7 +70,9 @@ function toSummary(row: PostSummaryRow): PostSummary {
     coverId: row.cover_id,
     pinnedAt:
       row.pinned_at === null ? null : fromEpochMilliseconds(row.pinned_at),
-    category: toCategory(row.category),
+    categoryId: row.category_id,
+    language: toLanguage(row.language),
+    translationOf: row.translation_of,
     status: toStatus(row.status),
     publishedAt:
       row.published_at === null
@@ -99,7 +104,9 @@ const PATCH_COLUMNS = {
   contentSchemaVersion: (value: number) => ["content_schema_version", value],
   coverId: (value: string | null) => ["cover_id", value],
   pinnedAt: (value: Date | null) => ["pinned_at", toNullableEpoch(value)],
-  category: (value: PostCategory | null) => ["category", value],
+  categoryId: (value: string | null) => ["category_id", value],
+  language: (value: PostLanguage | null) => ["language", value],
+  translationOf: (value: string | null) => ["translation_of", value],
   status: (value: PostStatus) => ["status", value],
   publishedAt: (value: Date | null) => ["published_at", toNullableEpoch(value)],
 } as const satisfies {
@@ -107,6 +114,17 @@ const PATCH_COLUMNS = {
     value: Required<PostPatch>[Key],
   ) => readonly [string, string | number | null];
 };
+
+/**
+ * A translation is left out of public lists while its original is published
+ * and live, so a version group shows one card (ADR-0038). The outer query
+ * reads `post` without an alias.
+ */
+const NOT_A_LISTED_TRANSLATION = `NOT EXISTS (
+  SELECT 1 FROM post AS original
+  WHERE original.id = post.translation_of
+    AND original.status = 'PUBLISHED' AND original.deleted_at IS NULL
+)`;
 
 export function createPostRepository(db: D1Database) {
   async function runSlugGuarded<T>(
@@ -119,6 +137,9 @@ export function createPostRepository(db: D1Database) {
       if (slug !== undefined && isUniqueViolation(error, "post.slug")) {
         throw new PostSlugTakenError(slug);
       }
+      if (isUniqueViolation(error, "index 'post_translation_language_uidx'")) {
+        throw new PostLanguageTakenError();
+      }
       throw error;
     }
   }
@@ -127,7 +148,11 @@ export function createPostRepository(db: D1Database) {
   function publishedFilter(
     query: Omit<PublishedPostQuery, "limit" | "offset">,
   ) {
-    const conditions = ["status = 'PUBLISHED'", "deleted_at IS NULL"];
+    const conditions = [
+      "status = 'PUBLISHED'",
+      "deleted_at IS NULL",
+      NOT_A_LISTED_TRANSLATION,
+    ];
     const values: string[] = [];
     if (query.tagId !== undefined) {
       conditions.push("id IN (SELECT post_id FROM post_tag WHERE tag_id = ?)");
@@ -211,9 +236,9 @@ export function createPostRepository(db: D1Database) {
         .prepare(
           `INSERT INTO post
              (id, slug, title, summary, content, content_schema_version,
-              cover_id, pinned_at, category, status, published_at,
-              created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              cover_id, pinned_at, category_id, language, translation_of,
+              status, published_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING ${POST_COLUMNS}`,
         )
         .bind(
@@ -225,7 +250,9 @@ export function createPostRepository(db: D1Database) {
           post.contentSchemaVersion,
           post.coverId ?? null,
           toNullableEpoch(post.pinnedAt ?? null),
-          post.category ?? null,
+          post.categoryId ?? null,
+          post.language ?? null,
+          post.translationOf ?? null,
           post.status,
           toNullableEpoch(post.publishedAt),
           timestamp,
@@ -375,7 +402,7 @@ export function createPostRepository(db: D1Database) {
         .prepare(
           `SELECT ${POST_COLUMNS} FROM post
            WHERE status = 'PUBLISHED' AND deleted_at IS NULL
-             AND pinned_at IS NOT NULL
+             AND pinned_at IS NOT NULL AND ${NOT_A_LISTED_TRANSLATION}
            ORDER BY pinned_at DESC, id DESC
            LIMIT ?`,
         )
@@ -438,6 +465,55 @@ export function createPostRepository(db: D1Database) {
         content: JSON.parse(row.content) as unknown,
         coverId: row.cover_id,
       }));
+    },
+
+    /** Whether any non-deleted post names `id` as its original. */
+    async hasTranslations(id: string): Promise<boolean> {
+      const row = await db
+        .prepare(
+          `SELECT 1 AS found FROM post
+           WHERE translation_of = ? AND deleted_at IS NULL
+           LIMIT 1`,
+        )
+        .bind(id)
+        .first<{ found: number }>();
+
+      return row !== null;
+    },
+
+    /**
+     * FR-BLOG-22: the published, live versions of each group, keyed by the
+     * group's original id. Versions without a language are left out.
+     */
+    async listPublishedVersions(
+      groupIds: readonly string[],
+    ): Promise<Map<string, { slug: string; language: PostLanguage }[]>> {
+      const groups = new Map<
+        string,
+        { slug: string; language: PostLanguage }[]
+      >();
+      const unique = [...new Set(groupIds)];
+      if (unique.length === 0) return groups;
+
+      const { results } = await db
+        .prepare(
+          `SELECT coalesce(translation_of, id) AS group_id, slug, language
+           FROM post
+           WHERE status = 'PUBLISHED' AND deleted_at IS NULL
+             AND language IS NOT NULL
+             AND coalesce(translation_of, id) IN (${placeholders(unique.length)})`,
+        )
+        .bind(...unique)
+        .all<{ group_id: string; slug: string; language: string }>();
+      for (const row of results) {
+        const language = toLanguage(row.language);
+        if (language === null) continue;
+        const versions = groups.get(row.group_id) ?? [];
+        versions.push({ slug: row.slug, language });
+        groups.set(row.group_id, versions);
+      }
+
+      return groups;
     },
 
     /** Returns false when the post does not exist or is already deleted. */

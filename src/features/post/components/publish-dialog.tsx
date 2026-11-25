@@ -10,6 +10,9 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+// Type only: the category index also exports server modules.
+import type { Category } from "@/features/category";
+
 import {
   Dialog,
   DialogContent,
@@ -26,6 +29,7 @@ import {
 } from "../schema";
 import { CategoryField } from "./category-field";
 import { CoverField, type CoverValue } from "./cover-field";
+import { LanguageField, type TranslationTarget } from "./language-field";
 import { PinField } from "./pin-field";
 import { SubmitButton } from "./submit-button";
 import { TagPicker } from "./tag-picker";
@@ -38,8 +42,12 @@ export interface PostSettings {
   tags: string;
   cover: CoverValue | null;
   pinned: boolean;
-  /** A category key, or blank for none (FR-BLOG-18). */
-  category: string;
+  /** A category id, or blank for none (FR-BLOG-18). */
+  categoryId: string;
+  /** A language code, or blank for none (FR-BLOG-22). */
+  language: string;
+  /** The original's id, or blank for an original (ADR-0038). */
+  translationOf: string;
 }
 
 /** Settings fields; an error on any of them opens the dialog. */
@@ -49,7 +57,9 @@ export const SETTINGS_FIELDS = [
   "tags",
   "coverId",
   "pinned",
-  "category",
+  "categoryId",
+  "language",
+  "translationOf",
 ] as const satisfies readonly (keyof PostFieldErrors)[];
 
 const INPUT_CLASS =
@@ -76,6 +86,8 @@ export function PublishDialog({
   tagSuggestions,
   tagLimit,
   imageUpload,
+  categories,
+  translationTargets,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -90,6 +102,8 @@ export function PublishDialog({
   tagSuggestions: readonly string[];
   tagLimit: number;
   imageUpload?: ImageUploadConfig;
+  categories: readonly Category[];
+  translationTargets: readonly TranslationTarget[];
 }) {
   const published = status === "PUBLISHED";
 
@@ -133,9 +147,19 @@ export function PublishDialog({
           />
 
           <CategoryField
-            error={fieldErrors.category}
-            onChange={(category) => onChange({ category })}
-            value={settings.category}
+            categories={categories}
+            error={fieldErrors.categoryId}
+            onChange={(categoryId) => onChange({ categoryId })}
+            value={settings.categoryId}
+          />
+
+          <LanguageField
+            language={settings.language}
+            languageError={fieldErrors.language}
+            onChange={onChange}
+            targets={translationTargets}
+            translationError={fieldErrors.translationOf}
+            translationOf={settings.translationOf}
           />
 
           <Section icon={TagIcon} label="Tags">

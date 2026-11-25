@@ -15,12 +15,14 @@ import {
   PUBLIC_POSTS_PER_PAGE,
   type PublicPostService,
 } from "@/features/post/server/public-post.service";
+import { createCategoryRepository } from "@/features/category";
 import { createTagRepository } from "@/features/tag";
 
 import { parsePageNumber } from "@/app/(site)/(blog)/page-number";
 
 import {
   clearContentTables,
+  insertCategories,
   createMigratedDatabase,
   SAMPLE_DOCUMENT,
   type TestDatabase,
@@ -32,6 +34,7 @@ let database: TestDatabase;
 let db: D1Database;
 let posts: ReturnType<typeof createPostRepository>;
 let tags: ReturnType<typeof createTagRepository>;
+let categories: ReturnType<typeof createCategoryRepository>;
 let service: PublicPostService;
 
 function post(overrides: Partial<NewPost> & { id: string }): NewPost {
@@ -63,7 +66,8 @@ beforeAll(async () => {
   db = database.db;
   posts = createPostRepository(db);
   tags = createTagRepository(db);
-  service = createPublicPostService({ posts, tags });
+  categories = createCategoryRepository(db);
+  service = createPublicPostService({ posts, tags, categories });
 }, 30_000);
 
 afterAll(async () => {
@@ -137,6 +141,7 @@ describe("public post list", () => {
       tags: [{ id: "t1", slug: "sqlite", name: "SQLite" }],
       readingMinutes: 1,
       category: null,
+      languages: [],
       views: 0,
       likes: 0,
       cover: null,
@@ -163,7 +168,12 @@ describe("public post list", () => {
     };
     // m2 stands for a deleted image: the media module does not return it.
     const resolveCovers = vi.fn(async () => ({ m1: cover }));
-    const withCovers = createPublicPostService({ posts, tags, resolveCovers });
+    const withCovers = createPublicPostService({
+      posts,
+      tags,
+      categories,
+      resolveCovers,
+    });
 
     const page = await withCovers.listPage(1);
     const bySlug = Object.fromEntries(
@@ -187,6 +197,83 @@ describe("public post list", () => {
     expect(entry?.readingMinutes).toBeNull();
     expect(error).toHaveBeenCalledOnce();
     error.mockRestore();
+  });
+});
+
+describe("categories and language versions (FR-BLOG-18, 22)", () => {
+  beforeEach(async () => {
+    await insertCategories(db);
+  });
+
+  it("shows the category name from the owner's list", async () => {
+    await posts.insert(post({ id: "a", categoryId: "cat-b" }), NOW);
+
+    const [entry] = (await service.listPage(1))?.posts ?? [];
+
+    expect(entry?.category).toEqual({ id: "cat-b", name: "Category B" });
+  });
+
+  it("lists one card per group with every published language", async () => {
+    await posts.insert(post({ id: "zh", language: "zh-Hans" }), NOW);
+    await posts.insert(
+      post({ id: "en", language: "en", translationOf: "zh" }),
+      NOW,
+    );
+    await posts.insert(
+      post({
+        id: "ja",
+        language: "ja",
+        translationOf: "zh",
+        status: "DRAFT",
+        publishedAt: null,
+      }),
+      NOW,
+    );
+    await posts.insert(post({ id: "solo", language: "en" }), NOW);
+
+    const page = await service.listPage(1);
+    const bySlug = Object.fromEntries(
+      (page?.posts ?? []).map((entry) => [entry.slug, entry.languages]),
+    );
+
+    // The draft version does not count; the translation has no card.
+    expect(bySlug).toEqual({ zh: ["zh-Hans", "en"], solo: ["en"] });
+    expect(page?.totalPosts).toBe(2);
+  });
+
+  it("lists a translation while its original is not published", async () => {
+    await posts.insert(
+      post({
+        id: "zh",
+        language: "zh-Hans",
+        status: "DRAFT",
+        publishedAt: null,
+      }),
+      NOW,
+    );
+    await posts.insert(
+      post({ id: "en", language: "en", translationOf: "zh" }),
+      NOW,
+    );
+
+    const page = await service.listPage(1);
+
+    expect(page?.posts.map((entry) => [entry.slug, entry.languages])).toEqual([
+      ["en", ["en"]],
+    ]);
+  });
+
+  it("links every published version from the post page", async () => {
+    await posts.insert(post({ id: "zh", language: "zh-Hans" }), NOW);
+    await posts.insert(
+      post({ id: "en", language: "en", translationOf: "zh" }),
+      NOW,
+    );
+
+    expect((await service.getBySlug("en"))?.versions).toEqual([
+      { language: "zh-Hans", slug: "zh", current: false },
+      { language: "en", slug: "en", current: true },
+    ]);
   });
 });
 

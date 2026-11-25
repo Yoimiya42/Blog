@@ -36,32 +36,37 @@ export function isBlankDraftIdentity(post: {
 export type PostStatus = (typeof POST_STATUSES)[number];
 
 /**
- * FR-BLOG-18: a fixed, deliberately small set. Keys are stored; names are the
- * product labels. Topics come from tags, not from new categories.
+ * FR-BLOG-22: content languages. Each label is the language's own short
+ * form, so the marker never depends on the interface language.
  */
-export const POST_CATEGORIES = [
-  "tech",
-  "economy",
-  "history",
-  "prose",
-  "monologue",
-] as const;
+export const POST_LANGUAGES = ["zh-Hans", "zh-Hant", "en", "ja"] as const;
 
-export type PostCategory = (typeof POST_CATEGORIES)[number];
+export type PostLanguage = (typeof POST_LANGUAGES)[number];
 
-export const POST_CATEGORY_NAMES: Record<PostCategory, string> = {
-  tech: "科技",
-  economy: "经济观察",
-  history: "历史观察",
-  prose: "散文",
-  monologue: "随笔独白",
+export const POST_LANGUAGE_LABELS: Record<
+  PostLanguage,
+  { short: string; name: string }
+> = {
+  "zh-Hans": { short: "简", name: "简体中文" },
+  "zh-Hant": { short: "繁", name: "繁體中文" },
+  en: { short: "EN", name: "English" },
+  ja: { short: "日", name: "日本語" },
 };
 
-export function isPostCategory(value: unknown): value is PostCategory {
+export function isPostLanguage(value: unknown): value is PostLanguage {
   return (
     typeof value === "string" &&
-    (POST_CATEGORIES as readonly string[]).includes(value)
+    (POST_LANGUAGES as readonly string[]).includes(value)
   );
+}
+
+/** Languages in the fixed display order, without repeats. */
+export function sortPostLanguages(
+  languages: Iterable<PostLanguage>,
+): PostLanguage[] {
+  const present = new Set(languages);
+
+  return POST_LANGUAGES.filter((language) => present.has(language));
 }
 
 /** A post without its body. List queries never load `content`. */
@@ -75,7 +80,11 @@ export interface PostSummary {
   /** Pin time; null when not pinned (FR-BLOG-17). */
   pinnedAt: Date | null;
   /** Null only for a post never published with one (FR-BLOG-18). */
-  category: PostCategory | null;
+  categoryId: string | null;
+  /** Null only for a post never published with one (FR-BLOG-22). */
+  language: PostLanguage | null;
+  /** The original post; null for an original (ADR-0038). */
+  translationOf: string | null;
   status: PostStatus;
   publishedAt: Date | null;
   createdAt: Date;
@@ -103,7 +112,11 @@ export interface NewPost {
   /** Omitted for not pinned. */
   pinnedAt?: Date | null;
   /** Omitted for no category. */
-  category?: PostCategory | null;
+  categoryId?: string | null;
+  /** Omitted for no language. */
+  language?: PostLanguage | null;
+  /** Omitted for an original. */
+  translationOf?: string | null;
   status: PostStatus;
   publishedAt: Date | null;
 }
@@ -174,8 +187,12 @@ export interface PostInput {
   coverId?: string | null;
   /** Pins or unpins the post. Omitted to keep the stored pin. */
   pinned?: boolean;
-  /** A category key; blank clears it. Omitted to keep the stored one. */
-  category?: string | null;
+  /** A category id; blank clears it. Omitted to keep the stored one. */
+  categoryId?: string | null;
+  /** A language code; blank clears it. Omitted to keep the stored one. */
+  language?: string | null;
+  /** The original's id; blank makes the post an original. Omitted keeps it. */
+  translationOf?: string | null;
 }
 
 export type PostField =
@@ -186,7 +203,9 @@ export type PostField =
   | "tags"
   | "coverId"
   | "pinned"
-  | "category";
+  | "categoryId"
+  | "language"
+  | "translationOf";
 
 export type PostFieldErrors = Partial<Record<PostField, string>>;
 
@@ -241,5 +260,13 @@ export class PostSlugTakenError extends Error {
   constructor(readonly slug: string) {
     super(`post slug is already in use: ${slug}`);
     this.name = "PostSlugTakenError";
+  }
+}
+
+/** Another live version of the same group already uses the language. */
+export class PostLanguageTakenError extends Error {
+  constructor() {
+    super("post language is already used in its translation group");
+    this.name = "PostLanguageTakenError";
   }
 }

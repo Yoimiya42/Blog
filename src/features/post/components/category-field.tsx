@@ -1,23 +1,27 @@
 "use client";
 
 import { Folder } from "lucide-react";
+import Link from "next/link";
 import { useId } from "react";
 
-import { POST_CATEGORIES, POST_CATEGORY_NAMES } from "../schema";
+// Type only: the category index also exports server modules.
+import type { Category } from "@/features/category";
 
 /**
- * Category choice in the publish dialog (FR-BLOG-18). Native radios, so the
- * group is one tab stop with arrow-key selection. Controlled, like the pin:
- * the form carries the value in a hidden input.
+ * Category choice in the publish dialog (FR-BLOG-18). The list comes from
+ * settings (FR-ADMIN-30). Native radios, so the group is one tab stop with
+ * arrow-key selection. Controlled: the form carries the id in a hidden input.
  */
 export function CategoryField({
+  categories,
   value,
   error,
   onChange,
 }: {
+  categories: readonly Category[];
   value: string;
   error?: string;
-  onChange: (category: string) => void;
+  onChange: (categoryId: string) => void;
 }) {
   const id = useId();
 
@@ -30,34 +34,80 @@ export function CategoryField({
         className="min-w-0 flex-1"
       >
         <legend className="text-sm text-muted-foreground">Category</legend>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {POST_CATEGORIES.map((category) => (
-            <label
-              className="cursor-pointer rounded-full border border-border px-3 py-1 text-sm text-muted-foreground has-checked:border-foreground has-checked:bg-foreground has-checked:text-background has-focus-visible:ring-2 has-focus-visible:ring-ring"
-              key={category}
+        {categories.length === 0 ? (
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            No categories yet.{" "}
+            <Link
+              className="underline underline-offset-2"
+              href="/admin/settings"
             >
-              <input
-                checked={value === category}
-                className="sr-only"
-                name={`${id}-category`}
-                onChange={() => onChange(category)}
-                type="radio"
-                value={category}
-              />
-              {POST_CATEGORY_NAMES[category]}
-            </label>
-          ))}
-        </div>
-        {error ? (
-          <p
-            className="mt-2 text-sm text-destructive"
-            id={`${id}-error`}
-            role="alert"
-          >
-            {error}
+              Add them in Settings
+            </Link>
+            .
           </p>
-        ) : null}
+        ) : (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {categories.map((category) => (
+              <ChoiceChip
+                checked={value === category.id}
+                key={category.id}
+                label={category.name}
+                name={`${id}-category`}
+                onChange={() => onChange(category.id)}
+                value={category.id}
+              />
+            ))}
+          </div>
+        )}
+        <ErrorText id={`${id}-error`} message={error} />
       </fieldset>
     </div>
+  );
+}
+
+/** A native radio styled as a chip, shared by the category and language. */
+export function ChoiceChip({
+  checked,
+  label,
+  name,
+  value,
+  lang,
+  title,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  name: string;
+  value: string;
+  lang?: string;
+  title?: string;
+  onChange: () => void;
+}) {
+  return (
+    <label
+      className="cursor-pointer rounded-full border border-border px-3 py-1 text-sm text-muted-foreground has-checked:border-foreground has-checked:bg-foreground has-checked:text-background has-focus-visible:ring-2 has-focus-visible:ring-ring"
+      lang={lang}
+      title={title}
+    >
+      <input
+        checked={checked}
+        className="sr-only"
+        name={name}
+        onChange={onChange}
+        type="radio"
+        value={value}
+      />
+      {label}
+    </label>
+  );
+}
+
+export function ErrorText({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+
+  return (
+    <p className="mt-2 text-sm text-destructive" id={id} role="alert">
+      {message}
+    </p>
   );
 }

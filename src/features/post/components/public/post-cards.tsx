@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { PublicPostSummary } from "../../server/public-post.service";
 import {
   CategoryLabel,
+  LanguageMarker,
   EngagementCounts,
   PostMeta,
   TagList,
@@ -55,7 +56,7 @@ function Cover({
 /**
  * Same structure for every post (FR-BLOG-15). The title link stretches over
  * the card; tags sit above it and stay separate links. Category, date, and
- * counts follow FR-BLOG-18 to 21.
+ * counts follow FR-BLOG-18 to 22.
  */
 function PostCard({
   post,
@@ -86,6 +87,7 @@ function PostCard({
           ) : null}
           <CategoryLabel category={post.category} />
           <PostMeta post={post} />
+          <LanguageMarker languages={post.languages} />
         </div>
         {post.summary ? (
           <p className="post-card__summary">{post.summary}</p>

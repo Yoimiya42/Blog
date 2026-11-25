@@ -8,6 +8,7 @@ import {
   CategoryLabel,
   EngagementCounts,
   PostMeta,
+  PostVersions,
   TagList,
 } from "./post-meta";
 import { TableOfContents } from "./table-of-contents";
@@ -56,6 +57,7 @@ export function PostArticle({
           <div className="post-head__meta">
             <PostMeta post={post} />
             <EngagementCounts post={post} showLikes={false} />
+            <PostVersions versions={post.versions} />
           </div>
         )}
         <TagList tags={post.tags} />

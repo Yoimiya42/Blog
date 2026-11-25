@@ -7,6 +7,7 @@ import {
   type PublicPostService,
 } from "@/features/post/server/public-post.service";
 import { createRateLimiter } from "@/features/post/server/rate-limit.repository";
+import { createCategoryRepository } from "@/features/category";
 import { createTagRepository } from "@/features/tag";
 
 import {
@@ -34,7 +35,6 @@ function post(overrides: Partial<NewPost> & { id: string }): NewPost {
     contentSchemaVersion: 1,
     status: "PUBLISHED",
     publishedAt: NOW,
-    category: "tech",
     ...overrides,
   };
 }
@@ -46,6 +46,7 @@ beforeAll(async () => {
   service = createPublicPostService({
     posts,
     tags: createTagRepository(db),
+    categories: createCategoryRepository(db),
     now: () => NOW,
   });
 }, 30_000);

@@ -65,11 +65,22 @@ export async function clearContentTables(db: D1Database): Promise<void> {
     db.prepare("DELETE FROM post_view"),
     db.prepare("DELETE FROM post_tag"),
     db.prepare("DELETE FROM post"),
+    db.prepare("DELETE FROM category"),
     db.prepare("DELETE FROM tag"),
     db.prepare("DELETE FROM post_editor_background"),
     db.prepare("DELETE FROM editor_background"),
     db.prepare("DELETE FROM media"),
   ]);
+}
+
+/** Two categories for tests that publish (FR-BLOG-18). */
+export async function insertCategories(db: D1Database): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO category (id, name, created_at)
+       VALUES ('cat-a', 'Category A', 1), ('cat-b', 'Category B', 2)`,
+    )
+    .run();
 }
 
 export const SAMPLE_DOCUMENT = {

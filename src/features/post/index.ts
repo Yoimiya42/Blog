@@ -19,7 +19,7 @@ export {
   toPostVersion,
   type NewPost,
   type Post,
-  type PostCategory,
+  type PostLanguage,
   type PostField,
   type PostFieldErrors,
   type PostInput,

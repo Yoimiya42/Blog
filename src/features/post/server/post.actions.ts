@@ -155,9 +155,16 @@ export async function savePostAction(
     ...(formData.has("pinned")
       ? { pinned: readText(formData, "pinned") === "true" }
       : {}),
-    // And for the category: absent keeps it, blank clears it.
-    ...(formData.has("category")
-      ? { category: readText(formData, "category") }
+    // And for category, language, and translation: absent keeps the stored
+    // value, blank clears it.
+    ...(formData.has("categoryId")
+      ? { categoryId: readText(formData, "categoryId") }
+      : {}),
+    ...(formData.has("language")
+      ? { language: readText(formData, "language") }
+      : {}),
+    ...(formData.has("translationOf")
+      ? { translationOf: readText(formData, "translationOf") }
       : {}),
     ...(submitted.content === undefined ? {} : { content: submitted.content }),
   };

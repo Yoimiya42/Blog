@@ -73,6 +73,7 @@ describe("migration replay", () => {
 
     expect(results.map((row) => row.name)).toEqual([
       "account",
+      "category",
       "editor_background",
       "media",
       "post",
@@ -135,17 +136,46 @@ describe("post constraints", () => {
     ).resolves.toBeDefined();
   });
 
-  it("accepts only the fixed categories", async () => {
+  it("rejects a category that does not exist", async () => {
     await insertPost();
 
     await expect(
       db
-        .prepare("UPDATE post SET category = 'sports' WHERE id = 'post-1'")
+        .prepare("UPDATE post SET category_id = 'missing' WHERE id = 'post-1'")
         .run(),
-    ).rejects.toThrow(/CHECK constraint/);
+    ).rejects.toThrow(/FOREIGN KEY constraint/);
+  });
+
+  it("allows one live version per language in a translation group", async () => {
+    await insertPost();
+    await insertPost({ id: "post-2", slug: "two" });
+    await insertPost({ id: "post-3", slug: "three" });
+    await db
+      .prepare(`UPDATE post SET language = 'en' WHERE id = 'post-1';`)
+      .run();
+    await db
+      .prepare(
+        "UPDATE post SET language = 'ja', translation_of = 'post-1' WHERE id = 'post-2'",
+      )
+      .run();
+
     await expect(
       db
-        .prepare("UPDATE post SET category = 'prose' WHERE id = 'post-1'")
+        .prepare(
+          "UPDATE post SET language = 'en', translation_of = 'post-1' WHERE id = 'post-3'",
+        )
+        .run(),
+    ).rejects.toThrow(/UNIQUE constraint/);
+
+    // A soft-deleted version frees its language.
+    await db
+      .prepare("UPDATE post SET deleted_at = 1 WHERE id = 'post-1'")
+      .run();
+    await expect(
+      db
+        .prepare(
+          "UPDATE post SET language = 'en', translation_of = 'post-1' WHERE id = 'post-3'",
+        )
         .run(),
     ).resolves.toBeDefined();
   });
