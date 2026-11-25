@@ -23,6 +23,7 @@ function InteractionSlot() {
     <div className="moment__actions" data-slot="interactions">
       <Button
         aria-label="Likes open later"
+        className="size-11"
         disabled
         size="icon"
         type="button"
@@ -32,6 +33,7 @@ function InteractionSlot() {
       </Button>
       <Button
         aria-label="Comments open later"
+        className="size-11"
         disabled
         size="icon"
         type="button"

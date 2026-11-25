@@ -101,7 +101,7 @@ export function DeleteMediaButton({
             {count === 1
               ? "1 post or moment shows"
               : `${count} posts or moments show`}{" "}
-            this image. Deleting it leaves “Image unavailable” in its place.
+            this image. Deleting it leaves a gap where it was shown.
           </p>
           <ul className="mt-2 list-disc pl-5">
             {checkState.posts.map((post) => (
