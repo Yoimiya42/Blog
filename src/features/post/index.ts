@@ -15,6 +15,7 @@ export {
   PostSlugTakenError,
   formatTagNames,
   isBlankDraftIdentity,
+  postOpenPath,
   toPostVersion,
   type NewPost,
   type Post,

@@ -9,6 +9,7 @@ import { setFlash } from "@/lib/flash";
 import {
   formatTagNames,
   fromPostVersion,
+  postOpenPath,
   toPostVersion,
   type PostFieldErrors,
   type PostMutationResult,
@@ -21,6 +22,8 @@ const FIX_FIELDS = "Fix the highlighted fields and save again.";
 const POST_GONE = "This post no longer exists.";
 const POST_CHANGED =
   "This post changed in another tab or window. Reload the page before saving again.";
+const LIST_STALE =
+  "This post changed in another tab or window. Reload the list and try again.";
 
 export interface PostFormValues {
   title: string;
@@ -128,18 +131,6 @@ export async function savePostAction(
   }
   const condition = { ifUpdatedAt };
 
-  // Unpublishing writes no field, so unsaved or invalid input cannot block it.
-  if (postId !== null && intent === "unpublish") {
-    const unpublished = await service.unpublish(session, postId, condition);
-    if (!unpublished.ok) return failure(values, unpublished);
-
-    revalidatePath(POSTS_PATH);
-    revalidatePublicReads();
-    await setFlash("Unpublished");
-    // A fresh render shows the new status and carries the new token.
-    redirect(`${POSTS_PATH}/${postId}`);
-  }
-
   const submitted = readContent(formData);
   if (!submitted.ok) {
     return {
@@ -207,8 +198,8 @@ export async function savePostAction(
 
     revalidatePublicReads();
     await setFlash("Published");
-    // A fresh render shows the new status and carries the new token.
-    redirect(`${POSTS_PATH}/${post.id}`);
+    // A published post opens in Preview, which shows the live version.
+    redirect(postOpenPath({ id: post.id, status: "PUBLISHED" }));
   }
 
   if (post.status === "PUBLISHED") revalidatePublicReads();
@@ -222,13 +213,14 @@ export async function savePostAction(
 }
 
 /**
- * Saves the document of a draft in the background. Called directly from the
- * client, so every argument is untrusted.
+ * Saves the document, and the title when given, of a draft in the
+ * background. Called directly from the client, so every argument is untrusted.
  */
 export async function autosavePostAction(
   postId: string,
   version: string,
   content: string,
+  title?: string,
 ): Promise<AutosaveResponse> {
   const session = await requireOwner();
 
@@ -236,6 +228,7 @@ export async function autosavePostAction(
   if (
     typeof postId !== "string" ||
     typeof content !== "string" ||
+    (title !== undefined && typeof title !== "string") ||
     !ifUpdatedAt
   ) {
     return { ok: false, reason: "invalid" };
@@ -249,13 +242,49 @@ export async function autosavePostAction(
   }
 
   const service = await getPostService();
-  const result = await service.autosave(session, postId, document, ifUpdatedAt);
+  const result =
+    title === undefined
+      ? await service.autosave(session, postId, document, ifUpdatedAt)
+      : await service.autosave(session, postId, document, ifUpdatedAt, title);
 
   // No revalidation: a draft has no public read, and refreshing the admin
   // route every few seconds would re-render the page under the editor.
   return result.ok
     ? { ok: true, version: toPostVersion(result.updatedAt) }
     : { ok: false, reason: result.reason };
+}
+
+export type UnpublishResponse = { ok: true } | { ok: false; message: string };
+
+/**
+ * Unpublishes from the post list row menu (FR-ADMIN-20). The row's version
+ * token makes it conditional, so a post edited elsewhere is not withdrawn
+ * unseen.
+ */
+export async function unpublishPostAction(
+  postId: string,
+  version: string,
+): Promise<UnpublishResponse> {
+  const session = await requireOwner();
+
+  const ifUpdatedAt = fromPostVersion(version);
+  if (typeof postId !== "string" || !ifUpdatedAt) {
+    return { ok: false, message: LIST_STALE };
+  }
+
+  const result = await (
+    await getPostService()
+  ).unpublish(session, postId, { ifUpdatedAt });
+  if (!result.ok) {
+    return {
+      ok: false,
+      message: result.reason === "not_found" ? POST_GONE : LIST_STALE,
+    };
+  }
+
+  revalidatePath(POSTS_PATH);
+  revalidatePublicReads();
+  return { ok: true };
 }
 
 /** New post (ADR-0030): opens a stored blank draft in the editor. */
@@ -287,6 +316,8 @@ export interface PostCommandItem {
   title: string;
   slug: string;
   status: "DRAFT" | "PUBLISHED";
+  /** Where the post opens (FR-ADMIN-03). */
+  href: string;
 }
 
 /** Read on each palette open, so the list is never stale. */
@@ -299,5 +330,6 @@ export async function listPostsForCommandAction(): Promise<PostCommandItem[]> {
     title: post.title,
     slug: post.slug,
     status: post.status,
+    href: postOpenPath(post),
   }));
 }

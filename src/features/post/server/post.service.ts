@@ -479,12 +479,26 @@ export function createPostService({
       id: string,
       content: unknown,
       ifUpdatedAt: Date,
+      /** Absent keeps the stored title (ADR-0035). */
+      title?: unknown,
     ): Promise<PostAutosaveResult> {
       assertOwner(actor);
 
       const invalidContent = await checkContent(content);
       if (invalidContent) {
         return { ok: false, reason: "invalid", message: invalidContent };
+      }
+
+      const parsedTitle =
+        title === undefined
+          ? undefined
+          : postInputSchema.shape.title.safeParse(title);
+      if (parsedTitle && !parsedTitle.success) {
+        return {
+          ok: false,
+          reason: "invalid",
+          message: parsedTitle.error.issues[0]?.message ?? "Invalid title.",
+        };
       }
 
       const current = await posts.findById(id);
@@ -495,7 +509,11 @@ export function createPostService({
       // was published after the status check above.
       const post = await posts.update(
         id,
-        { content, contentSchemaVersion: CONTENT_SCHEMA_VERSION },
+        {
+          content,
+          contentSchemaVersion: CONTENT_SCHEMA_VERSION,
+          ...(parsedTitle ? { title: parsedTitle.data } : {}),
+        },
         now(),
         { ifUpdatedAt },
       );

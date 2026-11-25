@@ -39,6 +39,7 @@ import {
   createBlankDraftAction,
   deletePostAction,
   savePostAction,
+  unpublishPostAction,
   type PostFormState,
 } from "@/features/post/server/post.actions";
 
@@ -180,7 +181,7 @@ describe("savePostAction", () => {
   ])(
     "reports a conflict without writing when the version is %s",
     async (_case, fields) => {
-      for (const intent of ["save", "publish", "unpublish"]) {
+      for (const intent of ["save", "publish"]) {
         const state = await savePostAction(
           "post-1",
           PREVIOUS,
@@ -194,7 +195,6 @@ describe("savePostAction", () => {
       }
       expect(service.update).not.toHaveBeenCalled();
       expect(service.publish).not.toHaveBeenCalled();
-      expect(service.unpublish).not.toHaveBeenCalled();
       expect(revalidatePath).not.toHaveBeenCalled();
     },
   );
@@ -357,7 +357,7 @@ describe("savePostAction", () => {
 });
 
 describe("publish intent", () => {
-  it("saves, publishes that version, and reopens the post", async () => {
+  it("saves, publishes that version, and opens its preview", async () => {
     service.update.mockResolvedValue({ ok: true, post: STORED });
     service.publish.mockResolvedValue({
       ok: true,
@@ -370,7 +370,7 @@ describe("publish intent", () => {
         PREVIOUS,
         form({ ...VALID, version: "1000", intent: "publish" }),
       ),
-    ).rejects.toMatchObject({ path: "/admin/posts/post-1" });
+    ).rejects.toMatchObject({ path: "/admin/posts/post-1/preview" });
 
     expect(service.publish).toHaveBeenCalledWith(SESSION, "post-1", {
       ifUpdatedAt: SAVED_AT,
@@ -429,42 +429,6 @@ describe("publish intent", () => {
   });
 });
 
-describe("unpublish intent", () => {
-  it("unpublishes without saving the form and reopens the post", async () => {
-    service.unpublish.mockResolvedValue({ ok: true, post: STORED });
-
-    await expect(
-      savePostAction(
-        "post-1",
-        PREVIOUS,
-        form({ title: "", slug: "", intent: "unpublish", version: "1000" }),
-      ),
-    ).rejects.toMatchObject({ path: "/admin/posts/post-1" });
-
-    expect(service.unpublish).toHaveBeenCalledWith(SESSION, "post-1", {
-      ifUpdatedAt: new Date(1_000),
-    });
-    expect(service.update).not.toHaveBeenCalled();
-    expectPublicRevalidation();
-  });
-
-  it("reports a conflict and leaves public reads alone", async () => {
-    service.unpublish.mockResolvedValue({ ok: false, reason: "conflict" });
-
-    const state = await savePostAction(
-      "post-1",
-      PREVIOUS,
-      form({ ...VALID, version: "1000", intent: "unpublish" }),
-    );
-
-    expect(state).toMatchObject({
-      values: VALID,
-      formError: expect.stringContaining("changed"),
-    });
-    expect(revalidatePath).not.toHaveBeenCalled();
-  });
-});
-
 describe("autosavePostAction", () => {
   const DOCUMENT = { type: "doc", content: [{ type: "paragraph" }] };
 
@@ -487,6 +451,20 @@ describe("autosavePostAction", () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
+  it("passes a title on to the service", async () => {
+    service.autosave.mockResolvedValue({ ok: true, updatedAt: SAVED_AT });
+
+    await autosavePostAction("post-1", "1000", JSON.stringify(DOCUMENT), "T");
+
+    expect(service.autosave).toHaveBeenCalledWith(
+      SESSION,
+      "post-1",
+      DOCUMENT,
+      new Date(1_000),
+      "T",
+    );
+  });
+
   it.each(["conflict", "not_found", "not_draft"] as const)(
     "passes on the %s outcome",
     async (reason) => {
@@ -505,13 +483,44 @@ describe("autosavePostAction", () => {
     ["content that is not JSON", "post-1", "1000", "{not json"],
     ["a non-string post id", 7, "1000", "{}"],
     ["non-string content", "post-1", "1000", { type: "doc" }],
+    ["a non-string title", "post-1", "1000", "{}", 5],
   ])("rejects %s before the service is reached", async (_name, ...args) => {
     const response = await autosavePostAction(
-      ...(args as [string, string, string]),
+      ...(args as [string, string, string, string?]),
     );
 
     expect(response).toEqual({ ok: false, reason: "invalid" });
     expect(service.autosave).not.toHaveBeenCalled();
+  });
+});
+
+describe("unpublishPostAction", () => {
+  it("unpublishes under the row token and refreshes public reads", async () => {
+    service.unpublish.mockResolvedValue({ ok: true, post: STORED });
+
+    expect(await unpublishPostAction("post-1", "1000")).toEqual({ ok: true });
+    expect(service.unpublish).toHaveBeenCalledWith(SESSION, "post-1", {
+      ifUpdatedAt: new Date(1_000),
+    });
+    expect(revalidatePath).toHaveBeenCalledWith("/admin/posts");
+    expect(revalidatePath).toHaveBeenCalledWith("/blog", "layout");
+  });
+
+  it("reports a stale row without refreshing", async () => {
+    service.unpublish.mockResolvedValue({ ok: false, reason: "conflict" });
+
+    expect(await unpublishPostAction("post-1", "1000")).toMatchObject({
+      ok: false,
+      message: expect.stringContaining("changed"),
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing token before the service is reached", async () => {
+    expect(await unpublishPostAction("post-1", "")).toMatchObject({
+      ok: false,
+    });
+    expect(service.unpublish).not.toHaveBeenCalled();
   });
 });
 

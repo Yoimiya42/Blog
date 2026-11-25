@@ -560,6 +560,42 @@ describe("autosave", () => {
     });
   });
 
+  it("saves a given title with the document", async () => {
+    const post = await createPost();
+    clock = LATER;
+
+    const result = await service.autosave(
+      OWNER,
+      post.id,
+      SAMPLE_DOCUMENT,
+      post.updatedAt,
+      "  Renamed  ",
+    );
+
+    expect(result).toEqual({ ok: true, updatedAt: LATER });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      title: "Renamed",
+      content: SAMPLE_DOCUMENT,
+    });
+  });
+
+  it("rejects a blank title and keeps the stored one", async () => {
+    const post = await createPost();
+
+    const result = await service.autosave(
+      OWNER,
+      post.id,
+      SAMPLE_DOCUMENT,
+      post.updatedAt,
+      " ",
+    );
+
+    expect(result).toMatchObject({ ok: false, reason: "invalid" });
+    expect(await service.getById(OWNER, post.id)).toMatchObject({
+      title: "Hello",
+    });
+  });
+
   it("rejects an invalid document", async () => {
     const post = await createPost({ content: SAMPLE_DOCUMENT });
 

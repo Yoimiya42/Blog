@@ -121,6 +121,7 @@ describe("schema v1 matrix completeness", () => {
         "listPostsForCommandAction",
         "createBlankDraftAction",
         "parseArticleDocument",
+        "postOpenPath",
         "toCalendarDate",
         "toPostVersion",
         "validateArticleDocument",

@@ -50,3 +50,4 @@ Template: `template.md`.
 | [0032](0032-editor-appearance-defaults.md) | Editor appearance defaults and per-post override | `editor_background` is the owner default; `post_editor_background` holds a post's own choice outside `post`, which wins when present | Accepted | 2026-11-24 |
 | [0033](0033-delete-media-object-first.md) | Delete the media object before the row | Delete the R2 object, then mark the row; any failure is reported and the same delete retries | Accepted | 2026-11-24 |
 | [0034](0034-public-controls-use-component-kit.md) | Public controls use the component kit | Public interactive controls use `src/components/ui` and lucide icons; content layout stays custom CSS | Accepted | 2026-11-24 |
+| [0035](0035-publish-settings-step.md) | Publish settings step | Settings move from the editor sidebar to a publish dialog; drafts autosave the title; no Save button; Unpublish in the post list | Accepted | 2026-11-24 |
