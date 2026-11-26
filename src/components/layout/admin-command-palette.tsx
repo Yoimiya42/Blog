@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   LoaderCircle,
   type LucideIcon,
+  MessageSquareText,
   Plus,
   Search,
   Settings,
@@ -48,6 +49,7 @@ const serverIsMac = () => false;
 const PAGES: { label: string; href: string; icon: LucideIcon }[] = [
   { label: "Overview", href: "/admin", icon: LayoutGrid },
   { label: "Posts", href: "/admin/posts", icon: FileText },
+  { label: "Moments", href: "/admin/moments", icon: MessageSquareText },
   { label: "Media", href: "/admin/media", icon: ImageIcon },
   { label: "Settings", href: "/admin/settings", icon: Settings },
   { label: "View site", href: "/", icon: ExternalLink },

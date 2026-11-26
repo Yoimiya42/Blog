@@ -8,6 +8,7 @@ import { LogoutButton } from "./logout-button";
 const navigation = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/posts", label: "Posts" },
+  { href: "/admin/moments", label: "Moments" },
   { href: "/admin/media", label: "Media" },
   { href: "/admin/settings", label: "Settings" },
 ] as const;

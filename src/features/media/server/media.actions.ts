@@ -62,6 +62,7 @@ export async function deleteMediaAction(
     // Public posts that showed the image now render it as unavailable.
     revalidatePath("/");
     revalidatePath("/blog", "layout");
+    revalidatePath("/moments");
   }
   return { kind: "deleted" };
 }
