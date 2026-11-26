@@ -58,9 +58,12 @@ export interface MediaLibraryItem {
   createdAt: Date;
 }
 
+/** A post or moment that shows a media item (ADR-0025, ADR-0036). */
 export interface MediaReference {
   id: string;
   title: string;
+  /** Admin page that edits the referencing item. */
+  href: string;
 }
 
 export type MediaRemoval =
@@ -100,6 +103,23 @@ export interface ResolvedCover {
   alt: string;
 }
 
+/**
+ * Fallback `src` for moment grid images (FR-MOMENT-02). A single image fills
+ * the feed column at about 36rem, so 960 is sharp on a two-times display.
+ */
+export const MOMENT_IMAGE_WIDTH: MediaWidth = 960;
+
+/** What the moment feed needs for one image. */
+export interface ResolvedMomentImage {
+  url: string;
+  srcSet: string;
+  /** Largest useful variant, for the enlarged view. */
+  zoomUrl: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+
 /** What an article renderer needs for one image. */
 export interface ResolvedMedia {
   url: string;
@@ -115,7 +135,7 @@ interface MediaServiceDependencies {
   media: MediaRepository;
   storage: StorageAdapter;
   isOwner: (actor: MediaActor) => boolean;
-  /** Posts whose content shows a media id (ADR-0025). */
+  /** Posts and moments that show a media id (ADR-0025, ADR-0036). */
   findReferences: (mediaId: string) => Promise<MediaReference[]>;
   now?: () => Date;
   newId?: () => string;
@@ -257,6 +277,34 @@ export function createMediaService({
       );
     },
 
+    /** Public read for the moment feed. Unknown or deleted ids are absent. */
+    async resolveForMoments(
+      ids: readonly string[],
+    ): Promise<Record<string, ResolvedMomentImage>> {
+      if (ids.length === 0) return {};
+
+      const found = await media.findDisplayByIds(ids);
+      return Object.fromEntries(
+        found.map((item) => [
+          item.id,
+          {
+            url: mediaUrl(
+              item.storageKey,
+              Math.min(
+                MOMENT_IMAGE_WIDTH,
+                coveringWidth(item.width),
+              ) as MediaWidth,
+            ),
+            srcSet: mediaSrcSet(item.storageKey, item.width),
+            zoomUrl: mediaUrl(item.storageKey, coveringWidth(item.width)),
+            width: item.width,
+            height: item.height,
+            alt: item.alt,
+          },
+        ]),
+      );
+    },
+
     /** For publishing: which ids name live media. */
     findExisting(ids: string[]): Promise<Set<string>> {
       return media.findExisting(ids);
@@ -330,11 +378,26 @@ export async function getMediaService(): Promise<MediaService> {
     media: await getMediaRepository(),
     storage: await getMediaStorage(),
     isOwner: isOwnerSession,
-    // Loaded only on delete: the post module owns article content, and the
-    // upload path in the Worker entry must not pull in its components.
+    // Loaded only on delete: the post and moment modules own their content,
+    // and the upload path in the Worker entry must not pull in their
+    // components.
     findReferences: async (mediaId) => {
-      const { getMediaReferenceFinder } = await import("@/features/post");
-      return (await getMediaReferenceFinder())(mediaId);
+      const [{ getMediaReferenceFinder }, { getMomentService }] =
+        await Promise.all([
+          import("@/features/post"),
+          import("@/features/moment"),
+        ]);
+      const [posts, moments] = await Promise.all([
+        getMediaReferenceFinder().then((find) => find(mediaId)),
+        getMomentService().then((service) =>
+          service.findReferencingMedia(mediaId),
+        ),
+      ]);
+
+      return [
+        ...posts.map((post) => ({ ...post, href: `/admin/posts/${post.id}` })),
+        ...moments,
+      ];
     },
   });
 }

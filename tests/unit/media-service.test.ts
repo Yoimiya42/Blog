@@ -230,6 +230,30 @@ describe("media resolution", () => {
     });
   });
 
+  it("resolves moment images with the enlarged variant and alt text", async () => {
+    const { media } = service();
+    const created = await media.upload(
+      OWNER,
+      buildJpeg({ width: 1200, height: 800 }),
+      "Harbour at dusk",
+    );
+
+    expect(await media.resolveForMoments([created.id, "missing"])).toEqual({
+      [created.id]: {
+        url: `/media/${created.id}.jpg?w=960`,
+        srcSet: [
+          `/media/${created.id}.jpg?w=480 480w`,
+          `/media/${created.id}.jpg?w=960 960w`,
+          `/media/${created.id}.jpg?w=1600 1200w`,
+        ].join(", "),
+        zoomUrl: `/media/${created.id}.jpg?w=1600`,
+        width: 1200,
+        height: 800,
+        alt: "Harbour at dusk",
+      },
+    });
+  });
+
   it("skips soft-deleted media", async () => {
     const { media } = service();
     const created = await media.upload(OWNER, buildJpeg());
@@ -313,7 +337,10 @@ describe("media library", () => {
   });
 
   it("asks for confirmation before deleting a referenced item", async () => {
-    const posts = [{ id: "p1", title: "Harbour walk" }];
+    const posts = [
+      { id: "p1", title: "Harbour walk", href: "/admin/posts/p1" },
+      { id: "m1", title: "Moment of 2026-11-25", href: "/admin/moments/m1" },
+    ];
     const { media, objects } = service({ findReferences: async () => posts });
     const created = await media.upload(OWNER, buildJpeg());
 

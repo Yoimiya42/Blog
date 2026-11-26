@@ -76,6 +76,8 @@ describe("migration replay", () => {
       "category",
       "editor_background",
       "media",
+      "moment",
+      "moment_media",
       "post",
       "post_editor_background",
       "post_tag",

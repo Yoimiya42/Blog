@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { getBlogView, getPublicPostService, PostIndex } from "@/features/post";
 
-import { parsePageNumber } from "../page-number";
+import { parsePageNumber } from "@/lib/page-number";
 
 export const metadata: Metadata = { title: "Writing" };
 

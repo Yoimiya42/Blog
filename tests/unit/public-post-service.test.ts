@@ -18,7 +18,7 @@ import {
 import { createCategoryRepository } from "@/features/category";
 import { createTagRepository } from "@/features/tag";
 
-import { parsePageNumber } from "@/app/(site)/(blog)/page-number";
+import { parsePageNumber } from "@/lib/page-number";
 
 import {
   clearContentTables,

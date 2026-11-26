@@ -51,5 +51,6 @@ Template: `template.md`.
 | [0033](0033-delete-media-object-first.md) | Delete the media object before the row | Delete the R2 object, then mark the row; any failure is reported and the same delete retries | Accepted | 2026-11-24 |
 | [0034](0034-public-controls-use-component-kit.md) | Public controls use the component kit | Public interactive controls use `src/components/ui` and lucide icons; content layout stays custom CSS | Accepted | 2026-11-24 |
 | [0035](0035-publish-settings-step.md) | Publish settings step | Settings move from the editor sidebar to a publish dialog; drafts autosave the title; no Save button; Unpublish in the post list | Accepted | 2026-11-24 |
+| [0036](0036-moment-data-model-and-composer.md) | Moment data model and composer | `moment` plus ordered `moment_media`; no interaction columns; plain textarea composer over the existing upload endpoint | Accepted | 2026-11-25 |
 | [0037](0037-post-views-and-anonymous-likes.md) | Post views and anonymous likes | `post_view` counts every opening; likes are reversible `reaction` rows keyed by a cookie set on the first like; ahead of v2.5 | Accepted | 2026-11-25 |
 | [0038](0038-post-language-versions.md) | Post language versions | Each version is a `post` row with `language` and `translation_of`; one version per language per group; lists show one card per group | Accepted | 2026-11-25 |

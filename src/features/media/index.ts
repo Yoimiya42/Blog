@@ -25,6 +25,7 @@ export {
   type MediaService,
   type ResolvedCover,
   type ResolvedMedia,
+  type ResolvedMomentImage,
 } from "./server/media.service";
 export {
   listMediaForPickerAction,

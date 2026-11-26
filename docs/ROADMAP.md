@@ -1,6 +1,6 @@
 # Release Roadmap
 
-> v2.12 · 2026-11-22
+> v2.13 · 2026-11-25
 > Product scope: [PRD.md](PRD.md). Daily status: [Personal Site Delivery](https://github.com/users/Yoimiya42/projects/1).
 
 ## Planning rules
@@ -32,13 +32,14 @@
 - Blog list, post detail, tags, pagination, code highlighting, table of contents, responsive images, drafts, and protected previews.
 - Owner-only email OTP authentication.
 - Post management, TipTap editing, autosave, publishing, media upload, and media library.
+- Moments feed and composer (#102), added at the owner's request.
 - Custom-domain application delivery on Cloudflare Workers and image delivery through the approved pipeline.
 - One approved visual direction, applied to the v1 public pages.
 - GitHub Actions, local quality gates, versioned database migrations, and release validation.
 
 ### Non-goals
 
-- Moments, life list, gallery, comments, visitor accounts, ratings, whispers, and subscriptions.
+- Moments light Markdown, place and mood, and infinite scroll; life list, gallery, comments, visitor accounts, ratings, whispers, and subscriptions.
 - GitHub or Google login.
 - Search, RSS, math, post series, offline editing, PWA installation, dark mode, and i18n.
 - Traffic analytics.
@@ -66,7 +67,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | M1 — Identity live | The real homepage is live on `fangmingluan.com`; `www` redirects; a login code reaches the owner mailbox with SPF, DKIM, and DMARC passing; a mainland tester loads the homepage | #11, #18 |
 | M2 — Text blog | The owner writes and publishes a post with code blocks on a desktop browser; visitors read it on the public blog | #38, #12, #13, #15, #10, #16 |
 | M3 — Media | The owner publishes a post with a phone-taken photo uploaded from a desktop browser; the image loads from the project domain with no GPS in the served file; a mainland load result is recorded | #4, #62, #14, #63, #64 |
-| M4 — Visual identity | The owner approves a visual direction; the v1 public pages match it on production | #66, #68, #94 |
+| M4 — Visual identity | The owner approves a visual direction; the v1 public pages match it on production | #66, #68, #94, #102 |
 | M5 — Release gates | Every release gate below passes | #67, #58, #17, #19 |
 
 ### Scope notes
@@ -81,6 +82,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 - **M4**: #66 closes OQ-02 and is owner work with no code; it runs in parallel with M3 and is exempt from the one-branch limit. #68 applies the result after M3, through tokens and layout shells only. The milestone precedes the release gates because they measure the final appearance. The formal host stays restrained unless #66 changes that principle through the PRD.
 - **M4 addition, 2026-11-24**: #94 adds post covers and the full and compact list views (FR-BLOG-14 to FR-BLOG-16, FR-ADMIN-28). It ships the `coverId` migration and list layouts; #68 supplies the tokens they use.
 - **M4 revision, 2026-11-24**: Owner review of #94 replaced the card rotation with a uniform grid and moved pinned posts (FR-BLOG-17, FR-ADMIN-29) from v1.5 into #94, so the grid keeps a prominent slot. #94 adds the `pinnedAt` migration.
+- **M4 addition, 2026-11-25**: The owner requested Moments ahead of v1.5. #102 ships the feed, the composer, and reserved like and comment slots (PRD v0.54, ADR-0036). It runs in the blog shell and does not wait for #66.
 - **M5**: Formerly M4. #67 moves the performance budgets into CI and may run whenever a feature branch is blocked on owner input. #58 resolves TD-002 before the site is promoted. #17 is the final audit; per-change checks moved to the PR template.
 - **Desktop acceptance, 2026-11-14**: v1 accepts the admin on a desktop browser. Phone acceptance left #12, #13, #14, and #19 and moved to #50 in v1.5. Admin layouts stay fluid and uploads stay server-processed, so phone support needs no rework.
 
@@ -116,6 +118,7 @@ Milestones run in order. Each is a GitHub Milestone with the same name, prefixed
 | [#66](https://github.com/Yoimiya42/Blog/issues/66) | Decide the visual direction | M4 | P0 | M | Backlog | Owner decisions |
 | [#68](https://github.com/Yoimiya42/Blog/issues/68) | Apply the visual direction to public pages | M4 | P0 | L | Backlog | #66, M3 |
 | [#94](https://github.com/Yoimiya42/Blog/issues/94) | Add post covers and list views | M4 | P1 | L | In progress | #66 |
+| [#102](https://github.com/Yoimiya42/Blog/issues/102) | Add the Moments feed and composer | M4 | P1 | M | In progress | #14 |
 | [#67](https://github.com/Yoimiya42/Blog/issues/67) | Automate performance budgets in CI | M5 | P1 | S | Backlog | — |
 | [#58](https://github.com/Yoimiya42/Blog/issues/58) | Remove the Workers Free CPU overrun dependency | M5 | P0 | M | Backlog | ADR-0019 trigger |
 | [#17](https://github.com/Yoimiya42/Blog/issues/17) | Audit security, privacy, and accessibility | M5 | P0 | M | Backlog | All feature Issues, #68 |
@@ -141,7 +144,7 @@ v1 ships only when:
 
 Order only. Scope is defined in PRD section 2. Each release is planned when the previous one ships.
 
-1. v1.5 — Owner publishing: phone-optimised admin (#50), scheduled publishing, Moments, RSS, math, offline tolerance, PWA, editable homepage.
+1. v1.5 — Owner publishing: phone-optimised admin (#50), scheduled publishing, the rest of Moments, RSS, math, offline tolerance, PWA, editable homepage.
 2. v2 — Owner life list, metadata fetch.
 3. v2.5 — Gallery, travel map, dark mode, visitor accounts, comments, visitor ratings, whispers, subscriptions.
 
@@ -153,4 +156,4 @@ GitHub Project states are `Backlog -> Ready -> In progress -> In review -> Done`
 
 ## History
 
-The original plan targeted 2026-09-30 with dated windows. Work paused from 2026-09-08 to 2026-11-10 and the target was missed. Version 2.0 replaced the dated plan with ordered milestones. Version 2.1 recorded the #8 pause and the #11 order exception. Version 2.2 allowed a blocked branch to be parked while a dependency-free Issue proceeds. Version 2.3 recorded #8 resuming and #45 closing. Version 2.4 recorded M0 closing, #18 starting, the R2 image domain moving from #18 to #14, the QQ Mail and 163 Mail delivery tests moving out of v1, visitor accounts and interaction moving to v2.5 under #49, and phone acceptance of the admin moving to v1.5 under #50. Version 2.5 recorded #13 closing, #15 starting, and scheduled publishing moving to v1.5. Version 2.6 recorded #15 and #10 closing and #16 starting. Version 2.7 recorded #16 and M2 closing. Version 2.8 re-sliced M3 into #4, #62, #14, #63, #64, and #65, added M4 for the visual direction, renumbered the release gates to M5, and moved per-change checks out of #17. Version 2.9 recorded #4 closing with ADR-0021, adopted Cloudflare Images in v1, and made mainland tests recorded rather than blocking under ADR-0020. Version 2.10 recorded #62 and #14 closing and #63 starting. Version 2.11 recorded #63 closing. Version 2.12 recorded #64 closing, #65 closing as not planned, and M3 closing.
+The original plan targeted 2026-09-30 with dated windows. Work paused from 2026-09-08 to 2026-11-10 and the target was missed. Version 2.0 replaced the dated plan with ordered milestones. Version 2.1 recorded the #8 pause and the #11 order exception. Version 2.2 allowed a blocked branch to be parked while a dependency-free Issue proceeds. Version 2.3 recorded #8 resuming and #45 closing. Version 2.4 recorded M0 closing, #18 starting, the R2 image domain moving from #18 to #14, the QQ Mail and 163 Mail delivery tests moving out of v1, visitor accounts and interaction moving to v2.5 under #49, and phone acceptance of the admin moving to v1.5 under #50. Version 2.5 recorded #13 closing, #15 starting, and scheduled publishing moving to v1.5. Version 2.6 recorded #15 and #10 closing and #16 starting. Version 2.7 recorded #16 and M2 closing. Version 2.8 re-sliced M3 into #4, #62, #14, #63, #64, and #65, added M4 for the visual direction, renumbered the release gates to M5, and moved per-change checks out of #17. Version 2.9 recorded #4 closing with ADR-0021, adopted Cloudflare Images in v1, and made mainland tests recorded rather than blocking under ADR-0020. Version 2.10 recorded #62 and #14 closing and #63 starting. Version 2.11 recorded #63 closing. Version 2.12 recorded #64 closing, #65 closing as not planned, and M3 closing. Version 2.13 added #102, Moments, to M4 at the owner's request.

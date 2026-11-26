@@ -1,6 +1,6 @@
 # Personal Site — Product Requirements
 
-> v0.53 · 2026-11-24 · Draft
+> v0.54 · 2026-11-25 · Draft
 > Single source of requirements. No feature ships without an entry here.
 
 ---
@@ -41,13 +41,13 @@ Releases ship in the order below and carry no calendar dates. Milestones and exi
 
 ### 2.1 v1
 
-Homepage · blog (list, detail, tags) · admin (write, upload, publish) accepted on desktop browsers · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance · one approved visual direction applied to the public pages · post categories, view counts, anonymous post likes, and post language versions (FR-BLOG-18 to 22), added at the owner's request.
+Homepage · blog (list, detail, tags) · admin (write, upload, publish) accepted on desktop browsers · `fangmingluan.com` · deployment · owner login (email code, 30-day session) · hidden entrance · one approved visual direction applied to the public pages · Moments feed and composer (FR-MOMENT-01, 02, 08; FR-ADMIN-11), and post categories, view counts, anonymous post likes, and post language versions (FR-BLOG-18 to 22), added at the owner's request.
 
-Excluded: life list, gallery, moments, visitor login, comments, ratings, whispers, subscriptions, dark mode, i18n of the interface and locale-prefixed routes (FR-BLOG-22 marks content languages only).
+Excluded: life list, gallery, the rest of Moments (light Markdown, place and mood, infinite scroll), visitor login, comments, ratings, whispers, subscriptions, dark mode, i18n of the interface and locale-prefixed routes (FR-BLOG-22 marks content languages only).
 
 ### 2.2 v1.5
 
-Owner publishing only. Phone-optimised admin · Moments · RSS · math · offline tolerance · installable PWA · homepage content editable in admin.
+Owner publishing only. Phone-optimised admin · Moments: light Markdown, place and mood, infinite scroll · RSS · math · offline tolerance · installable PWA · homepage content editable in admin.
 
 ### 2.3 v2
 
@@ -81,7 +81,8 @@ Gallery · travel map · dark mode · visitor registration and login (email code
 | `/admin/posts` | Post management | v1 | List, create, edit, delete |
 | `/admin/posts/[id]/edit` | Editor | v1 | |
 | `/admin/media` | Media library | v1 | |
-| `/moments` | Moments | v1.5 | Reverse-chronological feed |
+| `/admin/moments` | Moment management | v1 | Composer, list, edit, delete |
+| `/moments` | Moments | v1 | Reverse-chronological feed |
 | `/life` | Life list overview | v2 | Categories and stats |
 | `/life/movies` `/life/books` `/life/games` `/life/places` | Category lists | v2 | Cover-led card grid |
 | `/life/[type]/[id]` | Item detail | v2 | Owner review and rating. Visitor ratings and comments arrive in v2.5 |
@@ -192,13 +193,14 @@ Formal-host typography uses the device system font stack and loads no webfont. T
 
 | ID | Requirement | Version | Acceptance |
 |---|---|---|---|
-| FR-MOMENT-01 | Reverse-chronological feed | v1.5 | Body, images, timestamp; no titles |
-| FR-MOMENT-02 | 0–9 images per entry | v1.5 | Grid, tap for fullscreen carousel |
+| FR-MOMENT-01 | Reverse-chronological feed | v1 | `/moments` lists moments newest first, 20 per page with an Older link until FR-MOMENT-06. Each entry shows its body, images, and creation date; no titles. The body is plain text up to 2,000 characters with line breaks kept. A moment has a body, images, or both |
+| FR-MOMENT-02 | 0–9 images per entry | v1 | One image shows at its own aspect ratio; four show as a 2×2 grid; any other count shows as a three-column grid of square crops. Tapping an image opens an enlarged view with previous and next. A deleted image is left out |
 | FR-MOMENT-03 | Light Markdown | v1.5 | Bold, link, line break only |
 | FR-MOMENT-04 | Optional place and mood | v1.5 | Plain-text place label. When an attached image has GPS coordinates, suggest a place name; the owner edits it, for example to "Mount Vesuvius", before publishing. Only the label is public, never coordinates. The reverse-geocoding service needs an ADR |
 | FR-MOMENT-05 | Fast publishing from a phone | v1.5 | 5 interactions or fewer |
 | FR-MOMENT-06 | Infinite scroll | v1.5 | |
 | FR-MOMENT-07 | Comments | v2.5 | |
+| FR-MOMENT-08 | Reserved like and comment slots | v1 | Each entry shows disabled like and comment controls in a fixed footer slot. FR-SOCIAL-01 and a future reaction table fill them; the moment itself stores no counts. See ADR-0036 |
 
 ### 4.4 Life list (FR-LIFE)
 
@@ -270,7 +272,7 @@ Core of v1. v1 accepts every screen on a desktop browser. Screens stay fluid dow
 | FR-ADMIN-08 | Media library management | v1 | Browse, copy link, delete |
 | FR-ADMIN-09 | Mobile rich-text toolbar | v1.5 | One-tap heading, bold, link, list, image, and code-block controls |
 | FR-ADMIN-10 | Offline tolerance | v1.5 | Content persists locally, resumes after reconnect |
-| FR-ADMIN-11 | Quick moment composer | v1.5 | Lighter than the post editor |
+| FR-ADMIN-11 | Quick moment composer | v1 | `/admin/moments` holds a plain textarea and an image button; no title, no rich text, no draft. Post publishes at once. Images upload through `POST /api/media` while the owner types and can be removed before posting. The list below shows every moment with edit and delete; edit opens the same composer at `/admin/moments/[id]`. Delete asks once. Deleting an image used by a moment warns as for posts (ADR-0025). See ADR-0036 |
 | FR-ADMIN-12 | Item entry with cover fetch | v2 | |
 | FR-ADMIN-13 | Batch photo upload with EXIF extraction | v2.5 | |
 | FR-ADMIN-14 | Comment and whisper moderation | v2.5 | |
@@ -414,12 +416,14 @@ enum Visibility { PUBLIC MEMBER FRIEND PRIVATE }
 // ---------- Moments ----------
 model Moment {
   id         String     @id @default(cuid())
-  content    String                       // short text, light Markdown
-  images     Media[]    @relation("MomentImages")
+  body       String                       // short plain text; light Markdown in v1.5
+  images     Media[]    @relation("MomentImages")   // ordered, through MomentMedia
   place      String?                      // plain text, no map API
   mood       String?
   visibility Visibility @default(PUBLIC)
   createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
 }
 
 // ---------- Life list ----------
@@ -549,6 +553,8 @@ Issue #38 implements only these tables. Every other field in the logical model i
 | `Media` | `id`, `storageKey`, `mimeType`, `width`, `height`, `sizeBytes`, `alt`, `gpsLatitude`, `gpsLongitude`, `createdAt`, `updatedAt`, `deletedAt` |
 | `EditorBackground` | `userId`, `mediaId`, `opacity`, `updatedAt` |
 | `PostEditorBackground` | `postId`, `mediaId`, `opacity`, `updatedAt` |
+| `Moment` | `id`, `body`, `createdAt`, `updatedAt`, `deletedAt` |
+| `MomentMedia` | `momentId`, `mediaId`, `position` |
 | `PostView` | `postId`, `count` |
 | `Reaction` | `targetType`, `targetId`, `visitorId`, `kind`, `createdAt` |
 
@@ -567,6 +573,8 @@ Issue #38 implements only these tables. Every other field in the logical model i
 - `Media.width` and `height` are the displayed dimensions after EXIF orientation. `alt` is empty for a decorative image. Coordinates are owner-only. Deletion is soft through `deletedAt`; a deleted image no longer resolves and blocks publishing a post that references it.
 - Deferred `Media` fields: `blurhash`, `exif`. `url` is derived from `storageKey`, not stored.
 - `EditorBackground` holds one row per owner (FR-ADMIN-26). `mediaId` is null for no background; `opacity` is `0`, `25`, `50`, `75`, or `100`. A deleted `Media` row stays referenced and no longer resolves.
+- `Moment` has no status: saving publishes. `body` is plain text, empty only when the moment has images. `createdAt` is the displayed date. `updatedAt` is the concurrency token, as for `Post`. Deletion is soft through `deletedAt`. Deferred `Moment` fields: `place`, `mood`, `visibility`.
+- `MomentMedia` orders a moment's images by `position`, `0` to `8`. Each image appears at most once per moment. A deleted `Media` row stays referenced and is left out of the feed.
 - `EditorBackground` is the owner default. `PostEditorBackground` holds a post's own choice and overrides the default; deleting the row returns the post to the default. It lives outside `Post`, so it never changes `Post.updatedAt`.
 
 Open question: repeat experiences collapse into one record with a single `finishedAt`. Multiple occurrences need a separate `ItemLog` table. See OQ-06.
@@ -743,4 +751,5 @@ Workflow: `CONTRIBUTING.md`. AI rules: `AGENTS.md`.
 | 2026-11-24 | v0.51 | Added FR-BLOG-14 post cover, FR-BLOG-15 full list view, FR-BLOG-16 compact list view, and FR-ADMIN-28 cover selection to v1; FR-BLOG-01 offers both views. Added FR-BLOG-17 pinned posts to v1.5. Moved `coverId` into the v1 `Post` contract |
 | 2026-11-24 | v0.52 | FR-BLOG-15 replaces the card rotation with a uniform card grid. FR-BLOG-17 pinned posts moves to v1 with its treatment; added FR-ADMIN-29 pin posts and `pinnedAt` in the v1 `Post` contract. FR-BLOG-01 switches views with icon buttons. Public controls may use the component kit; see ADR-0034 |
 | 2026-11-24 | v0.53 | Editor separates writing from publishing: settings move from the sidebar to a publish dialog (FR-ADMIN-07, 23, 28, 29); drafts autosave the title and the Save button goes (FR-ADMIN-04, 18); Unpublish moves to a post list row menu and published posts open in Preview (FR-ADMIN-03, 20). See ADR-0035 |
+| 2026-11-25 | v0.54 | Moments feed and composer move into v1 at the owner's request: FR-MOMENT-01, FR-MOMENT-02, FR-ADMIN-11, and new FR-MOMENT-08 reserved like and comment slots. Added `Moment` and `MomentMedia` to the v1 field contract. Light Markdown, place and mood, and infinite scroll stay in v1.5. See ADR-0036 |
 | 2026-11-25 | v0.55 | Added FR-BLOG-18 post category, FR-BLOG-19 view count, FR-BLOG-20 anonymous likes, FR-BLOG-21 publication date display, FR-BLOG-22 post language versions, and FR-ADMIN-30 category list to v1 at the owner's request; FR-BLOG-15 cards show them and FR-ADMIN-07 sets category, language, and translation. Added `categoryId`, `language`, and `translationOf` to `Post` and the `Category`, `PostView`, and `Reaction` tables to the v1 contract; `viewCount` leaves the deferred list. Anonymous likes move ahead of v2.5; see ADR-0037. Language versions: see ADR-0038 |
