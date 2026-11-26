@@ -3,16 +3,20 @@ import {
   fromEpochMilliseconds,
   isUniqueViolation,
   MAX_BOUND_PARAMETERS,
+  placeholders,
   toEpochMilliseconds,
   type EpochMilliseconds,
 } from "@/lib/db/types";
 
 import {
+  isPostLanguage,
   MAX_PINNED_POSTS,
   POST_STATUSES,
+  PostLanguageTakenError,
   PostSlugTakenError,
   type NewPost,
   type Post,
+  type PostLanguage,
   type PostPatch,
   type PostStatus,
   type PostSummary,
@@ -27,6 +31,9 @@ interface PostSummaryRow {
   summary: string | null;
   cover_id: string | null;
   pinned_at: EpochMilliseconds | null;
+  category_id: string | null;
+  language: string | null;
+  translation_of: string | null;
   status: string;
   published_at: EpochMilliseconds | null;
   created_at: EpochMilliseconds;
@@ -39,7 +46,7 @@ interface PostRow extends PostSummaryRow {
 }
 
 const SUMMARY_COLUMNS =
-  "id, slug, title, summary, cover_id, pinned_at, status, published_at, created_at, updated_at";
+  "id, slug, title, summary, cover_id, pinned_at, category_id, language, translation_of, status, published_at, created_at, updated_at";
 const POST_COLUMNS = `${SUMMARY_COLUMNS}, content, content_schema_version`;
 
 function toStatus(value: string): PostStatus {
@@ -47,6 +54,11 @@ function toStatus(value: string): PostStatus {
     return value as PostStatus;
   }
   throw new Error(`unknown post status in database: ${value}`);
+}
+
+function toLanguage(value: string | null): PostLanguage | null {
+  if (value === null || isPostLanguage(value)) return value;
+  throw new Error(`unknown post language in database: ${value}`);
 }
 
 function toSummary(row: PostSummaryRow): PostSummary {
@@ -58,6 +70,9 @@ function toSummary(row: PostSummaryRow): PostSummary {
     coverId: row.cover_id,
     pinnedAt:
       row.pinned_at === null ? null : fromEpochMilliseconds(row.pinned_at),
+    categoryId: row.category_id,
+    language: toLanguage(row.language),
+    translationOf: row.translation_of,
     status: toStatus(row.status),
     publishedAt:
       row.published_at === null
@@ -89,6 +104,9 @@ const PATCH_COLUMNS = {
   contentSchemaVersion: (value: number) => ["content_schema_version", value],
   coverId: (value: string | null) => ["cover_id", value],
   pinnedAt: (value: Date | null) => ["pinned_at", toNullableEpoch(value)],
+  categoryId: (value: string | null) => ["category_id", value],
+  language: (value: PostLanguage | null) => ["language", value],
+  translationOf: (value: string | null) => ["translation_of", value],
   status: (value: PostStatus) => ["status", value],
   publishedAt: (value: Date | null) => ["published_at", toNullableEpoch(value)],
 } as const satisfies {
@@ -96,6 +114,17 @@ const PATCH_COLUMNS = {
     value: Required<PostPatch>[Key],
   ) => readonly [string, string | number | null];
 };
+
+/**
+ * A translation is left out of public lists while its original is published
+ * and live, so a version group shows one card (ADR-0038). The outer query
+ * reads `post` without an alias.
+ */
+const NOT_A_LISTED_TRANSLATION = `NOT EXISTS (
+  SELECT 1 FROM post AS original
+  WHERE original.id = post.translation_of
+    AND original.status = 'PUBLISHED' AND original.deleted_at IS NULL
+)`;
 
 export function createPostRepository(db: D1Database) {
   async function runSlugGuarded<T>(
@@ -108,6 +137,9 @@ export function createPostRepository(db: D1Database) {
       if (slug !== undefined && isUniqueViolation(error, "post.slug")) {
         throw new PostSlugTakenError(slug);
       }
+      if (isUniqueViolation(error, "index 'post_translation_language_uidx'")) {
+        throw new PostLanguageTakenError();
+      }
       throw error;
     }
   }
@@ -116,7 +148,11 @@ export function createPostRepository(db: D1Database) {
   function publishedFilter(
     query: Omit<PublishedPostQuery, "limit" | "offset">,
   ) {
-    const conditions = ["status = 'PUBLISHED'", "deleted_at IS NULL"];
+    const conditions = [
+      "status = 'PUBLISHED'",
+      "deleted_at IS NULL",
+      NOT_A_LISTED_TRANSLATION,
+    ];
     const values: string[] = [];
     if (query.tagId !== undefined) {
       conditions.push("id IN (SELECT post_id FROM post_tag WHERE tag_id = ?)");
@@ -200,9 +236,9 @@ export function createPostRepository(db: D1Database) {
         .prepare(
           `INSERT INTO post
              (id, slug, title, summary, content, content_schema_version,
-              cover_id, pinned_at, status, published_at, created_at,
-              updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              cover_id, pinned_at, category_id, language, translation_of,
+              status, published_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING ${POST_COLUMNS}`,
         )
         .bind(
@@ -214,6 +250,9 @@ export function createPostRepository(db: D1Database) {
           post.contentSchemaVersion,
           post.coverId ?? null,
           toNullableEpoch(post.pinnedAt ?? null),
+          post.categoryId ?? null,
+          post.language ?? null,
+          post.translationOf ?? null,
           post.status,
           toNullableEpoch(post.publishedAt),
           timestamp,
@@ -363,7 +402,7 @@ export function createPostRepository(db: D1Database) {
         .prepare(
           `SELECT ${POST_COLUMNS} FROM post
            WHERE status = 'PUBLISHED' AND deleted_at IS NULL
-             AND pinned_at IS NOT NULL
+             AND pinned_at IS NOT NULL AND ${NOT_A_LISTED_TRANSLATION}
            ORDER BY pinned_at DESC, id DESC
            LIMIT ?`,
         )
@@ -428,6 +467,55 @@ export function createPostRepository(db: D1Database) {
       }));
     },
 
+    /** Whether any non-deleted post names `id` as its original. */
+    async hasTranslations(id: string): Promise<boolean> {
+      const row = await db
+        .prepare(
+          `SELECT 1 AS found FROM post
+           WHERE translation_of = ? AND deleted_at IS NULL
+           LIMIT 1`,
+        )
+        .bind(id)
+        .first<{ found: number }>();
+
+      return row !== null;
+    },
+
+    /**
+     * FR-BLOG-22: the published, live versions of each group, keyed by the
+     * group's original id. Versions without a language are left out.
+     */
+    async listPublishedVersions(
+      groupIds: readonly string[],
+    ): Promise<Map<string, { slug: string; language: PostLanguage }[]>> {
+      const groups = new Map<
+        string,
+        { slug: string; language: PostLanguage }[]
+      >();
+      const unique = [...new Set(groupIds)];
+      if (unique.length === 0) return groups;
+
+      const { results } = await db
+        .prepare(
+          `SELECT coalesce(translation_of, id) AS group_id, slug, language
+           FROM post
+           WHERE status = 'PUBLISHED' AND deleted_at IS NULL
+             AND language IS NOT NULL
+             AND coalesce(translation_of, id) IN (${placeholders(unique.length)})`,
+        )
+        .bind(...unique)
+        .all<{ group_id: string; slug: string; language: string }>();
+      for (const row of results) {
+        const language = toLanguage(row.language);
+        if (language === null) continue;
+        const versions = groups.get(row.group_id) ?? [];
+        versions.push({ slug: row.slug, language });
+        groups.set(row.group_id, versions);
+      }
+
+      return groups;
+    },
+
     /** Returns false when the post does not exist or is already deleted. */
     async softDelete(id: string, now: Date): Promise<boolean> {
       const timestamp = toEpochMilliseconds(now);
@@ -440,6 +528,120 @@ export function createPostRepository(db: D1Database) {
         .run();
 
       return result.meta.changes > 0;
+    },
+
+    /**
+     * FR-BLOG-19: adds one view to a published post. Returns false when no
+     * published post has the slug. Outside `post`, so `updated_at` and the
+     * row with its content stay untouched (ADR-0037).
+     */
+    async recordView(slug: string): Promise<boolean> {
+      const result = await db
+        .prepare(
+          `INSERT INTO post_view (post_id, count)
+           SELECT id, 1 FROM post
+           WHERE slug = ? AND status = 'PUBLISHED' AND deleted_at IS NULL
+           ON CONFLICT (post_id) DO UPDATE SET count = count + 1`,
+        )
+        .bind(slug)
+        .run();
+
+      return result.meta.changes > 0;
+    },
+
+    /** View and like counts by post id; a post without any is left out. */
+    async countEngagement(
+      postIds: readonly string[],
+    ): Promise<Map<string, { views: number; likes: number }>> {
+      const counts = new Map<string, { views: number; likes: number }>();
+      const unique = [...new Set(postIds)];
+      if (unique.length === 0) return counts;
+
+      const list = placeholders(unique.length);
+      const [views, likes] = await db.batch<{ id: string; total: number }>([
+        db
+          .prepare(
+            `SELECT post_id AS id, count AS total FROM post_view
+             WHERE post_id IN (${list})`,
+          )
+          .bind(...unique),
+        db
+          .prepare(
+            `SELECT target_id AS id, count(*) AS total FROM reaction
+             WHERE target_type = 'POST' AND kind = 'LIKE'
+               AND target_id IN (${list})
+             GROUP BY target_id`,
+          )
+          .bind(...unique),
+      ]);
+      for (const row of views?.results ?? []) {
+        counts.set(row.id, { views: row.total, likes: 0 });
+      }
+      for (const row of likes?.results ?? []) {
+        const entry = counts.get(row.id) ?? { views: 0, likes: 0 };
+        counts.set(row.id, { ...entry, likes: row.total });
+      }
+
+      return counts;
+    },
+
+    /** Whether `visitorId` has liked the post. */
+    async hasLiked(postId: string, visitorId: string): Promise<boolean> {
+      const row = await db
+        .prepare(
+          `SELECT 1 AS liked FROM reaction
+           WHERE target_type = 'POST' AND target_id = ? AND kind = 'LIKE'
+             AND visitor_id = ?`,
+        )
+        .bind(postId, visitorId)
+        .first<{ liked: number }>();
+
+      return row !== null;
+    },
+
+    /**
+     * FR-BLOG-20: adds or removes the visitor's like on a published post in
+     * one transaction and returns the new state. Null when no published post
+     * has the slug.
+     */
+    async toggleLike(
+      slug: string,
+      visitorId: string,
+      now: Date,
+    ): Promise<{ liked: boolean; likes: number } | null> {
+      const post = await db
+        .prepare(
+          `SELECT id FROM post
+           WHERE slug = ? AND status = 'PUBLISHED' AND deleted_at IS NULL`,
+        )
+        .bind(slug)
+        .first<{ id: string }>();
+      if (!post) return null;
+
+      const key = "target_type = 'POST' AND target_id = ? AND kind = 'LIKE'";
+      // The delete runs first: when it removes a row the insert is skipped,
+      // so the two statements toggle within one transaction.
+      const [removed, , total] = await db.batch<{ total: number }>([
+        db
+          .prepare(`DELETE FROM reaction WHERE ${key} AND visitor_id = ?`)
+          .bind(post.id, visitorId),
+        db
+          .prepare(
+            `INSERT INTO reaction
+               (target_type, target_id, visitor_id, kind, created_at)
+             SELECT 'POST', ?, ?, 'LIKE', ?
+             WHERE changes() = 0`,
+          )
+          .bind(post.id, visitorId, toEpochMilliseconds(now)),
+        db
+          .prepare(`SELECT count(*) AS total FROM reaction WHERE ${key}`)
+          .bind(post.id),
+      ]);
+
+      return {
+        liked: (removed?.meta.changes ?? 0) === 0,
+        likes: total?.results[0]?.total ?? 0,
+      };
     },
 
     /** Replaces the full tag set of a post in one atomic batch. */

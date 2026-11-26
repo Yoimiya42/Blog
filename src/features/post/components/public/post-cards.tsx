@@ -3,7 +3,13 @@ import { Pin } from "lucide-react";
 import Link from "next/link";
 
 import type { PublicPostSummary } from "../../server/public-post.service";
-import { PostMeta, TagList } from "./post-meta";
+import {
+  CategoryLabel,
+  LanguageMarker,
+  EngagementCounts,
+  PostMeta,
+  TagList,
+} from "./post-meta";
 
 // Rendered cover widths; the 40rem breakpoint matches `.post-grid` and
 // `.post-card--pinned` in blog.css.
@@ -49,7 +55,8 @@ function Cover({
 
 /**
  * Same structure for every post (FR-BLOG-15). The title link stretches over
- * the card; tags sit above it and stay separate links.
+ * the card; tags sit above it and stay separate links. Category, date, and
+ * counts follow FR-BLOG-18 to 22.
  */
 function PostCard({
   post,
@@ -78,12 +85,17 @@ function PostCard({
               <span className="sr-only">Pinned</span>
             </span>
           ) : null}
+          <CategoryLabel category={post.category} />
           <PostMeta post={post} />
+          <LanguageMarker languages={post.languages} />
         </div>
         {post.summary ? (
           <p className="post-card__summary">{post.summary}</p>
         ) : null}
-        <TagList tags={post.tags} />
+        <div className="post-card__foot">
+          <TagList tags={post.tags} />
+          <EngagementCounts post={post} />
+        </div>
       </div>
     </article>
   );

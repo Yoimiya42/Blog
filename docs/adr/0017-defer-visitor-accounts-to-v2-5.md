@@ -1,6 +1,6 @@
 # 0017. Defer visitor accounts and interaction to v2.5
 
-- **Status**: Accepted
+- **Status**: Accepted; anonymous post likes superseded by 0037
 - **Date**: 2026-11-14
 - **Requirements**: FR-AUTH-01 to FR-AUTH-03, FR-AUTH-06, FR-SOCIAL-01 to FR-SOCIAL-05, FR-SOCIAL-09, FR-ADMIN-14
 - **Supersedes**: ADR-0004's "visitor email and GitHub login remain in v1.5" timing only

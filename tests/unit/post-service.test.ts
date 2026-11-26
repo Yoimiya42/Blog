@@ -13,6 +13,7 @@ import { isOwnerSession } from "@/features/auth/server/owner";
 import { PostAccessDeniedError, type PostInput } from "@/features/post";
 import { createMediaRepository } from "@/features/media/server/media.repository";
 import { createPostRepository } from "@/features/post/server/post.repository";
+import { createCategoryRepository } from "@/features/category";
 import { createTagRepository } from "@/features/tag";
 import {
   createPostService,
@@ -21,6 +22,7 @@ import {
 
 import {
   clearContentTables,
+  insertCategories,
   createMigratedDatabase,
   SAMPLE_DOCUMENT,
   type TestDatabase,
@@ -39,7 +41,15 @@ let clock: Date;
 let nextId: number;
 
 function input(overrides: Partial<PostInput> = {}): PostInput {
-  return { title: "Hello", slug: "hello", summary: "", ...overrides };
+  // Publishing needs a category and a language (FR-BLOG-18, 22).
+  return {
+    title: "Hello",
+    slug: "hello",
+    summary: "",
+    categoryId: "cat-a",
+    language: "en",
+    ...overrides,
+  };
 }
 
 async function createPost(overrides: Partial<PostInput> = {}) {
@@ -63,6 +73,7 @@ beforeAll(async () => {
   service = createPostService({
     posts: createPostRepository(db),
     tags: createTagRepository(db),
+    categories: createCategoryRepository(db),
     // The real rule, so these tests fail if the owner check changes.
     isOwner: isOwnerSession,
     media: createMediaRepository(db),
@@ -77,6 +88,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await clearContentTables(db);
+  await insertCategories(db);
   clock = CREATED;
   nextId = 0;
 });
@@ -1039,6 +1051,193 @@ describe("blank draft", () => {
       ok: false,
       reason: "invalid",
       fieldErrors: { slug: expect.any(String) },
+    });
+  });
+});
+
+describe("category (FR-BLOG-18)", () => {
+  it("stores, keeps, and clears a draft's category", async () => {
+    const post = await createPost({ categoryId: "cat-b" });
+    expect(post.categoryId).toBe("cat-b");
+
+    const kept = await service.update(
+      OWNER,
+      post.id,
+      input({ categoryId: undefined }),
+    );
+    expect(kept).toMatchObject({ ok: true, post: { categoryId: "cat-b" } });
+
+    const cleared = await service.update(
+      OWNER,
+      post.id,
+      input({ categoryId: "" }),
+    );
+    expect(cleared).toMatchObject({ ok: true, post: { categoryId: null } });
+  });
+
+  it("rejects a category that is not in the list", async () => {
+    expect(
+      await service.create(OWNER, input({ categoryId: "missing" })),
+    ).toMatchObject({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: { categoryId: "Choose a category from the list." },
+    });
+  });
+
+  it("refuses to publish without a category or language", async () => {
+    const post = await createPost({ categoryId: "", language: "" });
+
+    expect(await service.publish(OWNER, post.id)).toEqual({
+      ok: false,
+      reason: "invalid",
+      fieldErrors: {
+        categoryId: "Choose a category before publishing.",
+        language: "Choose a language before publishing.",
+      },
+    });
+  });
+
+  it("keeps a category and language on a published post", async () => {
+    const post = await createPost();
+    await service.publish(OWNER, post.id);
+
+    expect(
+      await service.update(
+        OWNER,
+        post.id,
+        input({ categoryId: "", language: "" }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      fieldErrors: {
+        categoryId: "Choose a category before publishing.",
+        language: "Choose a language before publishing.",
+      },
+    });
+    expect(
+      await service.update(OWNER, post.id, input({ categoryId: "cat-b" })),
+    ).toMatchObject({ ok: true, post: { categoryId: "cat-b" } });
+  });
+
+  it("lists the owner's categories for the publish dialog", async () => {
+    expect(await service.listCategories(OWNER)).toEqual([
+      { id: "cat-a", name: "Category A" },
+      { id: "cat-b", name: "Category B" },
+    ]);
+    await expect(service.listCategories(VISITOR)).rejects.toBeInstanceOf(
+      PostAccessDeniedError,
+    );
+  });
+});
+
+describe("language versions (FR-BLOG-22)", () => {
+  it("rejects a language outside the list", async () => {
+    expect(
+      await service.create(OWNER, input({ language: "fr" })),
+    ).toMatchObject({
+      ok: false,
+      fieldErrors: { language: "Choose a language from the list." },
+    });
+  });
+
+  it("links a translation to its original", async () => {
+    const original = await createPost({
+      slug: "original",
+      language: "zh-Hans",
+    });
+    const translation = await createPost({ slug: "translation" });
+
+    const linked = await service.update(
+      OWNER,
+      translation.id,
+      input({ slug: "translation", translationOf: original.id }),
+    );
+    expect(linked).toMatchObject({
+      ok: true,
+      post: { translationOf: original.id, language: "en" },
+    });
+
+    // The original keeps it; a blank value makes the post an original again.
+    expect(
+      (await service.listTranslationTargets(OWNER, translation.id)).map(
+        (target) => target.id,
+      ),
+    ).toEqual([original.id]);
+    expect(
+      await service.update(
+        OWNER,
+        translation.id,
+        input({ slug: "translation", translationOf: "" }),
+      ),
+    ).toMatchObject({ ok: true, post: { translationOf: null } });
+  });
+
+  it("refuses a second version in the same language", async () => {
+    const original = await createPost({ slug: "original" });
+    const translation = await createPost({ slug: "translation" });
+
+    expect(
+      await service.update(
+        OWNER,
+        translation.id,
+        input({ slug: "translation", translationOf: original.id }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      fieldErrors: {
+        language: "Another version of this post already uses this language.",
+      },
+    });
+  });
+
+  it("keeps groups one level deep", async () => {
+    const original = await createPost({ slug: "original", language: "ja" });
+    const translation = await createPost({
+      slug: "translation",
+      translationOf: original.id,
+    });
+    const third = await createPost({ slug: "third", language: "zh-Hant" });
+
+    expect(
+      await service.update(
+        OWNER,
+        third.id,
+        input({
+          slug: "third",
+          language: "zh-Hant",
+          translationOf: translation.id,
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      fieldErrors: {
+        translationOf:
+          "That post is itself a translation. Choose its original.",
+      },
+    });
+    expect(
+      await service.update(
+        OWNER,
+        original.id,
+        input({ slug: "original", language: "ja", translationOf: third.id }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      fieldErrors: {
+        translationOf:
+          "Other posts are translations of this one, so it stays an original.",
+      },
+    });
+    expect(
+      await service.update(
+        OWNER,
+        third.id,
+        input({ slug: "third", language: "zh-Hant", translationOf: third.id }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      fieldErrors: { translationOf: "Choose an original post from the list." },
     });
   });
 });

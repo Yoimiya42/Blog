@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { showFlash, toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+// Type only: the category index also exports server modules.
+import type { Category } from "@/features/category";
 
 import { deriveArticleStats } from "../content/derive";
 import type { ImageUploadConfig } from "../content/image-upload";
@@ -28,6 +30,7 @@ import {
 } from "../server/post.actions";
 import type { CoverValue } from "./cover-field";
 import { createDraftAutosave, type AutosaveStatus } from "./draft-autosave";
+import type { TranslationTarget } from "./language-field";
 import {
   EditorBackdrop,
   EditorBackgroundControl,
@@ -56,6 +59,9 @@ const TRACKED_FIELDS = [
   "tags",
   "coverId",
   "pinned",
+  "categoryId",
+  "language",
+  "translationOf",
 ] as const;
 
 /**
@@ -97,6 +103,16 @@ interface PostFormProps {
   initialCover?: CoverValue | null;
   /** Whether the post is pinned (FR-ADMIN-29). */
   initialPinned?: boolean;
+  /** The stored category id, or blank for none (FR-BLOG-18). */
+  initialCategoryId?: string;
+  /** The stored language code, or blank for none (FR-BLOG-22). */
+  initialLanguage?: string;
+  /** The stored original's id, or blank for an original (ADR-0038). */
+  initialTranslationOf?: string;
+  /** The owner's categories, offered by the publish dialog. */
+  categories?: readonly Category[];
+  /** Posts this one may name as its original. */
+  translationTargets?: readonly TranslationTarget[];
 }
 
 /** Stands in when the page passes no background, so the hook always runs. */
@@ -160,6 +176,11 @@ export function PostForm({
   background: backgroundConfig,
   initialCover = null,
   initialPinned = false,
+  initialCategoryId = "",
+  initialLanguage = "",
+  initialTranslationOf = "",
+  categories = [],
+  translationTargets = [],
 }: PostFormProps) {
   const background = useEditorBackground(backgroundConfig ?? NO_BACKGROUND);
   const formId = useId();
@@ -172,6 +193,9 @@ export function PostForm({
     tags: initialValues.tags,
     cover: initialCover,
     pinned: initialPinned,
+    categoryId: initialCategoryId,
+    language: initialLanguage,
+    translationOf: initialTranslationOf,
   }));
   const [publishOpen, setPublishOpen] = useState(false);
   const changeSettings = useCallback(
@@ -515,6 +539,13 @@ export function PostForm({
           type="hidden"
           value={settings.pinned ? "true" : "false"}
         />
+        <input name="categoryId" type="hidden" value={settings.categoryId} />
+        <input name="language" type="hidden" value={settings.language} />
+        <input
+          name="translationOf"
+          type="hidden"
+          value={settings.translationOf}
+        />
         {autosaveStatus.kind === "stopped" ? (
           <p
             className="mb-4 rounded-card bg-card px-4 py-3 text-sm text-destructive ring-1 ring-border"
@@ -604,8 +635,10 @@ export function PostForm({
           slugFrozen={slugFrozen}
           stats={stats}
           status={status}
+          categories={categories}
           tagLimit={TAG_LIMIT_HINT}
           tagSuggestions={tagSuggestions}
+          translationTargets={translationTargets}
         />
       ) : null}
     </>

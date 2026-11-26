@@ -32,13 +32,16 @@ export default async function EditPostPage({
   const service = await getPostService();
   const post = await service.getById(session, id);
   if (!post) notFound();
-  const [tags, library, background] = await Promise.all([
-    service.listTags(session, post.id),
-    service.listAllTags(session),
-    getEditorBackgroundService().then((backgrounds) =>
-      backgrounds.getForPost(session, post.id),
-    ),
-  ]);
+  const [tags, library, background, categories, translationTargets] =
+    await Promise.all([
+      service.listTags(session, post.id),
+      service.listAllTags(session),
+      getEditorBackgroundService().then((backgrounds) =>
+        backgrounds.getForPost(session, post.id),
+      ),
+      service.listCategories(session),
+      service.listTranslationTargets(session, post.id),
+    ]);
 
   // The editor opens only a document that is valid for the current schema
   // version. Anything else stays stored as it is until it is migrated.
@@ -95,6 +98,11 @@ export default async function EditPostPage({
       }}
       initialCover={initialCover}
       initialPinned={post.pinnedAt !== null}
+      categories={categories}
+      initialCategoryId={post.categoryId ?? ""}
+      initialLanguage={post.language ?? ""}
+      initialTranslationOf={post.translationOf ?? ""}
+      translationTargets={translationTargets}
       initialDocument={initialDocument}
       deletedMediaIds={deletedMediaIds}
       initialMediaUrls={initialMediaUrls}

@@ -1,3 +1,4 @@
+import type { Category, CategoryRepository } from "@/features/category";
 import {
   parseTagNames,
   TagSlugTakenError,
@@ -20,9 +21,11 @@ import {
   BLANK_DRAFT_TITLE,
   BLANK_DRAFT_SLUG_PATTERN,
   isBlankDraftIdentity,
+  isPostLanguage,
   MAX_PINNED_POSTS,
   POST_STATUSES,
   PostAccessDeniedError,
+  PostLanguageTakenError,
   PostSlugTakenError,
   postInputSchema,
   type Post,
@@ -30,6 +33,7 @@ import {
   type PostField,
   type PostFieldErrors,
   type PostInput,
+  type PostLanguage,
   type PostMutationResult,
   type PostPatch,
   type PostsByStatus,
@@ -46,6 +50,17 @@ const SLUG_PLACEHOLDER = "Choose a slug before publishing.";
 const COVER_UNKNOWN = "Choose a cover from the library.";
 const PIN_LIMIT = `Up to ${MAX_PINNED_POSTS} posts can be pinned. Unpin one first.`;
 const PIN_UNREADABLE = "Pinned could not be read.";
+const CATEGORY_UNKNOWN = "Choose a category from the list.";
+const CATEGORY_REQUIRED = "Choose a category before publishing.";
+const LANGUAGE_UNKNOWN = "Choose a language from the list.";
+const LANGUAGE_REQUIRED = "Choose a language before publishing.";
+const LANGUAGE_TAKEN =
+  "Another version of this post already uses this language.";
+const TRANSLATION_UNKNOWN = "Choose an original post from the list.";
+const TRANSLATION_OF_TRANSLATION =
+  "That post is itself a translation. Choose its original.";
+const TRANSLATION_HAS_VERSIONS =
+  "Other posts are translations of this one, so it stays an original.";
 
 function randomHex(bytes: number): string {
   const values = new Uint8Array(bytes);
@@ -66,6 +81,7 @@ function missedWrite(condition: PostWriteCondition): "conflict" | "not_found" {
 interface PostServiceDependencies {
   posts: PostRepository;
   tags: TagRepository;
+  categories: Pick<CategoryRepository, "findById" | "list">;
   /** The auth module owns the owner rule; the service only applies it. */
   isOwner: (actor: PostActor) => boolean;
   /**
@@ -130,6 +146,37 @@ async function coverError(
     : COVER_UNKNOWN;
 }
 
+/**
+ * Optional field rule shared by category, language, and translation:
+ * undefined keeps the stored value, blank clears it.
+ */
+type ParsedOptional<T> =
+  { ok: true; value?: T | null } | { ok: false; message: string };
+
+function blankOrUndefined<T>(raw: unknown): ParsedOptional<T> | null {
+  if (raw === undefined) return { ok: true };
+  if (raw === null || raw === "") return { ok: true, value: null };
+
+  return null;
+}
+
+function parseLanguage(raw: unknown): ParsedOptional<PostLanguage> {
+  return (
+    blankOrUndefined<PostLanguage>(raw) ??
+    (isPostLanguage(raw)
+      ? { ok: true, value: raw }
+      : { ok: false, message: LANGUAGE_UNKNOWN })
+  );
+}
+
+/** The stored value after applying a parsed optional field. */
+function effective<T>(
+  parsed: { value?: T | null },
+  stored: T | null,
+): T | null {
+  return parsed.value === undefined ? stored : parsed.value;
+}
+
 type ParsedTags =
   { ok: true; names?: string[] } | { ok: false; message: string };
 
@@ -146,6 +193,7 @@ function parseTags(input: PostInput): ParsedTags {
 export function createPostService({
   posts,
   tags,
+  categories,
   isOwner,
   media,
   now = () => new Date(),
@@ -178,8 +226,54 @@ export function createPostService({
           fieldErrors: { slug: SLUG_TAKEN },
         };
       }
+      if (error instanceof PostLanguageTakenError) {
+        return {
+          ok: false,
+          reason: "invalid",
+          fieldErrors: { language: LANGUAGE_TAKEN },
+        };
+      }
       throw error;
     }
+  }
+
+  /** A category must exist in the owner's list (FR-BLOG-18). */
+  async function parseCategory(raw: unknown): Promise<ParsedOptional<string>> {
+    const blank = blankOrUndefined<string>(raw);
+    if (blank) return blank;
+    if (typeof raw !== "string")
+      return { ok: false, message: CATEGORY_UNKNOWN };
+
+    return (await categories.findById(raw))
+      ? { ok: true, value: raw }
+      : { ok: false, message: CATEGORY_UNKNOWN };
+  }
+
+  /**
+   * ADR-0038: a translation names a live original that is not itself a
+   * translation, and a post with translations stays an original. The
+   * one-version-per-language rule is left to the unique index.
+   */
+  async function parseTranslation(
+    raw: unknown,
+    postId: string | null,
+  ): Promise<ParsedOptional<string>> {
+    const blank = blankOrUndefined<string>(raw);
+    if (blank) return blank;
+    if (typeof raw !== "string" || raw === postId) {
+      return { ok: false, message: TRANSLATION_UNKNOWN };
+    }
+
+    const original = await posts.findById(raw);
+    if (!original) return { ok: false, message: TRANSLATION_UNKNOWN };
+    if (original.translationOf !== null) {
+      return { ok: false, message: TRANSLATION_OF_TRANSLATION };
+    }
+    if (postId !== null && (await posts.hasTranslations(postId))) {
+      return { ok: false, message: TRANSLATION_HAS_VERSIONS };
+    }
+
+    return { ok: true, value: raw };
   }
 
   /** Existing tags keep their stored name; unknown names create a tag. */
@@ -255,6 +349,28 @@ export function createPostService({
       assertOwner(actor);
 
       return (await tags.listByPostIds([postId])).get(postId) ?? [];
+    },
+
+    /** The owner's categories, for the publish dialog (FR-BLOG-18). */
+    async listCategories(actor: PostActor): Promise<Category[]> {
+      assertOwner(actor);
+
+      return categories.list();
+    },
+
+    /**
+     * Posts that `postId` may name as its original (ADR-0038): live
+     * originals other than itself, most recently edited first.
+     */
+    async listTranslationTargets(
+      actor: PostActor,
+      postId: string,
+    ): Promise<{ id: string; title: string; language: PostLanguage | null }[]> {
+      assertOwner(actor);
+
+      return (await posts.listAll())
+        .filter((post) => post.id !== postId && post.translationOf === null)
+        .map(({ id, title, language }) => ({ id, title, language }));
     },
 
     async listByStatus(actor: PostActor): Promise<PostsByStatus> {
@@ -336,12 +452,18 @@ export function createPostService({
       const tagNames = parseTags(input);
       const invalidCover = await coverError(input.coverId, media);
       const invalidPin = await pinError(input.pinned, false);
+      const category = await parseCategory(input.categoryId);
+      const language = parseLanguage(input.language);
+      const translation = await parseTranslation(input.translationOf, null);
       if (
         !parsed.ok ||
         invalidContent ||
         !tagNames.ok ||
         invalidCover ||
-        invalidPin
+        invalidPin ||
+        !category.ok ||
+        !language.ok ||
+        !translation.ok
       ) {
         return {
           ok: false,
@@ -352,6 +474,9 @@ export function createPostService({
             ...(tagNames.ok ? {} : { tags: tagNames.message }),
             ...(invalidCover ? { coverId: invalidCover } : {}),
             ...(invalidPin ? { pinned: invalidPin } : {}),
+            ...(category.ok ? {} : { categoryId: category.message }),
+            ...(language.ok ? {} : { language: language.message }),
+            ...(translation.ok ? {} : { translationOf: translation.message }),
           },
         };
       }
@@ -369,6 +494,9 @@ export function createPostService({
             contentSchemaVersion: CONTENT_SCHEMA_VERSION,
             coverId: input.coverId ?? null,
             pinnedAt: input.pinned === true ? now() : null,
+            categoryId: category.value ?? null,
+            language: language.value ?? null,
+            translationOf: translation.value ?? null,
             status: "DRAFT",
             publishedAt: null,
           },
@@ -419,12 +547,31 @@ export function createPostService({
         current.pinnedAt !== null,
         id,
       );
+      const category = await parseCategory(input.categoryId);
+      const language = parseLanguage(input.language);
+      const translation = await parseTranslation(input.translationOf, id);
+      // A live post keeps its category and language: an update cannot clear
+      // either.
+      const live = current.status === "PUBLISHED";
+      const categoryMessage = !category.ok
+        ? category.message
+        : live && effective(category, current.categoryId) === null
+          ? CATEGORY_REQUIRED
+          : undefined;
+      const languageMessage = !language.ok
+        ? language.message
+        : live && effective(language, current.language) === null
+          ? LANGUAGE_REQUIRED
+          : undefined;
       if (
         !parsed.ok ||
         invalidContent ||
         !tagNames.ok ||
         invalidCover ||
-        invalidPin
+        invalidPin ||
+        categoryMessage ||
+        languageMessage ||
+        !translation.ok
       ) {
         return {
           ok: false,
@@ -435,12 +582,24 @@ export function createPostService({
             ...(tagNames.ok ? {} : { tags: tagNames.message }),
             ...(invalidCover ? { coverId: invalidCover } : {}),
             ...(invalidPin ? { pinned: invalidPin } : {}),
+            ...(categoryMessage ? { categoryId: categoryMessage } : {}),
+            ...(languageMessage ? { language: languageMessage } : {}),
+            ...(translation.ok ? {} : { translationOf: translation.message }),
           },
         };
       }
 
       const patch: PostPatch = { ...parsed.fields };
       if (input.coverId !== undefined) patch.coverId = input.coverId;
+      if (category.ok && category.value !== undefined) {
+        patch.categoryId = category.value;
+      }
+      if (language.ok && language.value !== undefined) {
+        patch.language = language.value;
+      }
+      if (translation.ok && translation.value !== undefined) {
+        patch.translationOf = translation.value;
+      }
       // A repeated pin keeps its original time, so the order stays stable.
       if (input.pinned === true && current.pinnedAt === null) {
         patch.pinnedAt = now();
@@ -547,6 +706,21 @@ export function createPostService({
         };
       }
 
+      if (current.categoryId === null || current.language === null) {
+        return {
+          ok: false,
+          reason: "invalid",
+          fieldErrors: {
+            ...(current.categoryId === null
+              ? { categoryId: CATEGORY_REQUIRED }
+              : {}),
+            ...(current.language === null
+              ? { language: LANGUAGE_REQUIRED }
+              : {}),
+          },
+        };
+      }
+
       // The public renderer accepts only the current schema version.
       const invalidContent =
         current.contentSchemaVersion === CONTENT_SCHEMA_VERSION
@@ -620,11 +794,13 @@ export async function getPostService(): Promise<PostService> {
   const [
     { getPostRepository },
     { getTagRepository },
+    { getCategoryRepository },
     { isOwnerSession },
     { getMediaService },
   ] = await Promise.all([
     import("./post.repository"),
     import("@/features/tag"),
+    import("@/features/category"),
     import("@/features/auth"),
     import("@/features/media"),
   ]);
@@ -632,6 +808,7 @@ export async function getPostService(): Promise<PostService> {
   return createPostService({
     posts: await getPostRepository(),
     tags: await getTagRepository(),
+    categories: await getCategoryRepository(),
     isOwner: isOwnerSession,
     media: await getMediaService(),
   });
